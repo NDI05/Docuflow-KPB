@@ -1,0 +1,60 @@
+﻿@model Docuflow_projectIT_KPB.Models.Surat
+
+@{
+    ViewData["Title"] = "Preview Surat";
+}
+
+<div class="card shadow-lg border-0">
+
+    <div class="card-header bg-dark text-white">
+        <h4>Preview Surat</h4>
+    </div>
+
+    <div class="card-body">
+
+        <table class="table table-bordered">
+
+            <tr>
+                <th width="200">Nomor Surat</th>
+                <td>@(Model?.NomorSurat ?? "-")</td>
+            </tr>
+
+            <tr>
+                <th>Jenis Surat</th>
+                <td>@(Model?.JenisSuratId.ToString() ?? "-")</td>
+            </tr>
+
+            <tr>
+                <th>Staff</th>
+                <td>@(Model?.StaffId?.ToString() ?? "-")</td>
+            </tr>
+
+            <tr>
+                <th>Manager</th>
+                <td>@(Model?.ManagerId?.ToString() ?? "-")</td>
+            </tr>
+
+            <tr>
+                <th>Deskripsi</th>
+                <td>@(Model?.Deskripsi ?? "-")</td>
+            </tr>
+
+            <tr>
+                <th>File</th>
+                <td>@ViewBag.FileName</td>
+            </tr>
+
+        </table>
+
+        <div class="text-end mt-4">
+
+            <a href="/Surat/Create"
+               class="btn btn-secondary">
+                Kembali
+            </a>
+
+        </div>
+
+    </div>
+
+</div>

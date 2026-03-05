@@ -1,0 +1,132 @@
+﻿@model List<Docuflow_projectIT_KPB.Models.Surat>
+
+@{
+    ViewData["Title"] = "Daftar Surat";
+}
+
+<div class="card shadow-lg border-0">
+
+    <div class="card-header bg-dark text-white d-flex justify-content-between align-items-center">
+        <h5 class="mb-0">Daftar Surat</h5>
+
+        <a href="/Surat/Create" class="btn btn-primary btn-sm">
+            + Buat Surat
+        </a>
+    </div>
+
+    <div class="card-body">
+
+        @if (TempData["Message"] != null)
+        {
+            <div class="alert alert-success">
+                @TempData["Message"]
+            </div>
+        }
+
+        <div class="table-responsive">
+
+            <table class="table table-hover table-bordered align-middle">
+
+                <thead class="table-dark text-center">
+                    <tr>
+                        <th>Nomor</th>
+                        <th>Jenis</th>
+                        <th>Tanggal Surat</th>
+                        <th>Staff</th>
+                        <th>Waktu Upload</th>
+                        <th width="220">Aksi</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+
+                    @if (Model != null && Model.Any())
+                    {
+                        foreach (var item in Model)
+                        {
+                            <tr>
+
+                                <td>
+                                    @(item.NomorSurat ?? "-")
+                                </td>
+
+                                <td>
+                                    @(item.JenisSurat?.NamaJenis ?? "-")
+                                </td>
+
+                                <td>
+                                    @(item.Tanggal.ToString("dd/MM/yyyy"))
+                                </td>
+
+                                <td>
+                                    @(item.Staff?.Nama ?? "-")
+                                </td>
+
+                                <td>
+                                    @((item.CreatedAt ?? item.Tanggal)
+                                                                .ToString("dd/MM/yyyy HH:mm:ss"))
+                                </td>
+
+                                <td class="text-center">
+
+                                    <!-- DETAIL -->
+
+                                    <a href="/Surat/Details/@item.Id"
+                                       class="btn btn-sm btn-info text-white">
+                                        Detail
+                                    </a>
+
+
+                                    <!-- DOWNLOAD (SEKARANG SELALU ADA) -->
+
+                                    <a href="/Surat/Download/@item.Id"
+                                       class="btn btn-sm btn-success">
+                                        Download
+                                    </a>
+
+
+                                    <!-- DELETE -->
+
+                                    <form asp-controller="Surat"
+                                          asp-action="Delete"
+                                          method="post"
+                                          style="display:inline"
+                                          onsubmit="return confirm('Yakin ingin menghapus surat ini?');">
+
+                                        <input type="hidden"
+                                               name="id"
+                                               value="@item.Id" />
+
+                                        <button type="submit"
+                                                class="btn btn-sm btn-danger">
+                                            Delete
+                                        </button>
+
+                                    </form>
+
+                                </td>
+
+                            </tr>
+                        }
+                    }
+                    else
+                    {
+                        <tr>
+                            <td colspan="6"
+                                class="text-center text-muted">
+
+                                Belum ada data surat
+
+                            </td>
+                        </tr>
+                    }
+
+                </tbody>
+
+            </table>
+
+        </div>
+
+    </div>
+
+</div>

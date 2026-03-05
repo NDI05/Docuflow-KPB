@@ -1,0 +1,46 @@
+﻿@model Docuflow_projectIT_KPB.Models.Surat
+
+@{
+    ViewData["Title"] = "Detail Surat";
+}
+
+<div style="width:800px; margin:auto; border:1px solid black; padding:40px;">
+
+    <h2 style="text-align:center;">SURAT RESMI</h2>
+    <hr />
+
+    <h3>Nomor: @Model.NomorSurat</h3>
+
+    <p><strong>Jenis Surat:</strong> @Model.JenisSurat?.NamaJenis</p>
+    <p><strong>Tanggal:</strong> @Model.Tanggal.ToString("dd MMMM yyyy")</p>
+
+    <br />
+
+    <p><strong>Deskripsi:</strong></p>
+    <p>@Model.Deskripsi</p>
+
+    <br /><br /><br />
+
+    <div style="display:flex; justify-content:space-between; margin-top:80px;">
+
+        <div style="text-align:center;">
+            <p>Staff</p>
+            <br /><br />
+            <p><strong>@Model.Staff?.Nama</strong></p>
+        </div>
+
+        <div style="text-align:center;">
+            <p>Manager</p>
+            <br /><br />
+            <p><strong>@Model.Manager?.Nama</strong></p>
+        </div>
+
+        <div style="text-align:center;">
+            <p>Penanggung Jawab</p>
+            <br /><br />
+            <p><strong>@Model.PenanggungJawab?.Nama</strong></p>
+        </div>
+
+    </div>
+
+</div>

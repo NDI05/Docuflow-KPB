@@ -1,0 +1,83 @@
+﻿@model List<Docuflow_projectIT_KPB.Models.User>
+
+@{
+    ViewData["Title"] = "Daftar Users";
+}
+
+<h2 class="mb-3">Daftar Users</h2>
+
+<h5>Nomor Surat Generated:</h5>
+<h3 class="text-success">@ViewBag.NomorSurat</h3>
+
+<hr />
+
+<!-- Tombol Tambah User -->
+<a asp-action="Create" class="btn btn-primary mb-3">
+    + Tambah User
+</a>
+
+<table class="table table-bordered table-striped align-middle">
+    <thead class="table-dark text-center">
+        <tr>
+            <th style="width:60px;">No</th>
+            <th style="width:150px;">ID Badge</th>
+            <th>Nama</th>
+            <th style="width:180px;">Role</th>
+            <th style="width:120px;">Action</th>
+        </tr>
+    </thead>
+
+    <tbody>
+        @{
+            int no = 1;
+        }
+
+        @foreach (var user in Model)
+        {
+            <tr>
+                <!-- Nomor Urut -->
+                <td class="text-center">@no</td>
+
+                <!-- Nomor Pegawai / ID Badge -->
+                <td class="text-center">
+                    <span class="badge bg-dark fs-6">
+                        @user.NomorPegawai
+                    </span>
+                </td>
+
+                <!-- Nama -->
+                <td>@user.Nama</td>
+
+                <!-- Role -->
+                <td class="text-center">
+                    @if (user.Role == "Staff")
+                    {
+                        <span class="badge bg-secondary px-3">Staff</span>
+                    }
+                    else if (user.Role == "Manager")
+                    {
+                        <span class="badge bg-primary px-3">Manager</span>
+                    }
+                    else
+                    {
+                        <span class="badge bg-success px-3">PenanggungJawab</span>
+                    }
+                </td>
+
+                <!-- Action -->
+                <td class="text-center">
+                    <form asp-action="Delete" method="post">
+                        <input type="hidden" name="id" value="@user.Id" />
+                        <button type="submit"
+                                class="btn btn-sm btn-danger"
+                                onclick="return confirm('Yakin hapus user ini?')">
+                            Hapus
+                        </button>
+                    </form>
+                </td>
+            </tr>
+
+            no++;
+        }
+    </tbody>
+</table>
