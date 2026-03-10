@@ -1,46 +1,298 @@
 ﻿@model Docuflow_projectIT_KPB.Models.Surat
-
 @{
-    ViewData["Title"] = "Detail Surat";
+    Layout = null;
 }
 
-<div style="width:800px; margin:auto; border:1px solid black; padding:40px;">
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8" />
+<title>Preview Surat</title>
 
-    <h2 style="text-align:center;">SURAT RESMI</h2>
-    <hr />
+<style>
 
-    <h3>Nomor: @Model.NomorSurat</h3>
+body{
+    background:#f2f2f2;
+    font-family:Arial, Helvetica, sans-serif;
+}
 
-    <p><strong>Jenis Surat:</strong> @Model.JenisSurat?.NamaJenis</p>
-    <p><strong>Tanggal:</strong> @Model.Tanggal.ToString("dd MMMM yyyy")</p>
+/* KERTAS DOKUMEN */
 
-    <br />
+.paper{
+    width:900px;
+    margin:40px auto;
+    background:white;
+    padding:50px;
+    box-shadow:0 0 15px rgba(0,0,0,0.15);
+    font-size:14px;
+}
 
-    <p><strong>Deskripsi:</strong></p>
-    <p>@Model.Deskripsi</p>
+/* HEADER */
 
-    <br /><br /><br />
+.header{
+    position:relative;
+    text-align:center;
+}
 
-    <div style="display:flex; justify-content:space-between; margin-top:80px;">
+.logo{
+    position:absolute;
+    left:0;
+    top:0;
+    width:110px;
+}
 
-        <div style="text-align:center;">
-            <p>Staff</p>
-            <br /><br />
-            <p><strong>@Model.Staff?.Nama</strong></p>
-        </div>
+.company{
+    font-size:20px;
+    font-weight:bold;
+}
 
-        <div style="text-align:center;">
-            <p>Manager</p>
-            <br /><br />
-            <p><strong>@Model.Manager?.Nama</strong></p>
-        </div>
+.company-sub{
+    font-size:17px;
+    font-weight:bold;
+}
 
-        <div style="text-align:center;">
-            <p>Penanggung Jawab</p>
-            <br /><br />
-            <p><strong>@Model.PenanggungJawab?.Nama</strong></p>
-        </div>
+.alamat{
+    font-size:13px;
+    margin-top:5px;
+}
 
-    </div>
+/* BOX INFO */
+
+.box-info{
+    position:absolute;
+    right:0;
+    top:0;
+    border:1px solid black;
+    padding:10px 15px;
+    font-size:13px;
+    text-align:left;
+}
+
+/* TITLE */
+
+.title{
+    text-align:center;
+    font-weight:bold;
+    margin-top:50px;
+    margin-bottom:25px;
+    text-decoration:underline;
+    font-size:16px;
+}
+
+/* TABLE UMUM */
+
+table{
+    width:100%;
+    border-collapse:collapse;
+}
+
+th,td{
+    border:1px solid #444;
+    padding:8px;
+    text-align:center;
+}
+
+th{
+    background:#f3f3f3;
+}
+
+/* INFO TABLE */
+
+.info-table{
+    margin-bottom:20px;
+}
+
+.info-table td{
+    border:none;
+    text-align:left;
+    padding:4px;
+}
+
+/* PARAGRAPH */
+
+.paragraph{
+    margin-top:14px;
+    text-align:justify;
+    line-height:1.5;
+}
+
+/* SIGNATURE */
+
+.signature{
+    margin-top:50px;
+}
+
+.signature td{
+    border:none;
+    text-align:center;
+    padding-top:50px;
+}
+
+.signature-name{
+    margin-top:60px;
+    font-weight:bold;
+}
+
+</style>
+
+</head>
+
+<body>
+
+<div class="paper">
+
+<div class="header">
+
+<img src="/images/logo.png" class="logo"/>
+
+<div class="company">PT KILANG PERTAMINA</div>
+<div class="company-sub">BALIKPAPAN</div>
+
+<div class="alamat">
+Kantor NSO PT Kilang Pertamina Balikpapan<br>
+JL. Yos Sudarso No.1 Balikpapan
+</div>
+
+<div class="box-info">
+Nomor : @Model.NomorSurat <br />
+Tanggal : @Model.Tanggal.ToString("dd MMMM yyyy") <br />
+Dari : IT KPB <br />
+Tujuan : @Model.Tujuan
+</div>
 
 </div>
+
+        <div class="title">
+            @(Model.JenisSurat?.NamaJenis?.ToUpper())
+        </div>
+
+<table class="info-table">
+
+<tr>
+<td width="200">Nama Penanggung Jawab</td>
+<td width="10">:</td>
+<td>@Model.NamaPenanggungJawab</td>
+</tr>
+
+<tr>
+<td>Jabatan</td>
+<td>:</td>
+<td>@Model.Jabatan</td>
+</tr>
+
+<tr>
+<td>No. Pekerja</td>
+<td>:</td>
+<td>@Model.NoPekerja</td>
+</tr>
+
+<tr>
+<td>Alamat</td>
+<td>:</td>
+<td>@Model.Alamat</td>
+</tr>
+
+</table>
+
+
+<table>
+
+<thead>
+<tr>
+<th width="50">No</th>
+<th>Nama Barang</th>
+<th width="80">Jumlah</th>
+<th width="160">Merk Type</th>
+<th width="160">Pengguna</th>
+</tr>
+</thead>
+
+<tbody>
+
+@if (Model.BarangList != null && Model.BarangList.Any())
+{
+int no = 1;
+
+foreach (var barang in Model.BarangList)
+{
+<tr>
+<td>@no</td>
+<td>@barang.NamaBarang</td>
+<td>@barang.Jumlah</td>
+<td>@barang.MerkType</td>
+<td>@barang.Pengguna</td>
+</tr>
+
+no++;
+}
+}
+else
+{
+<tr>
+<td colspan="5">Tidak ada data barang</td>
+</tr>
+}
+
+</tbody>
+
+</table>
+
+<div class="paragraph">
+<b>Catatan: Pemenuhan Permintaan Berdasarkan :</b> @Model.NoTiket
+</div>
+
+<div class="paragraph">
+I. Telah dilakukan uji-coba terhadap barang yang diserahkan sesuai dengan data diatas,
+yang dilaksanakan oleh petugas dari staff IT KPB dan pihak penerima sebagai pemakai /
+penanggung jawab, semua sepakat bahwa barang tersebut telah sesuai seperti tercantum
+di atas dan bekerja dengan baik serta laik pakai.
+</div>
+
+<div class="paragraph">
+II. Pihak penerima bertanggung jawab sepenuhnya atas barang yang digunakan dan telah
+membaca serta setuju dengan ketentuan tambahan yang tercantum pada halaman belakang
+dari lembar bukti penerimaan barang ini (wajib dibaca).
+</div>
+
+<div class="paragraph">
+III. Apabila terjadi pencurian / kehilangan barang yang diserahkan kepada pemakai /
+penanggung jawab, maka pemakai / penanggung jawab harus melaporkan kepada Kepolisian
+dan Sekuriti Pertamina dimana terjadi kehilangan barang tersebut.
+</div>
+
+<div class="paragraph">
+IV. Perangkat IT yang tidak harus / wajib dikembalikan ke Fungsi IT KPB Direktorat
+Keuangan apabila pekerja mutasi / keluar.
+</div>
+
+<div class="paragraph">
+V. Kami sebagai Penerima/Penanggung Jawab telah membaca, memahami dan menerima
+semua ketentuan Perusahaan tersebut.
+</div>
+
+
+<table class="signature">
+
+<tr>
+<td>Yang Menyerahkan</td>
+<td>Mengetahui<br>Ast Manager IT | PT. KPB</td>
+<td>Yang Bertanggung Jawab</td>
+<td>
+Balikpapan, @Model.Tanggal.ToString("dd.MM.yyyy")<br>
+Yang Menerima
+</td>
+</tr>
+
+<tr>
+<td class="signature-name">@Model.Staff?.Nama</td>
+<td class="signature-name">@Model.Manager?.Nama</td>
+<td class="signature-name">@Model.NamaPenanggungJawab</td>
+<td class="signature-name">@Model.YangMenerima</td>
+</tr>
+
+</table>
+
+</div>
+
+</body>
+</html>

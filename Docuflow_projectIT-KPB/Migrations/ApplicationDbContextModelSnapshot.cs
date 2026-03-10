@@ -22,6 +22,39 @@ namespace Docuflow_projectIT_KPB.Migrations
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
 
+            modelBuilder.Entity("Docuflow_projectIT_KPB.Models.BarangSurat", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("Jumlah")
+                        .HasColumnType("int");
+
+                    b.Property<string>("MerkType")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("NamaBarang")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Pengguna")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("SuratId")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("SuratId");
+
+                    b.ToTable("BarangSurat");
+                });
+
             modelBuilder.Entity("Docuflow_projectIT_KPB.Models.CounterNomorSurat", b =>
                 {
                     b.Property<int>("Id")
@@ -54,6 +87,10 @@ namespace Docuflow_projectIT_KPB.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
+                    b.Property<string>("Kode")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<string>("NamaJenis")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
@@ -71,6 +108,9 @@ namespace Docuflow_projectIT_KPB.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
+                    b.Property<string>("Alamat")
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<DateTime?>("CreatedAt")
                         .HasColumnType("datetime2");
 
@@ -80,11 +120,26 @@ namespace Docuflow_projectIT_KPB.Migrations
                     b.Property<string>("FilePath")
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<string>("FormatSerahTerima")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Jabatan")
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<int>("JenisSuratId")
                         .HasColumnType("int");
 
                     b.Property<int?>("ManagerId")
                         .HasColumnType("int");
+
+                    b.Property<string>("NamaPenanggungJawab")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("NoPekerja")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("NoTiket")
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("NomorSurat")
                         .IsRequired()
@@ -98,6 +153,12 @@ namespace Docuflow_projectIT_KPB.Migrations
 
                     b.Property<DateTime>("Tanggal")
                         .HasColumnType("datetime2");
+
+                    b.Property<string>("Tujuan")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("YangMenerima")
+                        .HasColumnType("nvarchar(max)");
 
                     b.HasKey("Id");
 
@@ -128,6 +189,9 @@ namespace Docuflow_projectIT_KPB.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<string>("Npk")
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<string>("Role")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
@@ -138,6 +202,17 @@ namespace Docuflow_projectIT_KPB.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("Users");
+                });
+
+            modelBuilder.Entity("Docuflow_projectIT_KPB.Models.BarangSurat", b =>
+                {
+                    b.HasOne("Docuflow_projectIT_KPB.Models.Surat", "Surat")
+                        .WithMany("BarangList")
+                        .HasForeignKey("SuratId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Surat");
                 });
 
             modelBuilder.Entity("Docuflow_projectIT_KPB.Models.CounterNomorSurat", b =>
@@ -178,6 +253,11 @@ namespace Docuflow_projectIT_KPB.Migrations
                     b.Navigation("PenanggungJawab");
 
                     b.Navigation("Staff");
+                });
+
+            modelBuilder.Entity("Docuflow_projectIT_KPB.Models.Surat", b =>
+                {
+                    b.Navigation("BarangList");
                 });
 #pragma warning restore 612, 618
         }

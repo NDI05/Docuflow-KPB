@@ -1,0 +1,188 @@
+﻿@model Docuflow_projectIT_KPB.Models.Surat
+
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+
+    <style>
+
+        body {
+            font-family: Arial;
+            font-size: 14px;
+        }
+
+        .title {
+            text-align: center;
+            font-weight: bold;
+            font-size: 18px;
+            margin-bottom: 20px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th, td {
+            border: 1px solid black;
+            padding: 6px;
+        }
+
+        .no-border td {
+            border: none;
+        }
+
+        .signature {
+            margin-top: 60px;
+        }
+
+            .signature td {
+                border: none;
+                text-align: center;
+            }
+
+    </style>
+
+</head>
+
+<body>
+
+    <div class="title">
+        @(Model.JenisSurat?.NamaJenis?.ToUpper())
+    </div>
+
+    <table class="no-border">
+
+        <tr>
+            <td width="150">Nomor</td>
+            <td>: @Model.NomorSurat</td>
+        </tr>
+
+        <tr>
+            <td>Tanggal</td>
+            <td>: @Model.Tanggal.ToString("dd MMMM yyyy")</td>
+        </tr>
+
+        <tr>
+            <td>Dari</td>
+            <td>: IT KPB</td>
+        </tr>
+
+        <tr>
+            <td>Tujuan</td>
+            <td>: @Model.Deskripsi</td>
+        </tr>
+
+    </table>
+
+    <br />
+
+    <table class="no-border">
+
+        <tr>
+            <td width="200">Format</td>
+            <td>: BUKTI SERAH TERIMA BARANG</td>
+        </tr>
+
+        <tr>
+            <td>Nama Penanggung Jawab</td>
+            <td>: @Model.PenanggungJawab?.Nama</td>
+        </tr>
+
+        <tr>
+            <td>Jabatan</td>
+            <td>: -</td>
+        </tr>
+
+        <tr>
+            <td>No Pekerja</td>
+            <td>: -</td>
+        </tr>
+
+        <tr>
+            <td>Alamat</td>
+            <td>: -</td>
+        </tr>
+
+    </table>
+
+    <br />
+
+    <table>
+
+        <thead>
+            <tr>
+                <th width="50">No</th>
+                <th>Nama Barang</th>
+                <th width="100">Jumlah</th>
+                <th>Merek Type</th>
+                <th>Pengguna</th>
+            </tr>
+        </thead>
+
+        <tbody>
+
+            <tr>
+                <td>1</td>
+                <td>Contoh Barang</td>
+                <td>1</td>
+                <td>Dell</td>
+                <td>IT</td>
+            </tr>
+
+        </tbody>
+
+    </table>
+
+    <br />
+
+    <table class="no-border">
+
+        <tr>
+            <td>
+                Catatan : Pemenuhan Permintaan Berdasarkan Tiket MySSC No.
+            </td>
+        </tr>
+
+    </table>
+
+    <br />
+
+    <table class="signature">
+
+        <tr>
+
+            <td>
+                Yang Menyerahkan
+                <br /><br /><br /><br />
+                <b>@Model.Staff?.Nama</b>
+            </td>
+
+            <td>
+                Mengetahui
+                <br />Ast. Manager IT
+                <br />PT KPB
+                <br /><br /><br />
+                <b>@Model.Manager?.Nama</b>
+            </td>
+
+            <td>
+                Yang Bertanggung Jawab
+                <br /><br /><br /><br />
+                <b>@Model.PenanggungJawab?.Nama</b>
+            </td>
+
+            <td>
+                Balikpapan, @Model.Tanggal.ToString("dd.MM.yyyy")
+                <br />Yang Menerima
+                <br /><br /><br />
+                <b>________________</b>
+            </td>
+
+        </tr>
+
+    </table>
+
+</body>
+</html>

@@ -11,5 +11,7 @@
         public string? TtdImagePath { get; set; }
 
         public string NomorPegawai { get; set; }
+
+        public string? Npk { get; set; }
     }
 }

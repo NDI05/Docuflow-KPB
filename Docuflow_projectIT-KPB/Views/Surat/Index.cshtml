@@ -6,6 +6,7 @@
 
 <div class="card shadow-lg border-0">
 
+    ```
     <div class="card-header bg-dark text-white d-flex justify-content-between align-items-center">
         <h5 class="mb-0">Daftar Surat</h5>
 
@@ -34,7 +35,7 @@
                         <th>Tanggal Surat</th>
                         <th>Staff</th>
                         <th>Waktu Upload</th>
-                        <th width="220">Aksi</th>
+                        <th width="260">Aksi</th>
                     </tr>
                 </thead>
 
@@ -63,8 +64,7 @@
                                 </td>
 
                                 <td>
-                                    @((item.CreatedAt ?? item.Tanggal)
-                                                                .ToString("dd/MM/yyyy HH:mm:ss"))
+                                    @((item.CreatedAt ?? item.Tanggal).ToString("dd/MM/yyyy HH:mm:ss"))
                                 </td>
 
                                 <td class="text-center">
@@ -76,14 +76,19 @@
                                         Detail
                                     </a>
 
+                                    <!-- GENERATE PDF -->
 
-                                    <!-- DOWNLOAD (SEKARANG SELALU ADA) -->
+                                    <a href="/Surat/GeneratePDF/@item.Id"
+                                       class="btn btn-sm btn-warning text-white">
+                                        Generate PDF
+                                    </a>
+
+                                    <!-- DOWNLOAD -->
 
                                     <a href="/Surat/Download/@item.Id"
                                        class="btn btn-sm btn-success">
                                         Download
                                     </a>
-
 
                                     <!-- DELETE -->
 
@@ -128,5 +133,6 @@
         </div>
 
     </div>
+    ```
 
 </div>

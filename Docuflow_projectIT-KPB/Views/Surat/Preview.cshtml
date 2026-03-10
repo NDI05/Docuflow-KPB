@@ -4,6 +4,53 @@
     ViewData["Title"] = "Preview Surat";
 }
 
+<style>
+
+    .surat-container {
+        background: white;
+        padding: 40px;
+        font-family: Arial;
+        font-size: 14px;
+    }
+
+    .judul {
+        text-align: center;
+        font-weight: bold;
+        font-size: 18px;
+        margin-bottom: 30px;
+    }
+
+    table {
+        width: 100%;
+    }
+
+    .table-info td {
+        padding: 3px;
+    }
+
+    .table-barang {
+        border-collapse: collapse;
+        margin-top: 20px;
+    }
+
+    .table-barang th,
+    .table-barang td {
+        border: 1px solid black;
+        padding: 6px;
+    }
+
+    .signature {
+        margin-top: 80px;
+    }
+
+    .signature td {
+        text-align: center;
+        width: 25%;
+    }
+
+</style>
+
+
 <div class="card shadow-lg border-0">
 
     <div class="card-header bg-dark text-white">
@@ -12,48 +59,179 @@
 
     <div class="card-body">
 
-        <table class="table table-bordered">
+        <div class="surat-container">
 
-            <tr>
-                <th width="200">Nomor Surat</th>
-                <td>@(Model?.NomorSurat ?? "-")</td>
-            </tr>
+            <div class="title">
+                @(Model.JenisSurat?.NamaJenis?.ToUpper())
+            </div>
 
-            <tr>
-                <th>Jenis Surat</th>
-                <td>@(Model?.JenisSuratId.ToString() ?? "-")</td>
-            </tr>
 
-            <tr>
-                <th>Staff</th>
-                <td>@(Model?.StaffId?.ToString() ?? "-")</td>
-            </tr>
+            <table class="table-info">
 
-            <tr>
-                <th>Manager</th>
-                <td>@(Model?.ManagerId?.ToString() ?? "-")</td>
-            </tr>
+                <tr>
+                    <td width="150"><b>Nomor</b></td>
+                    <td width="10">:</td>
+                    <td>@(Model?.NomorSurat ?? "-")</td>
+                </tr>
 
-            <tr>
-                <th>Deskripsi</th>
-                <td>@(Model?.Deskripsi ?? "-")</td>
-            </tr>
+                <tr>
+                    <td><b>Tanggal</b></td>
+                    <td>:</td>
+                    <td>@(Model?.Tanggal.ToString("dd MMMM yyyy") ?? "-")</td>
+                </tr>
 
-            <tr>
-                <th>File</th>
-                <td>@ViewBag.FileName</td>
-            </tr>
+                <tr>
+                    <td><b>Dari</b></td>
+                    <td>:</td>
+                    <td>IT KPB</td>
+                </tr>
 
-        </table>
+                <tr>
+                    <td><b>Tujuan</b></td>
+                    <td>:</td>
+                    <td>@(Model?.Deskripsi ?? "-")</td>
+                </tr>
+
+            </table>
+
+
+            <br />
+
+            <p>
+                Format <b>@(Model?.JenisSuratId.ToString() ?? "-")</b>
+            </p>
+
+
+            <br />
+
+            <table class="table-info">
+
+                <tr>
+                    <td width="200"><b>Nama Penanggung Jawab</b></td>
+                    <td width="10">:</td>
+                    <td>@(Model?.PenanggungJawab?.Nama ?? "-")</td>
+                </tr>
+
+                <tr>
+                    <td><b>Jabatan</b></td>
+                    <td>:</td>
+                    <td>-</td>
+                </tr>
+
+                <tr>
+                    <td><b>No Pekerja</b></td>
+                    <td>:</td>
+                    <td>-</td>
+                </tr>
+
+                <tr>
+                    <td><b>Alamat</b></td>
+                    <td>:</td>
+                    <td>-</td>
+                </tr>
+
+            </table>
+
+
+            <table class="table-barang">
+
+                <thead>
+                    <tr>
+                        <th width="50">No</th>
+                        <th>Nama Barang</th>
+                        <th width="100">Jumlah</th>
+                        <th>Merek Type</th>
+                        <th>Pengguna</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+
+                    <tr>
+                        <td>1</td>
+                        <td>-</td>
+                        <td>-</td>
+                        <td>-</td>
+                        <td>-</td>
+                    </tr>
+
+                    <tr>
+                        <td>2</td>
+                        <td>-</td>
+                        <td>-</td>
+                        <td>-</td>
+                        <td>-</td>
+                    </tr>
+
+                    <tr>
+                        <td>3</td>
+                        <td>-</td>
+                        <td>-</td>
+                        <td>-</td>
+                        <td>-</td>
+                    </tr>
+
+                </tbody>
+
+            </table>
+
+
+            <br />
+
+            <b>Catatan :</b><br>
+
+            Pemenuhan Permintaan Berdasarkan Tiket MySSC No. -
+
+
+            <br /><br /><br />
+
+
+            <table class="signature">
+
+                <tr>
+
+                    <td>
+                        Yang Menyerahkan
+                        <br /><br /><br /><br />
+                        <b>@(Model?.Staff?.Nama ?? "-")</b>
+                    </td>
+
+                    <td>
+                        Mengetahui<br>
+                        Ast. Manager IT | PT KPB
+                        <br /><br /><br /><br />
+                        <b>@(Model?.Manager?.Nama ?? "-")</b>
+                    </td>
+
+                    <td>
+                        Yang Bertanggung Jawab
+                        <br /><br /><br /><br />
+                        <b>@(Model?.PenanggungJawab?.Nama ?? "-")</b>
+                    </td>
+
+                    <td>
+                        Balikpapan, @(DateTime.Now.ToString("dd.MM.yyyy"))<br>
+                        Yang Menerima
+                        <br /><br /><br /><br />
+                        <b>-</b>
+                    </td>
+
+                </tr>
+
+            </table>
+
+
+        </div>
+
 
         <div class="text-end mt-4">
 
-            <a href="/Surat/Create"
-               class="btn btn-secondary">
+            <a href="/Surat/Create" class="btn btn-secondary">
                 Kembali
             </a>
 
         </div>
+
 
     </div>
 

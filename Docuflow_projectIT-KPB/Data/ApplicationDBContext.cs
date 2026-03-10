@@ -1,6 +1,5 @@
 ﻿using Docuflow_projectIT_KPB.Models;
 using Microsoft.EntityFrameworkCore;
-using Docuflow_projectIT_KPB.Models;
 
 namespace Docuflow_projectIT_KPB.Data
 {
@@ -15,5 +14,7 @@ namespace Docuflow_projectIT_KPB.Data
         public DbSet<JenisSurat> JenisSurat { get; set; }
         public DbSet<Surat> Surat { get; set; }
         public DbSet<CounterNomorSurat> CounterNomorSurat { get; set; }
+
+        public DbSet<BarangSurat> BarangSurat { get; set; }
     }
 }
