@@ -49,6 +49,13 @@ namespace Docuflow_projectIT_KPB.Models
 
         public string? FormatSerahTerima { get; set; }
 
+
+        // ======================
+        // CATATAN TIKET
+        // ======================
+
+        public string? JenisTiket { get; set; }
+
         public string? NoTiket { get; set; }
 
 

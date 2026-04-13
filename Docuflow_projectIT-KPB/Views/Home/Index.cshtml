@@ -2,38 +2,132 @@
     ViewData["Title"] = "Dashboard";
 }
 
-<div class="row">
+<style>
+    .dashboard-container {
+        padding: 25px;
+        background: #f4f6fb;
+        border-radius: 18px;
+        min-height: 80vh;
+    }
 
-    <div class="col-md-4">
-        <div class="card text-white bg-primary shadow mb-3">
-            <div class="card-body">
-                <h5 class="card-title">Total Users</h5>
-                <h2>@ViewBag.TotalUsers</h2>
+    .dashboard-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 25px;
+    }
+
+        .dashboard-header h3 {
+            font-weight: 700;
+            color: #1f2d3d;
+            margin: 0;
+        }
+
+        .dashboard-header p {
+            margin: 0;
+            font-size: 14px;
+            color: #6c757d;
+        }
+
+    .stat-card {
+        border-radius: 16px;
+        border: none;
+        padding: 18px;
+        background: white;
+        box-shadow: 0px 8px 20px rgba(0,0,0,0.08);
+        transition: 0.2s ease-in-out;
+    }
+
+        .stat-card:hover {
+            transform: translateY(-3px);
+        }
+
+    .stat-title {
+        font-size: 15px;
+        font-weight: 600;
+        color: #6c757d;
+        margin-bottom: 5px;
+    }
+
+    .stat-value {
+        font-size: 44px;
+        font-weight: 800;
+        color: #1f2d3d;
+        margin: 0;
+    }
+
+    .section-title {
+        font-weight: 700;
+        color: #1f2d3d;
+        margin-top: 30px;
+        margin-bottom: 15px;
+    }
+
+    .jenis-card {
+        border-radius: 16px;
+        border: none;
+        padding: 16px;
+        background: #e9ecf5;
+        transition: 0.2s ease-in-out;
+        height: 100%;
+    }
+
+        .jenis-card:hover {
+            background: #dfe4f2;
+            transform: translateY(-2px);
+        }
+
+    .jenis-title {
+        font-size: 13px;
+        font-weight: 600;
+        color: #2c3e50;
+        margin-bottom: 10px;
+    }
+
+    .jenis-value {
+        font-size: 32px;
+        font-weight: 800;
+        color: #111827;
+        margin: 0;
+    }
+</style>
+
+<div class="dashboard-container">
+
+    <div class="dashboard-header">
+        <div>
+            <h3>Beranda</h3>
+            <p>Selamat Datang, @User.Identity.Name</p>
+        </div>
+    </div>
+
+    <!-- Statistik utama -->
+    <div class="row g-4">
+        <div class="col-md-6">
+            <div class="stat-card">
+                <div class="stat-title">Total Surat</div>
+                <h2 class="stat-value">@ViewBag.TotalSurat</h2>
+            </div>
+        </div>
+
+        <div class="col-md-6">
+            <div class="stat-card">
+                <div class="stat-title">Total Users</div>
+                <h2 class="stat-value">@ViewBag.TotalUsers</h2>
             </div>
         </div>
     </div>
 
-    <div class="col-md-4">
-        <div class="card text-white bg-success shadow mb-3">
-            <div class="card-body">
-                <h5 class="card-title">Total Surat</h5>
-                <h2>@ViewBag.TotalSurat</h2>
-            </div>
-        </div>
-    </div>
+    <!-- Total surat per jenis -->
+    <h5 class="section-title">Total Surat per Jenis</h5>
 
-    <hr />
-    <h4>Total Surat per Jenis</h4>
-
-    <div class="row">
+    <div class="row g-3">
         @foreach (var item in ViewBag.SuratPerJenis)
         {
-            <div class="col-md-3 mb-3">
-                <div class="card text-white bg-info">
-                    <div class="card-body">
-                        <h5 class="card-title">@item.NamaJenis</h5>
-                        <h3>@item.Total</h3>
-                    </div>
+            <div class="col-lg-3 col-md-4 col-sm-6">
+                <div class="jenis-card">
+                    <div class="jenis-title">@item.NamaJenis</div>
+                    <h3 class="jenis-value">@item.Total</h3>
                 </div>
             </div>
         }

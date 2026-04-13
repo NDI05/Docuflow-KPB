@@ -7,275 +7,381 @@
 <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0/dist/css/select2.min.css" rel="stylesheet" />
 
 <style>
+    .page-card {
+        border-radius: 18px;
+        overflow: hidden;
+        border: none;
+        box-shadow: 0px 10px 25px rgba(0,0,0,0.10);
+    }
 
-.select2-container--default .select2-results__options{
-    max-height:350px;
-}
+    .page-header {
+        background: #c6c8d9;
+        padding: 14px 20px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
 
+    .page-header h5 {
+        margin: 0;
+        font-weight: 800;
+        color: #111827;
+    }
+
+    .btn-header {
+        border-radius: 10px;
+        font-weight: 700;
+        font-size: 13px;
+        padding: 7px 14px;
+    }
+
+    .form-wrapper {
+        background: #f4f6fb;
+        padding: 20px;
+    }
+
+    .section-box {
+        background: #dcdfee;
+        border-radius: 14px;
+        padding: 12px;
+        margin-bottom: 16px;
+    }
+
+    .section-title {
+        background: #bfc2d9;
+        padding: 8px 12px;
+        border-radius: 10px;
+        font-weight: 800;
+        color: #111827;
+        font-size: 14px;
+        margin-bottom: 12px;
+    }
+
+    label {
+        font-size: 13px;
+        font-weight: 700;
+        color: #111827;
+        margin-bottom: 5px;
+    }
+
+    .form-control, .select2-container--default .select2-selection--single {
+        border-radius: 10px !important;
+        height: 38px;
+        border: 1px solid #b6b9cc;
+        font-size: 14px;
+    }
+
+    textarea.form-control {
+        height: auto !important;
+    }
+
+    .select2-container--default .select2-selection--single {
+        display: flex;
+        align-items: center;
+    }
+
+    .select2-container--default .select2-selection--single .select2-selection__arrow {
+        height: 36px;
+    }
+
+    .select2-container--default .select2-results__options {
+        max-height: 350px;
+    }
+
+    .table-custom {
+        background: white;
+        border-radius: 12px;
+        overflow: hidden;
+    }
+
+    .table-custom thead {
+        background: #c6c8d9;
+        font-weight: 800;
+        text-align: center;
+    }
+
+    .table-custom tbody td {
+        vertical-align: middle;
+        font-size: 13px;
+    }
+
+    .btn-action {
+        border-radius: 10px;
+        font-weight: 700;
+        font-size: 13px;
+        padding: 6px 12px;
+    }
+
+    .btn-add {
+        border-radius: 10px;
+        font-weight: 700;
+        font-size: 13px;
+        padding: 7px 12px;
+    }
+
+    .footer-actions {
+        display: flex;
+        justify-content: center;
+        gap: 10px;
+        margin-top: 20px;
+    }
+
+    .footer-actions .btn {
+        border-radius: 10px;
+        font-weight: 800;
+        padding: 7px 22px;
+        font-size: 13px;
+    }
 </style>
 
-<div class="card shadow-lg border-0">
+<div class="card page-card">
 
-<div class="card-header bg-dark text-white">
-<h4>Buat Surat Baru</h4>
+    <!-- HEADER -->
+    <div class="page-header">
+        <h5>Buat Surat</h5>
+
+        <button type="submit" form="formSurat" class="btn btn-success btn-header">
+            Simpan
+        </button>
+    </div>
+
+    <div class="form-wrapper">
+
+        <form asp-action="Create" method="post" enctype="multipart/form-data" id="formSurat">
+
+            <!-- INFORMASI SURAT -->
+            <div class="section-box">
+                <div class="section-title">Informasi Surat</div>
+
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <label>Jenis Surat</label>
+                        <select asp-for="JenisSuratId" class="form-control select2">
+                            <option value="">-- Pilih Jenis Surat --</option>
+                            @foreach (var item in ViewBag.JenisSurat)
+                            {
+                                <option value="@item.Id">@item.NamaJenis</option>
+                            }
+                        </select>
+                    </div>
+
+                    <div class="col-md-6">
+                        <label>Tujuan</label>
+                        <input type="text" name="Tujuan" class="form-control" />
+                    </div>
+                </div>
+            </div>
+
+            <!-- DATA PENANGGUNG JAWAB -->
+            <div class="section-box">
+                <div class="section-title">Data Penanggung Jawab</div>
+
+                <div class="row g-3">
+                    <div class="col-md-4">
+                        <label>Nama Penanggung Jawab</label>
+                        <input type="text" name="NamaPenanggungJawab" class="form-control" />
+                    </div>
+
+                    <div class="col-md-4">
+                        <label>Jabatan</label>
+                        <input type="text" name="Jabatan" class="form-control" />
+                    </div>
+
+                    <div class="col-md-4">
+                        <label>ID Badge</label>
+                        <input type="text" name="NoPekerja" class="form-control" />
+                    </div>
+
+                    <div class="col-md-6">
+                        <label>Alamat</label>
+                        <textarea name="Alamat" class="form-control" rows="4"></textarea>
+                    </div>
+                </div>
+            </div>
+
+            <!-- DAFTAR BARANG -->
+            <div class="section-box">
+                <div class="section-title">Daftar Barang</div>
+
+                <div class="table-responsive table-custom">
+                    <table class="table table-bordered mb-0" id="barangTable">
+                        <thead>
+                            <tr>
+                                <th width="60">No.</th>
+                                <th>Nama Barang</th>
+                                <th width="90">Jumlah</th>
+                                <th>Merk/Type</th>
+                                <th>Nama Pengguna</th>
+                                <th width="100">Aksi</th>
+                            </tr>
+                        </thead>
+
+                        <tbody>
+                            <tr>
+                                <td class="text-center">1</td>
+
+                                <td>
+                                    <input type="text" name="NamaBarang[]" class="form-control" />
+                                </td>
+
+                                <td>
+                                    <input type="number" name="Jumlah[]" class="form-control" />
+                                </td>
+
+                                <td>
+                                    <input type="text" name="MerkType[]" class="form-control" />
+                                </td>
+
+                                <td>
+                                    <input type="text" name="Pengguna[]" class="form-control" />
+                                </td>
+
+                                <td class="text-center">
+                                    <button type="button" class="btn btn-danger btn-sm btn-action removeRow">
+                                        Hapus
+                                    </button>
+                                </td>
+                            </tr>
+                        </tbody>
+
+                    </table>
+                </div>
+
+                <button type="button" class="btn btn-primary btn-add mt-3" id="addRow">
+                    + Tambah Barang
+                </button>
+            </div>
+
+            <!-- CATATAN -->
+            <div class="section-box">
+                <div class="section-title">Catatan</div>
+
+                <div class="row g-3 align-items-end">
+                    <div class="col-md-12">
+                        <label>Catatan</label>
+
+                        <div class="d-flex flex-wrap gap-2 align-items-center">
+                            <span style="font-size:13px; font-weight:600;">Pemenuhan Permintaan Berdasarkan</span>
+
+                            <select name="JenisTiket" class="form-control" style="width:160px;">
+                                <option value="Tiket MySSC">Tiket MySSC</option>
+                                <option value="Tiket BAST">Tiket BAST</option>
+                                <option value="Dokumen Lain">Dokumen Lain</option>
+                            </select>
+
+                            <span style="font-size:13px; font-weight:600;">No.</span>
+
+                            <input type="text" name="NoTiket" class="form-control" style="width:220px;" />
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- TANDA TANGAN -->
+            <div class="section-box">
+                <div class="section-title">Tanda Tangan</div>
+
+                <div class="row g-3">
+                    <div class="col-md-4">
+                        <label>Yang Menyerahkan (Staff)</label>
+                        <select asp-for="StaffId" class="form-control select2">
+                            <option value="">-- Pilih Staff --</option>
+                            @foreach (var user in ViewBag.Users)
+                            {
+                                if (user.Role == "Staff")
+                                {
+                                    <option value="@user.Id">@user.Nama</option>
+                                }
+                            }
+                        </select>
+                    </div>
+
+                    <div class="col-md-4">
+                        <label>Yang Mengetahui (Manager)</label>
+                        <select asp-for="ManagerId" class="form-control select2">
+                            <option value="">-- Pilih Manager --</option>
+                            @foreach (var user in ViewBag.Users)
+                            {
+                                if (user.Role == "Manager")
+                                {
+                                    <option value="@user.Id">@user.Nama</option>
+                                }
+                            }
+                        </select>
+                    </div>
+
+                    <div class="col-md-4">
+                        <label>Yang Menerima</label>
+                        <input type="text" name="YangMenerima" class="form-control" />
+                    </div>
+                </div>
+            </div>
+
+            <!-- FOOTER ACTIONS -->
+            <div class="footer-actions">
+                <button type="submit" class="btn btn-success">
+                    Simpan
+                </button>
+
+                <a href="/Surat" class="btn btn-secondary">
+                    Kembali
+                </a>
+            </div>
+
+        </form>
+
+    </div>
 </div>
 
-<div class="card-body">
-
-<form asp-action="Create" method="post" enctype="multipart/form-data">
-
-<h5 class="mb-3">Informasi Surat</h5>
-
-<div class="row">
-
-<div class="col-md-4 mb-3">
-<label>Jenis Surat</label>
-
-<select asp-for="JenisSuratId" class="form-control select2">
-
-<option value="">-- Pilih Jenis Surat --</option>
-
-@foreach (var item in ViewBag.JenisSurat)
-{
-<option value="@item.Id">@item.NamaJenis</option>
-}
-
-</select>
-
-</div>
-
-<div class="col-md-4 mb-3">
-<label>Tujuan</label>
-<input type="text" name="Tujuan" class="form-control" />
-</div>
-
-@* <div class="col-md-4 mb-3">
-<label>Format Judul Surat</label>
-<input type="text" name="FormatSerahTerima" class="form-control" />
-</div> *@
-
-</div>
-
-<hr />
-
-<h5 class="mb-3">Data Penanggung Jawab</h5>
-
-<div class="row">
-
-<div class="col-md-3 mb-3">
-<label>Nama Penanggung Jawab</label>
-<input type="text" name="NamaPenanggungJawab" class="form-control" />
-</div>
-
-<div class="col-md-3 mb-3">
-<label>Jabatan</label>
-<input type="text" name="Jabatan" class="form-control" />
-</div>
-
-<div class="col-md-3 mb-3">
-<label>No Pekerja</label>
-<input type="text" name="NoPekerja" class="form-control" />
-</div>
-
-<div class="col-md-3 mb-3">
-<label>Alamat</label>
-<input type="text" name="Alamat" class="form-control" />
-</div>
-
-</div>
-
-<hr />
-
-<h5 class="mb-3">Daftar Barang</h5>
-
-<table class="table table-bordered" id="barangTable">
-
-<thead class="table-dark">
-<tr>
-<th width="50">No</th>
-<th>Nama Barang</th>
-<th>Jumlah</th>
-<th>Merk Type</th>
-<th>Pengguna</th>
-<th width="100">Aksi</th>
-</tr>
-</thead>
-
-<tbody>
-
-<tr>
-
-<td>1</td>
-
-<td>
-<input type="text" name="NamaBarang[]" class="form-control" />
-</td>
-
-<td>
-<input type="number" name="Jumlah[]" class="form-control" />
-</td>
-
-<td>
-<input type="text" name="MerkType[]" class="form-control" />
-</td>
-
-<td>
-<input type="text" name="Pengguna[]" class="form-control" />
-</td>
-
-<td>
-<button type="button" class="btn btn-danger removeRow">
-Hapus
-</button>
-</td>
-
-</tr>
-
-</tbody>
-
-</table>
-
-<button type="button" class="btn btn-primary mb-4" id="addRow">
-+ Tambah Barang
-</button>
-
-<hr />
-
-<h5 class="mb-3">Catatan</h5>
-
-<div class="row">
-
-<div class="col-md-6 mb-3">
-<label>No Tiket MySSC</label>
-<input type="text" name="NoTiket" class="form-control" />
-</div>
-
-</div>
-
-<hr />
-
-<h5 class="mb-3">Tanda Tangan</h5>
-
-<div class="row">
-
-<div class="col-md-4 mb-3">
-
-<label>Yang Menyerahkan (Staff)</label>
-
-<select asp-for="StaffId" class="form-control select2">
-
-<option value="">-- Pilih Staff --</option>
-
-@foreach (var user in ViewBag.Users)
-{
-if (user.Role == "Staff")
-{
-<option value="@user.Id">@user.Nama</option>
-}
-}
-
-</select>
-
-</div>
-
-<div class="col-md-4 mb-3">
-
-<label>Mengetahui (Manager)</label>
-
-<select asp-for="ManagerId" class="form-control select2">
-
-<option value="">-- Pilih Manager --</option>
-
-@foreach (var user in ViewBag.Users)
-{
-if (user.Role == "Manager")
-{
-<option value="@user.Id">@user.Nama</option>
-}
-}
-
-</select>
-
-</div>
-
-<div class="col-md-4 mb-3">
-<label>Yang Menerima</label>
-<input type="text" name="YangMenerima" class="form-control" />
-</div>
-
-</div>
-
-<hr />
-
-@* <h5 class="mb-3">Upload File (Opsional)</h5>
-
-<div class="mb-3">
-<input type="file" name="file" class="form-control" />
-</div> *@
-
-<hr />
-
-<div class="text-end">
-
-<button type="submit" class="btn btn-success">
-Simpan Surat
-</button>
-
-<a href="/Surat" class="btn btn-secondary">
-Kembali
-</a>
-
-</div>
-
-</form>
-
-</div>
-
-</div>
 
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-
 <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0/dist/js/select2.min.js"></script>
 
 <script>
+    $(document).ready(function () {
+        $('.select2').select2({
+            width: '100%',
+            dropdownAutoWidth: true
+        });
+    });
 
-$(document).ready(function () {
+    let rowNumber = 1;
 
-$('.select2').select2({
-width:'100%',
-dropdownAutoWidth:true
-});
+    document.getElementById("addRow").addEventListener("click", function () {
 
-});
+        rowNumber++;
 
-let rowNumber = 1;
+        let table = document.getElementById("barangTable").getElementsByTagName('tbody')[0];
 
-document.getElementById("addRow").addEventListener("click", function(){
+        let row = table.insertRow();
 
-rowNumber++;
+        row.innerHTML = `
+            <td class="text-center">${rowNumber}</td>
+            <td><input type="text" name="NamaBarang[]" class="form-control"/></td>
+            <td><input type="number" name="Jumlah[]" class="form-control"/></td>
+            <td><input type="text" name="MerkType[]" class="form-control"/></td>
+            <td><input type="text" name="Pengguna[]" class="form-control"/></td>
+            <td class="text-center">
+                <button type="button" class="btn btn-danger btn-sm btn-action removeRow">Hapus</button>
+            </td>
+        `;
+    });
 
-let table = document.getElementById("barangTable").getElementsByTagName('tbody')[0];
+    document.addEventListener("click", function (e) {
 
-let row = table.insertRow();
+        if (e.target.classList.contains("removeRow")) {
 
-row.innerHTML = `
-<td>${rowNumber}</td>
-<td><input type="text" name="NamaBarang[]" class="form-control"/></td>
-<td><input type="number" name="Jumlah[]" class="form-control"/></td>
-<td><input type="text" name="MerkType[]" class="form-control"/></td>
-<td><input type="text" name="Pengguna[]" class="form-control"/></td>
-<td><button type="button" class="btn btn-danger removeRow">Hapus</button></td>
-`;
+            let row = e.target.closest("tr");
+            row.remove();
 
-});
+            // reset nomor urut biar rapih
+            let rows = document.querySelectorAll("#barangTable tbody tr");
+            rowNumber = 0;
 
-document.addEventListener("click", function(e){
-
-if(e.target.classList.contains("removeRow"))
-{
-e.target.closest("tr").remove();
-}
-
-});
-
+            rows.forEach((r) => {
+                rowNumber++;
+                r.children[0].innerText = rowNumber;
+            });
+        }
+    });
 </script>

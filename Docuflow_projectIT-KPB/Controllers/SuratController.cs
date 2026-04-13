@@ -27,17 +27,60 @@ namespace Docuflow_projectIT_KPB.Controllers
         }
 
         // =========================
-        // LIST SURAT
+        // LIST SURAT (PAGINATION + SEARCH)
         // =========================
-        public async Task<IActionResult> Index()
+        public async Task<IActionResult> Index(string search, int page = 1)
         {
-            var suratList = await _context.Surat
+            int pageSize = 15;
+
+            var query = _context.Surat
                 .Include(s => s.JenisSurat)
                 .Include(s => s.Staff)
                 .Include(s => s.Manager)
                 .Include(s => s.PenanggungJawab)
                 .OrderByDescending(s => s.CreatedAt)
+                .AsQueryable();
+
+            // =========================
+            // SEARCH FILTER
+            // =========================
+            if (!string.IsNullOrWhiteSpace(search))
+            {
+                search = search.Trim();
+
+                query = query.Where(s =>
+                    s.NomorSurat.Contains(search) ||
+                    s.JenisSurat.NamaJenis.Contains(search) ||
+                    s.Staff.Nama.Contains(search)
+                );
+            }
+
+            // =========================
+            // COUNT TOTAL DATA
+            // =========================
+            int totalData = await query.CountAsync();
+            int totalPages = (int)Math.Ceiling((double)totalData / pageSize);
+
+            if (totalPages == 0)
+                totalPages = 1;
+
+            if (page < 1)
+                page = 1;
+
+            if (page > totalPages)
+                page = totalPages;
+
+            // =========================
+            // PAGINATION DATA
+            // =========================
+            var suratList = await query
+                .Skip((page - 1) * pageSize)
+                .Take(pageSize)
                 .ToListAsync();
+
+            ViewBag.CurrentPage = page;
+            ViewBag.TotalPages = totalPages;
+            ViewBag.Search = search;
 
             return View(suratList);
         }
@@ -135,7 +178,7 @@ namespace Docuflow_projectIT_KPB.Controllers
                 surat.PenanggungJawabId = pj.Id;
 
             // =========================
-            // SAVE SURAT + BARANG SEKALIGUS
+            // SAVE SURAT + BARANG
             // =========================
             _context.Surat.Add(surat);
             await _context.SaveChangesAsync();

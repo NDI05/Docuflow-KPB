@@ -1,4 +1,5 @@
-﻿@model Docuflow_projectIT_KPB.Models.User
+﻿```cshtml
+@model Docuflow_projectIT_KPB.Models.User
 
 <h2>Tambah User</h2>
 
@@ -15,15 +16,26 @@
     </div>
 
     <div class="mb-3">
+        <label class="form-label">Username (untuk login)</label>
+        <input asp-for="Username" class="form-control" />
+    </div>
+
+    <div class="mb-3">
+        <label class="form-label">Password</label>
+        <input asp-for="Password" type="password" class="form-control" />
+    </div>
+
+    <div class="mb-3">
         <label class="form-label">Role</label>
         <select asp-for="Role" class="form-control">
             <option value="">-- Pilih Role --</option>
+            <option value="Admin">Admin</option>
             <option value="Staff">Staff</option>
             <option value="Manager">Manager</option>
-            <option value="PenanggungJawab">PenanggungJawab</option>
         </select>
     </div>
 
     <button type="submit" class="btn btn-primary">Simpan</button>
 
 </form>
+```

@@ -129,6 +129,9 @@ namespace Docuflow_projectIT_KPB.Migrations
                     b.Property<int>("JenisSuratId")
                         .HasColumnType("int");
 
+                    b.Property<string>("JenisTiket")
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<int?>("ManagerId")
                         .HasColumnType("int");
 
@@ -192,11 +195,19 @@ namespace Docuflow_projectIT_KPB.Migrations
                     b.Property<string>("Npk")
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<string>("Password")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<string>("Role")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("TtdImagePath")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Username")
+                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.HasKey("Id");

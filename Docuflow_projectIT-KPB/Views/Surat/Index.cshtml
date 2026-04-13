@@ -2,20 +2,64 @@
 
 @{
     ViewData["Title"] = "Daftar Surat";
+
+    int currentPage = ViewBag.CurrentPage ?? 1;
+    int totalPages = ViewBag.TotalPages ?? 1;
 }
 
-<div class="card shadow-lg border-0">
+<style>
+    .table thead th {
+        text-align: center;
+        vertical-align: middle;
+        font-weight: 700;
+    }
 
-    ```
-    <div class="card-header bg-dark text-white d-flex justify-content-between align-items-center">
-        <h5 class="mb-0">Daftar Surat</h5>
+    .table tbody td {
+        vertical-align: middle;
+        font-size: 14px;
+    }
 
-        <a href="/Surat/Create" class="btn btn-primary btn-sm">
-            + Buat Surat
-        </a>
+    .pagination .page-link {
+        border-radius: 10px;
+        margin: 0 3px;
+        font-weight: 600;
+        color: #0d1a8a;
+    }
+
+    .pagination .active .page-link {
+        background: #0d1a8a;
+        border-color: #0d1a8a;
+        color: white;
+    }
+
+    .btn-action {
+        border-radius: 10px;
+        font-weight: 600;
+        font-size: 13px;
+        padding: 6px 12px;
+    }
+</style>
+
+<div class="card shadow-lg border-0" style="border-radius:18px; overflow:hidden;">
+
+    <div class="card-header text-white d-flex justify-content-between align-items-center"
+         style="background:#c6c8d9; padding:15px 20px;">
+        <h5 class="mb-0 fw-bold text-dark">Daftar Surat</h5>
+
+        <div class="d-flex gap-2">
+            <input type="text"
+                   class="form-control form-control-sm"
+                   placeholder="Search"
+                   style="border-radius:12px; width:200px;" />
+
+            <a href="/Surat/Create" class="btn btn-primary btn-sm"
+                   style="border-radius:12px; font-weight:600;">
+                Buat Surat +
+            </a>
+        </div>
     </div>
 
-    <div class="card-body">
+    <div class="card-body" style="background:#f4f6fb;">
 
         @if (TempData["Message"] != null)
         {
@@ -25,13 +69,13 @@
         }
 
         <div class="table-responsive">
+            <table class="table table-bordered table-hover align-middle"
+                   style="background:white; border-radius:14px; overflow:hidden;">
 
-            <table class="table table-hover table-bordered align-middle">
-
-                <thead class="table-dark text-center">
+                <thead style="background:#c6c8d9;">
                     <tr>
                         <th>Nomor</th>
-                        <th>Jenis</th>
+                        <th>Jenis Surat</th>
                         <th>Tanggal Surat</th>
                         <th>Staff</th>
                         <th>Waktu Upload</th>
@@ -40,57 +84,27 @@
                 </thead>
 
                 <tbody>
-
                     @if (Model != null && Model.Any())
                     {
                         foreach (var item in Model)
                         {
                             <tr>
-
-                                <td>
-                                    @(item.NomorSurat ?? "-")
-                                </td>
-
-                                <td>
-                                    @(item.JenisSurat?.NamaJenis ?? "-")
-                                </td>
-
-                                <td>
-                                    @(item.Tanggal.ToString("dd/MM/yyyy"))
-                                </td>
-
-                                <td>
-                                    @(item.Staff?.Nama ?? "-")
-                                </td>
-
-                                <td>
-                                    @((item.CreatedAt ?? item.Tanggal).ToString("dd/MM/yyyy HH:mm:ss"))
-                                </td>
+                                <td>@(item.NomorSurat ?? "-")</td>
+                                <td>@(item.JenisSurat?.NamaJenis ?? "-")</td>
+                                <td>@item.Tanggal.ToString("dd/MM/yyyy")</td>
+                                <td>@(item.Staff?.Nama ?? "-")</td>
+                                <td>@((item.CreatedAt ?? item.Tanggal).ToString("HH:mm:ss"))</td>
 
                                 <td class="text-center">
-
-                                    <!-- DETAIL -->
-
                                     <a href="/Surat/Details/@item.Id"
-                                       class="btn btn-sm btn-info text-white">
+                                           class="btn btn-info btn-sm text-white btn-action">
                                         Detail
                                     </a>
 
-                                    <!-- GENERATE PDF -->
-
                                     <a href="/Surat/GeneratePDF/@item.Id"
-                                       class="btn btn-sm btn-warning text-white">
-                                        Generate PDF
-                                    </a>
-
-                                    <!-- DOWNLOAD -->
-
-                                    <a href="/Surat/Download/@item.Id"
-                                       class="btn btn-sm btn-success">
+                                           class="btn btn-warning btn-sm text-white btn-action">
                                         Download
                                     </a>
-
-                                    <!-- DELETE -->
 
                                     <form asp-controller="Surat"
                                           asp-action="Delete"
@@ -98,41 +112,67 @@
                                           style="display:inline"
                                           onsubmit="return confirm('Yakin ingin menghapus surat ini?');">
 
-                                        <input type="hidden"
-                                               name="id"
-                                               value="@item.Id" />
+                                        <input type="hidden" name="id" value="@item.Id" />
 
                                         <button type="submit"
-                                                class="btn btn-sm btn-danger">
+                                                class="btn btn-danger btn-sm btn-action">
                                             Delete
                                         </button>
-
                                     </form>
-
                                 </td>
-
                             </tr>
                         }
                     }
                     else
                     {
                         <tr>
-                            <td colspan="6"
-                                class="text-center text-muted">
-
+                            <td colspan="6" class="text-center text-muted">
                                 Belum ada data surat
-
                             </td>
                         </tr>
                     }
-
                 </tbody>
-
             </table>
+        </div>
 
+        <!-- PAGINATION -->
+        <div class="d-flex justify-content-between align-items-center mt-3">
+            <div class="text-muted" style="font-size:14px;">
+                Page <b>@currentPage</b> of <b>@totalPages</b>
+            </div>
+
+            <nav>
+                <ul class="pagination mb-0">
+
+                    <!-- Prev -->
+                    <li class="page-item @(currentPage == 1 ? "disabled" : "")">
+                        <a class="page-link"
+                               href="/Surat/Index?page=@(currentPage - 1)">
+                            &laquo;
+                        </a>
+                    </li>
+
+                    @for (int i = 1; i <= totalPages; i++)
+                    {
+                        <li class="page-item @(i == currentPage ? "active" : "")">
+                            <a class="page-link"
+                                   href="/Surat/Index?page=@i">
+                                @i
+                            </a>
+                        </li>
+                    }
+
+                    <!-- Next -->
+                    <li class="page-item @(currentPage == totalPages ? "disabled" : "")">
+                        <a class="page-link"
+                               href="/Surat/Index?page=@(currentPage + 1)">
+                            &raquo;
+                        </a>
+                    </li>
+
+                </ul>
+            </nav>
         </div>
 
     </div>
-    ```
-
 </div>

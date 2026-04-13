@@ -16,7 +16,7 @@ body{
     font-family:Arial, Helvetica, sans-serif;
 }
 
-/* KERTAS DOKUMEN */
+/* KERTAS */
 
 .paper{
     width:900px;
@@ -27,18 +27,25 @@ body{
     font-size:14px;
 }
 
-/* HEADER */
+/* HEADER BARU */
 
 .header{
-    position:relative;
-    text-align:center;
+    display:flex;
+    align-items:flex-start;
+    justify-content:space-between;
 }
 
+/* LOGO */
+
 .logo{
-    position:absolute;
-    left:0;
-    top:0;
-    width:110px;
+    width:140px;
+}
+
+/* TEXT TENGAH */
+
+.header-center{
+    text-align:center;
+    flex:1;
 }
 
 .company{
@@ -47,7 +54,7 @@ body{
 }
 
 .company-sub{
-    font-size:17px;
+    font-size:18px;
     font-weight:bold;
 }
 
@@ -59,12 +66,14 @@ body{
 /* BOX INFO */
 
 .box-info{
-    position:absolute;
-    right:0;
-    top:0;
-    border:1px solid black;
-    padding:10px 15px;
+    border-collapse:collapse;
     font-size:13px;
+    width:280px;
+}
+
+.box-info td{
+    border:1px solid black;
+    padding:4px 6px;
     text-align:left;
 }
 
@@ -73,7 +82,7 @@ body{
 .title{
     text-align:center;
     font-weight:bold;
-    margin-top:50px;
+    margin-top:40px;
     margin-bottom:25px;
     text-decoration:underline;
     font-size:16px;
@@ -141,30 +150,57 @@ th{
 
 <div class="paper">
 
+<!-- HEADER BARU -->
+
 <div class="header">
 
-<img src="/images/logo.png" class="logo"/>
+    <img src="/images/pertamina.png" class="logo" />
 
-<div class="company">PT KILANG PERTAMINA</div>
-<div class="company-sub">BALIKPAPAN</div>
+    <div class="header-center">
 
-<div class="alamat">
-Kantor NSO PT Kilang Pertamina Balikpapan<br>
-JL. Yos Sudarso No.1 Balikpapan
-</div>
+        <div class="company">PT KILANG PERTAMINA</div>
+        <div class="company-sub">BALIKPAPAN</div>
 
-<div class="box-info">
-Nomor : @Model.NomorSurat <br />
-Tanggal : @Model.Tanggal.ToString("dd MMMM yyyy") <br />
-Dari : IT KPB <br />
-Tujuan : @Model.Tujuan
-</div>
-
-</div>
-
-        <div class="title">
-            @(Model.JenisSurat?.NamaJenis?.ToUpper())
+        <div class="alamat">
+            Kantor NSO PT Kilang Pertamina Balikpapan<br>
+            JL. Yos Sudarso No.1 Balikpapan
         </div>
+
+    </div>
+
+    <table class="box-info">
+
+        <tr>
+            <td width="70">Nomor</td>
+            <td width="10">:</td>
+            <td>@Model.NomorSurat</td>
+        </tr>
+
+        <tr>
+            <td>Tanggal</td>
+            <td>:</td>
+            <td>@Model.Tanggal.ToString("dd MMMM yyyy")</td>
+        </tr>
+
+        <tr>
+            <td>Dari</td>
+            <td>:</td>
+            <td>Ruang IT KPB</td>
+        </tr>
+
+        <tr>
+            <td>Tujuan</td>
+            <td>:</td>
+            <td>@Model.Tujuan</td>
+        </tr>
+
+    </table>
+
+</div>
+
+<div class="title">
+@(Model.JenisSurat?.NamaJenis?.ToUpper())
+</div>
 
 <table class="info-table">
 
@@ -193,7 +229,6 @@ Tujuan : @Model.Tujuan
 </tr>
 
 </table>
-
 
 <table>
 
@@ -238,7 +273,7 @@ else
 </table>
 
 <div class="paragraph">
-<b>Catatan: Pemenuhan Permintaan Berdasarkan :</b> @Model.NoTiket
+<b>Catatan : Pemenuhan Permintaan Berdasarkan</b> @Model.JenisTiket No @Model.NoTiket
 </div>
 
 <div class="paragraph">
@@ -269,7 +304,6 @@ Keuangan apabila pekerja mutasi / keluar.
 V. Kami sebagai Penerima/Penanggung Jawab telah membaca, memahami dan menerima
 semua ketentuan Perusahaan tersebut.
 </div>
-
 
 <table class="signature">
 

@@ -2,7 +2,6 @@ using Microsoft.EntityFrameworkCore;
 using Docuflow_projectIT_KPB.Data;
 using Docuflow_projectIT_KPB.Services;
 using Rotativa.AspNetCore;
-using Rotativa.AspNetCore.Options;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -10,6 +9,14 @@ var builder = WebApplication.CreateBuilder(args);
 // ADD SERVICES
 // =============================
 builder.Services.AddControllersWithViews();
+
+// SESSION (untuk login & role)
+builder.Services.AddSession(options =>
+{
+    options.IdleTimeout = TimeSpan.FromMinutes(30);
+    options.Cookie.HttpOnly = true;
+    options.Cookie.IsEssential = true;
+});
 
 // =============================
 // REGISTER DATABASE
@@ -28,9 +35,7 @@ builder.Services.AddScoped<NomorSuratService>();
 var app = builder.Build();
 
 // =============================
-// ROTATIVA CONFIGURATION
-// wkhtmltopdf harus ada di:
-// wwwroot/Rotativa/wkhtmltopdf.exe
+// ROTATIVA CONFIG
 // =============================
 RotativaConfiguration.Setup(
     builder.Environment.WebRootPath,
@@ -47,11 +52,12 @@ if (!app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
-
-// WAJIB supaya Rotativa bisa akses wkhtmltopdf
 app.UseStaticFiles();
 
 app.UseRouting();
+
+// SESSION harus sebelum Authorization
+app.UseSession();
 
 app.UseAuthorization();
 
@@ -60,7 +66,7 @@ app.UseAuthorization();
 // =============================
 app.MapControllerRoute(
     name: "default",
-    pattern: "{controller=Home}/{action=Index}/{id?}"
+    pattern: "{controller=Account}/{action=Login}/{id?}"
 );
 
 app.Run();

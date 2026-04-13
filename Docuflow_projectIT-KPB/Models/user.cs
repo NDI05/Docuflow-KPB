@@ -1,4 +1,6 @@
-﻿namespace Docuflow_projectIT_KPB.Models
+﻿using System.ComponentModel.DataAnnotations;
+
+namespace Docuflow_projectIT_KPB.Models
 {
     public class User
     {
@@ -10,8 +12,13 @@
 
         public string? TtdImagePath { get; set; }
 
-        public string NomorPegawai { get; set; }
+        public string NomorPegawai { get; set; } = string.Empty;
 
         public string? Npk { get; set; }
+
+        // LOGIN
+        public string Username { get; set; } = string.Empty;
+
+        public string Password { get; set; } = string.Empty;
     }
 }
