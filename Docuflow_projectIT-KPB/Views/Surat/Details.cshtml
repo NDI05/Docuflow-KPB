@@ -6,327 +6,383 @@
 <!DOCTYPE html>
 <html>
 <head>
-<meta charset="utf-8" />
-<title>Preview Surat</title>
+    <meta charset="utf-8" />
+    <title>Preview Surat</title>
 
-<style>
+    <style>
+            body {
+                margin: 0;
+                padding: 20px;
+                background: #f2f2f2;
+                font-family: Arial, Helvetica, sans-serif;
+            }
 
-body{
-    background:#f2f2f2;
-    font-family:Arial, Helvetica, sans-serif;
-}
+            .paper {
+                width: 900px;
+                margin: 20px auto;
+                background: #fff;
+                padding: 35px 45px 45px 45px;
+                box-shadow: 0 0 12px rgba(0,0,0,0.15);
+                font-size: 14px;
+                color: #000;
+            }
 
-/* KERTAS */
+            /* ================= HEADER ================= */
+            .header {
+                position: relative;
+                min-height: 120px;
+                margin-bottom: 30px;
+            }
 
-.paper{
-    width:900px;
-    margin:40px auto;
-    background:white;
-    padding:50px;
-    box-shadow:0 0 15px rgba(0,0,0,0.15);
-    font-size:14px;
-}
+            /* logo dibesarin dikit */
+            .logo {
+                position: absolute;
+                top: 0;
+                left: 0;
+                width: 150px;
+            }
 
-/* HEADER BARU */
+            /* kop surat digeser agak ke kanan */
+            .header-center {
+                margin-left: 115px;
+                margin-right: 280px;
+                text-align: center;
+                padding-top: 2px;
+            }
 
-.header{
-    display:flex;
-    align-items:flex-start;
-    justify-content:space-between;
-}
+            .company {
+                font-size: 18px;
+                font-weight: bold;
+                line-height: 1.2;
+            }
 
-/* LOGO */
+            .company-sub {
+                font-size: 18px;
+                font-weight: bold;
+                margin-top: 2px;
+            }
 
-.logo{
-    width:140px;
-}
+            .alamat {
+                margin-top: 8px;
+                font-size: 13px;
+                line-height: 1.4;
+            }
 
-/* TEXT TENGAH */
+            /* box kanan tanpa garis vertikal berlebih */
+            .box-info {
+                position: absolute;
+                top: 0;
+                right: 0;
+                width: 255px;
+                border: 1px solid #000;
+                border-collapse: collapse;
+                font-size: 13px;
+            }
 
-.header-center{
-    text-align:center;
-    flex:1;
-}
+                .box-info td {
+                    border-bottom: 1px solid #000;
+                    padding: 4px 8px;
+                    vertical-align: top;
+                }
 
-.company{
-    font-size:20px;
-    font-weight:bold;
-}
+                .box-info tr:last-child td {
+                    border-bottom: none;
+                }
 
-.company-sub{
-    font-size:18px;
-    font-weight:bold;
-}
+                .box-info .label {
+                    width: 65px;
+                    white-space: nowrap;
+                    border-right: none;
+                    padding-right: 2px;
+                }
 
-.alamat{
-    font-size:13px;
-    margin-top:5px;
-}
+                .box-info .separator {
+                    width: 10px;
+                    text-align: center;
+                    border-left: none;
+                    border-right: none;
+                    padding-left: 0;
+                    padding-right: 0;
+                }
 
-/* BOX INFO */
+                .box-info .value {
+                    border-left: none;
+                    font-weight: bold;
+                    padding-left: 2px;
+                }
 
-.box-info{
-    border-collapse:collapse;
-    font-size:13px;
-    width:280px;
-}
+            /* ================= TITLE ================= */
+            .title {
+                text-align: center;
+                font-size: 16px;
+                font-weight: bold;
+                text-decoration: underline;
+                margin: 10px 0 22px 0;
+            }
 
-.box-info td{
-    border:1px solid black;
-    padding:4px 6px;
-    text-align:left;
-}
+            /* ================= INFO TABLE ================= */
+            .info-table {
+                width: 100%;
+                border-collapse: collapse;
+                margin-bottom: 18px;
+            }
 
-/* TITLE */
+                .info-table td {
+                    border: none;
+                    padding: 3px 0;
+                    vertical-align: top;
+                    font-size: 14px;
+                }
 
-.title{
-    text-align:center;
-    font-weight:bold;
-    margin-top:40px;
-    margin-bottom:25px;
-    text-decoration:underline;
-    font-size:16px;
-}
+                .info-table .label {
+                    width: 210px;
+                }
 
-/* TABLE UMUM */
+                .info-table .colon {
+                    width: 15px;
+                    text-align: center;
+                }
 
-table{
-    width:100%;
-    border-collapse:collapse;
-}
+                .info-table .value {
+                    width: 260px;
+                }
 
-th,td{
-    border:1px solid #444;
-    padding:8px;
-    text-align:center;
-}
+            /* ================= TABEL BARANG ================= */
+            .barang-table {
+                width: 100%;
+                border-collapse: collapse;
+                margin-top: 10px;
+                font-size: 13px;
+            }
 
-th{
-    background:#f3f3f3;
-}
+                .barang-table th,
+                .barang-table td {
+                    border: 1px solid #000;
+                    padding: 7px 8px;
+                }
 
-/* INFO TABLE */
+                .barang-table th {
+                    text-align: center;
+                    background: #f3f3f3;
+                    font-weight: bold;
+                }
 
-.info-table{
-    margin-bottom:20px;
-}
+                .barang-table td {
+                    vertical-align: top;
+                }
 
-.info-table td{
-    border:none;
-    text-align:left;
-    padding:4px;
-}
+            .text-left {
+                text-align: left;
+            }
 
-/* PARAGRAPH */
+            .text-center {
+                text-align: center;
+            }
 
-.paragraph{
-    margin-top:14px;
-    text-align:justify;
-    line-height:1.5;
-}
+            /* ================= PARAGRAPH ================= */
+            .paragraph {
+                margin-top: 12px;
+                text-align: justify;
+                line-height: 1.5;
+                font-size: 13px;
+            }
 
-/* SIGNATURE */
+            /* ================= SIGNATURE ================= */
+            .signature {
+                width: 100%;
+                border-collapse: collapse;
+                margin-top: 45px;
+            }
 
-.signature{
-    margin-top:50px;
-}
+                .signature td {
+                    border: none;
+                    text-align: center;
+                    vertical-align: top;
+                    width: 25%;
+                    padding: 0 10px;
+                    font-size: 13px;
+                }
 
-.signature td{
-    border:none;
-    text-align:center;
-    padding-top:50px;
-}
+            .sign-space {
+                height: 75px;
+            }
 
-.signature-name{
-    margin-top:60px;
-    font-weight:bold;
-}
-
-</style>
-
+            .signature-name {
+                font-weight: bold;
+                text-decoration: underline;
+            }
+    </style>
 </head>
-
 <body>
 
-<div class="paper">
+    <div class="paper">
 
-<!-- HEADER BARU -->
+        <div class="header">
 
-<div class="header">
+            <img src="/images/Logo_pertamina.png" class="logo" />
 
-    <img src="/images/pertamina.png" class="logo" />
+            <div class="header-center">
+                <div class="company">PT KILANG PERTAMINA</div>
+                <div class="company-sub">BALIKPAPAN</div>
 
-    <div class="header-center">
+                <div class="alamat">
+                    Kantor NSO PT Kilang Pertamina Balikpapan<br />
+                    JL. Yos Sudarso No.1 Balikpapan
+                </div>
+            </div>
 
-        <div class="company">PT KILANG PERTAMINA</div>
-        <div class="company-sub">BALIKPAPAN</div>
+            <table class="box-info">
+                <tr>
+                    <td class="label">Nomor</td>
+                    <td class="separator">:</td>
+                    <td class="value">@Model.NomorSurat</td>
+                </tr>
+                <tr>
+                    <td class="label">Tanggal</td>
+                    <td class="separator">:</td>
+                    <td class="value">@Model.Tanggal.ToString("dd MMMM yyyy")</td>
+                </tr>
+                <tr>
+                    <td class="label">Dari</td>
+                    <td class="separator">:</td>
+                    <td class="value">Ruang IT KPB</td>
+                </tr>
+                <tr>
+                    <td class="label">Tujuan</td>
+                    <td class="separator">:</td>
+                    <td class="value">@Model.Tujuan</td>
+                </tr>
+            </table>
 
-        <div class="alamat">
-            Kantor NSO PT Kilang Pertamina Balikpapan<br>
-            JL. Yos Sudarso No.1 Balikpapan
         </div>
 
+        <div class="title">
+            @(Model.JenisSurat?.NamaJenis?.ToUpper())
+        </div>
+
+        <table class="info-table">
+            <tr>
+                <td class="label"><b>Nama Penanggung Jawab</b></td>
+                <td class="colon">:</td>
+                <td class="value">@Model.NamaPenanggungJawab</td>
+
+                <td class="label" style="width:120px;"><b>No. Pekerja</b></td>
+                <td class="colon">:</td>
+                <td>@Model.NoPekerja</td>
+            </tr>
+
+            <tr>
+                <td class="label"><b>Jabatan</b></td>
+                <td class="colon">:</td>
+                <td class="value">@Model.Jabatan</td>
+            </tr>
+
+            <tr>
+                <td class="label"><b>Alamat</b></td>
+                <td class="colon">:</td>
+                <td class="value">@Model.Alamat</td>
+            </tr>
+        </table>
+
+        <table class="barang-table">
+            <thead>
+                <tr>
+                    <th width="50">No</th>
+                    <th>Nama Barang</th>
+                    <th width="80">Jumlah</th>
+                    <th width="160">Merk Type</th>
+                    <th width="160">Pengguna</th>
+                </tr>
+            </thead>
+
+            <tbody>
+                @if (Model.BarangList != null && Model.BarangList.Any())
+                {
+                    int no = 1;
+
+                    foreach (var barang in Model.BarangList)
+                    {
+                        <tr>
+                            <td class="text-center">@no</td>
+                            <td class="text-left">@barang.NamaBarang</td>
+                            <td class="text-center">@barang.Jumlah</td>
+                            <td class="text-center">@barang.MerkType</td>
+                            <td class="text-center">@barang.Pengguna</td>
+                        </tr>
+
+                        no++;
+                    }
+                }
+                else
+                {
+                    <tr>
+                        <td colspan="5" class="text-center">Tidak ada data barang</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+
+        <div class="paragraph">
+            <b>Catatan : Pemenuhan Permintaan Berdasarkan</b>
+            @Model.JenisTiket No @Model.NoTiket
+        </div>
+
+        <div class="paragraph">
+            I. Telah dilakukan uji-coba terhadap barang yang diserahkan sesuai dengan data diatas,
+            yang dilaksanakan oleh petugas dari staff IT KPB dan pihak penerima sebagai pemakai /
+            penanggung jawab, semua sepakat bahwa barang tersebut telah sesuai seperti tercantum
+            di atas dan bekerja dengan baik serta laik pakai.
+        </div>
+
+        <div class="paragraph">
+            II. Pihak penerima bertanggung jawab sepenuhnya atas barang yang digunakan dan telah
+            membaca serta setuju dengan ketentuan tambahan yang tercantum pada halaman belakang
+            dari lembar bukti penerimaan barang ini (wajib dibaca).
+        </div>
+
+        <div class="paragraph">
+            III. Apabila terjadi pencurian / kehilangan barang yang diserahkan kepada pemakai /
+            penanggung jawab, maka pemakai / penanggung jawab harus melaporkan kepada Kepolisian
+            dan Sekuriti Pertamina dimana terjadi kehilangan barang tersebut.
+        </div>
+
+        <div class="paragraph">
+            IV. Perangkat IT yang tidak harus / wajib dikembalikan ke Fungsi IT KPB Direktorat
+            Keuangan apabila pekerja mutasi / keluar.
+        </div>
+
+        <div class="paragraph">
+            V. Kami sebagai Penerima/Penanggung Jawab telah membaca, memahami dan menerima
+            semua ketentuan Perusahaan tersebut.
+        </div>
+
+        <table class="signature">
+            <tr>
+                <td>Yang Menyerahkan</td>
+                <td>Mengetahui<br />Ast Manager IT | PT. KPB</td>
+                <td>Yang Bertanggung Jawab</td>
+                <td>
+                    Balikpapan, @Model.Tanggal.ToString("dd.MM.yyyy")<br />
+                    Yang Menerima
+                </td>
+            </tr>
+
+            <tr>
+                <td class="sign-space"></td>
+                <td class="sign-space"></td>
+                <td class="sign-space"></td>
+                <td class="sign-space"></td>
+            </tr>
+
+            <tr>
+                <td class="signature-name">@Model.Staff?.Nama</td>
+                <td class="signature-name">@Model.Manager?.Nama</td>
+                <td class="signature-name">@Model.NamaPenanggungJawab</td>
+                <td class="signature-name">@Model.YangMenerima</td>
+            </tr>
+        </table>
+
     </div>
-
-    <table class="box-info">
-
-        <tr>
-            <td width="70">Nomor</td>
-            <td width="10">:</td>
-            <td>@Model.NomorSurat</td>
-        </tr>
-
-        <tr>
-            <td>Tanggal</td>
-            <td>:</td>
-            <td>@Model.Tanggal.ToString("dd MMMM yyyy")</td>
-        </tr>
-
-        <tr>
-            <td>Dari</td>
-            <td>:</td>
-            <td>Ruang IT KPB</td>
-        </tr>
-
-        <tr>
-            <td>Tujuan</td>
-            <td>:</td>
-            <td>@Model.Tujuan</td>
-        </tr>
-
-    </table>
-
-</div>
-
-<div class="title">
-@(Model.JenisSurat?.NamaJenis?.ToUpper())
-</div>
-
-<table class="info-table">
-
-<tr>
-<td width="200">Nama Penanggung Jawab</td>
-<td width="10">:</td>
-<td>@Model.NamaPenanggungJawab</td>
-</tr>
-
-<tr>
-<td>Jabatan</td>
-<td>:</td>
-<td>@Model.Jabatan</td>
-</tr>
-
-<tr>
-<td>No. Pekerja</td>
-<td>:</td>
-<td>@Model.NoPekerja</td>
-</tr>
-
-<tr>
-<td>Alamat</td>
-<td>:</td>
-<td>@Model.Alamat</td>
-</tr>
-
-</table>
-
-<table>
-
-<thead>
-<tr>
-<th width="50">No</th>
-<th>Nama Barang</th>
-<th width="80">Jumlah</th>
-<th width="160">Merk Type</th>
-<th width="160">Pengguna</th>
-</tr>
-</thead>
-
-<tbody>
-
-@if (Model.BarangList != null && Model.BarangList.Any())
-{
-int no = 1;
-
-foreach (var barang in Model.BarangList)
-{
-<tr>
-<td>@no</td>
-<td>@barang.NamaBarang</td>
-<td>@barang.Jumlah</td>
-<td>@barang.MerkType</td>
-<td>@barang.Pengguna</td>
-</tr>
-
-no++;
-}
-}
-else
-{
-<tr>
-<td colspan="5">Tidak ada data barang</td>
-</tr>
-}
-
-</tbody>
-
-</table>
-
-<div class="paragraph">
-<b>Catatan : Pemenuhan Permintaan Berdasarkan</b> @Model.JenisTiket No @Model.NoTiket
-</div>
-
-<div class="paragraph">
-I. Telah dilakukan uji-coba terhadap barang yang diserahkan sesuai dengan data diatas,
-yang dilaksanakan oleh petugas dari staff IT KPB dan pihak penerima sebagai pemakai /
-penanggung jawab, semua sepakat bahwa barang tersebut telah sesuai seperti tercantum
-di atas dan bekerja dengan baik serta laik pakai.
-</div>
-
-<div class="paragraph">
-II. Pihak penerima bertanggung jawab sepenuhnya atas barang yang digunakan dan telah
-membaca serta setuju dengan ketentuan tambahan yang tercantum pada halaman belakang
-dari lembar bukti penerimaan barang ini (wajib dibaca).
-</div>
-
-<div class="paragraph">
-III. Apabila terjadi pencurian / kehilangan barang yang diserahkan kepada pemakai /
-penanggung jawab, maka pemakai / penanggung jawab harus melaporkan kepada Kepolisian
-dan Sekuriti Pertamina dimana terjadi kehilangan barang tersebut.
-</div>
-
-<div class="paragraph">
-IV. Perangkat IT yang tidak harus / wajib dikembalikan ke Fungsi IT KPB Direktorat
-Keuangan apabila pekerja mutasi / keluar.
-</div>
-
-<div class="paragraph">
-V. Kami sebagai Penerima/Penanggung Jawab telah membaca, memahami dan menerima
-semua ketentuan Perusahaan tersebut.
-</div>
-
-<table class="signature">
-
-<tr>
-<td>Yang Menyerahkan</td>
-<td>Mengetahui<br>Ast Manager IT | PT. KPB</td>
-<td>Yang Bertanggung Jawab</td>
-<td>
-Balikpapan, @Model.Tanggal.ToString("dd.MM.yyyy")<br>
-Yang Menerima
-</td>
-</tr>
-
-<tr>
-<td class="signature-name">@Model.Staff?.Nama</td>
-<td class="signature-name">@Model.Manager?.Nama</td>
-<td class="signature-name">@Model.NamaPenanggungJawab</td>
-<td class="signature-name">@Model.YangMenerima</td>
-</tr>
-
-</table>
-
-</div>
 
 </body>
 </html>

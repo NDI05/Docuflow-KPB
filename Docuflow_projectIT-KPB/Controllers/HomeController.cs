@@ -4,9 +4,11 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using System.Diagnostics;
 using System.Linq;
+using Docuflow_projectIT_KPB.Filters;
 
 namespace Docuflow_projectIT_KPB.Controllers
 {
+    [SessionAuthorize]
     public class HomeController : Controller
     {
         private readonly ApplicationDbContext _context;
@@ -18,11 +20,9 @@ namespace Docuflow_projectIT_KPB.Controllers
 
         public IActionResult Index()
         {
-            // Total keseluruhan
             ViewBag.TotalUsers = _context.Users.Count();
             ViewBag.TotalSurat = _context.Surat.Count();
 
-            // Total surat per jenis
             var suratPerJenis = _context.Surat
                 .Include(s => s.JenisSurat)
                 .GroupBy(s => s.JenisSurat.NamaJenis)

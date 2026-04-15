@@ -5,24 +5,26 @@
 
     int currentPage = ViewBag.CurrentPage ?? 1;
     int totalPages = ViewBag.TotalPages ?? 1;
+    string search = ViewBag.Search ?? "";
 }
 
 <style>
     .table thead th {
         text-align: center;
         vertical-align: middle;
-        font-weight: 700;
+        font-weight: 800;
+        font-size: 14px;
     }
 
     .table tbody td {
         vertical-align: middle;
-        font-size: 14px;
+        font-size: 13px;
     }
 
     .pagination .page-link {
         border-radius: 10px;
         margin: 0 3px;
-        font-weight: 600;
+        font-weight: 700;
         color: #0d1a8a;
     }
 
@@ -34,28 +36,54 @@
 
     .btn-action {
         border-radius: 10px;
-        font-weight: 600;
-        font-size: 13px;
+        font-weight: 700;
+        font-size: 12px;
         padding: 6px 12px;
+    }
+
+    .table-custom {
+        background: white;
+        border-radius: 14px;
+        overflow: hidden;
+    }
+
+    .wrap-text {
+        white-space: normal !important;
+        word-break: break-word;
     }
 </style>
 
 <div class="card shadow-lg border-0" style="border-radius:18px; overflow:hidden;">
 
-    <div class="card-header text-white d-flex justify-content-between align-items-center"
+    <div class="card-header d-flex justify-content-between align-items-center"
          style="background:#c6c8d9; padding:15px 20px;">
+
         <h5 class="mb-0 fw-bold text-dark">Daftar Surat</h5>
 
-        <div class="d-flex gap-2">
-            <input type="text"
-                   class="form-control form-control-sm"
-                   placeholder="Search"
-                   style="border-radius:12px; width:200px;" />
+        <div class="d-flex gap-2 align-items-center">
 
-            <a href="/Surat/Create" class="btn btn-primary btn-sm"
-                   style="border-radius:12px; font-weight:600;">
+            <!-- SEARCH FORM -->
+            <form method="get" asp-action="Index" class="d-flex gap-2 align-items-center">
+                <input type="text"
+                       name="search"
+                       value="@search"
+                       class="form-control form-control-sm"
+                       placeholder="Search"
+                       style="border-radius:12px; width:220px;" />
+
+                <button type="submit"
+                        class="btn btn-primary btn-sm"
+                        style="border-radius:12px; font-weight:700;">
+                    Cari
+                </button>
+            </form>
+
+            <a href="/Surat/Create"
+                   class="btn btn-primary btn-sm"
+                   style="border-radius:12px; font-weight:700;">
                 Buat Surat +
             </a>
+
         </div>
     </div>
 
@@ -68,18 +96,17 @@
             </div>
         }
 
-        <div class="table-responsive">
-            <table class="table table-bordered table-hover align-middle"
-                   style="background:white; border-radius:14px; overflow:hidden;">
+        <div class="table-responsive table-custom">
+            <table class="table table-bordered table-hover align-middle mb-0 w-100">
 
                 <thead style="background:#c6c8d9;">
                     <tr>
-                        <th>Nomor</th>
-                        <th>Jenis Surat</th>
-                        <th>Tanggal Surat</th>
-                        <th>Staff</th>
-                        <th>Waktu Upload</th>
-                        <th width="260">Aksi</th>
+                        <th style="width:260px;">Nomor</th>
+                        <th style="width:380px;">Jenis Surat</th>
+                        <th style="width:140px;">Tanggal Surat</th>
+                        <th style="width:140px;">Staff</th>
+                        <th style="width:120px;">Upload</th>
+                        <th style="width:260px;">Aksi</th>
                     </tr>
                 </thead>
 
@@ -89,13 +116,28 @@
                         foreach (var item in Model)
                         {
                             <tr>
-                                <td>@(item.NomorSurat ?? "-")</td>
-                                <td>@(item.JenisSurat?.NamaJenis ?? "-")</td>
-                                <td>@item.Tanggal.ToString("dd/MM/yyyy")</td>
-                                <td>@(item.Staff?.Nama ?? "-")</td>
-                                <td>@((item.CreatedAt ?? item.Tanggal).ToString("HH:mm:ss"))</td>
+                                <td class="wrap-text fw-bold">
+                                    @(item.NomorSurat ?? "-")
+                                </td>
+
+                                <td class="wrap-text">
+                                    @(item.JenisSurat?.NamaJenis ?? "-")
+                                </td>
 
                                 <td class="text-center">
+                                    @item.Tanggal.ToString("dd/MM/yyyy")
+                                </td>
+
+                                <td class="text-center">
+                                    @(item.Staff?.Nama ?? "-")
+                                </td>
+
+                                <td class="text-center">
+                                    @((item.CreatedAt ?? item.Tanggal).ToString("HH:mm:ss"))
+                                </td>
+
+                                <td class="text-center">
+
                                     <a href="/Surat/Details/@item.Id"
                                            class="btn btn-info btn-sm text-white btn-action">
                                         Detail
@@ -112,6 +154,8 @@
                                           style="display:inline"
                                           onsubmit="return confirm('Yakin ingin menghapus surat ini?');">
 
+                                        @Html.AntiForgeryToken()
+
                                         <input type="hidden" name="id" value="@item.Id" />
 
                                         <button type="submit"
@@ -119,6 +163,7 @@
                                             Delete
                                         </button>
                                     </form>
+
                                 </td>
                             </tr>
                         }
@@ -132,6 +177,7 @@
                         </tr>
                     }
                 </tbody>
+
             </table>
         </div>
 
@@ -147,7 +193,7 @@
                     <!-- Prev -->
                     <li class="page-item @(currentPage == 1 ? "disabled" : "")">
                         <a class="page-link"
-                               href="/Surat/Index?page=@(currentPage - 1)">
+                               href="/Surat/Index?page=@(currentPage - 1)&search=@search">
                             &laquo;
                         </a>
                     </li>
@@ -156,7 +202,7 @@
                     {
                         <li class="page-item @(i == currentPage ? "active" : "")">
                             <a class="page-link"
-                                   href="/Surat/Index?page=@i">
+                                   href="/Surat/Index?page=@i&search=@search">
                                 @i
                             </a>
                         </li>
@@ -165,7 +211,7 @@
                     <!-- Next -->
                     <li class="page-item @(currentPage == totalPages ? "disabled" : "")">
                         <a class="page-link"
-                               href="/Surat/Index?page=@(currentPage + 1)">
+                               href="/Surat/Index?page=@(currentPage + 1)&search=@search">
                             &raquo;
                         </a>
                     </li>

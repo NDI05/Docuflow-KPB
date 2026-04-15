@@ -2,33 +2,35 @@
 
 @{
     ViewData["Title"] = "Login";
+    Layout = "~/Views/Shared/_LoginLayout.cshtml";
 }
 
-<div style="width:350px;margin:100px auto;font-family:Arial">
-
-    <h2>Login Sistem</h2>
+<div>
+    <div class="login-title">Login Sistem</div>
+    <div class="login-subtitle">Silahkan login untuk masuk ke Docuflow</div>
 
     @if (ViewBag.Error != null)
     {
-        <div style="color:red;margin-bottom:10px">@ViewBag.Error</div>
+        <div class="alert alert-danger">
+            @ViewBag.Error
+        </div>
     }
 
     <form asp-controller="Account" asp-action="Login" method="post">
-
         @Html.AntiForgeryToken()
 
-        <div style="margin-bottom:10px">
+        <div class="mb-3">
             <label>Username</label>
             <input asp-for="Username" class="form-control" required />
         </div>
 
-        <div style="margin-bottom:10px">
+        <div class="mb-3">
             <label>Password</label>
             <input asp-for="Password" type="password" class="form-control" required />
         </div>
 
-        <button type="submit" class="btn btn-primary">Login</button>
-
+        <button type="submit" class="btn btn-primary btn-login">
+            Login
+        </button>
     </form>
-
 </div>

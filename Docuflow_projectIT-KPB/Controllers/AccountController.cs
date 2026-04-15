@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Docuflow_projectIT_KPB.Data;
+using Docuflow_projectIT_KPB.Models;
 using Microsoft.AspNetCore.Http;
 using System.Linq;
 
@@ -33,31 +34,61 @@ namespace Docuflow_projectIT_KPB.Controllers
         // =========================
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public IActionResult Login(string username, string password)
+        public IActionResult Login(LoginViewModel model)
         {
-            if (string.IsNullOrEmpty(username) || string.IsNullOrEmpty(password))
+            if (model == null || string.IsNullOrWhiteSpace(model.Username) || string.IsNullOrWhiteSpace(model.Password))
             {
                 ViewBag.Error = "Username dan Password wajib diisi";
                 return View();
             }
 
-            var user = _context.Users
-                .FirstOrDefault(x => x.Username == username && x.Password == password);
+            var user = _context.Users.FirstOrDefault(x => x.Username == model.Username);
 
-            if (user != null)
+            if (user == null)
             {
-                // SIMPAN SESSION
-                HttpContext.Session.SetString("Username", user.Username ?? "");
-                HttpContext.Session.SetString("Nama", user.Nama ?? "");
-                HttpContext.Session.SetString("Role", user.Role ?? "");
-                HttpContext.Session.SetString("NomorPegawai", user.NomorPegawai ?? "");
-
-                // redirect ke dashboard
-                return RedirectToAction("Index", "Home");
+                ViewBag.Error = "Username atau Password salah";
+                return View();
             }
 
-            ViewBag.Error = "Username atau Password salah";
-            return View();
+            bool validPassword = false;
+
+            // =========================
+            // CEK PASSWORD (HASH / PLAIN)
+            // =========================
+            if (!string.IsNullOrEmpty(user.Password) && user.Password.StartsWith("$2"))
+            {
+                // PASSWORD SUDAH HASH BCRYPT
+                validPassword = BCrypt.Net.BCrypt.Verify(model.Password, user.Password);
+            }
+            else
+            {
+                // PASSWORD MASIH PLAIN TEXT
+                validPassword = (user.Password == model.Password);
+
+                // kalau cocok, langsung ubah jadi hash supaya aman
+                if (validPassword)
+                {
+                    user.Password = BCrypt.Net.BCrypt.HashPassword(model.Password);
+                    _context.Users.Update(user);
+                    _context.SaveChanges();
+                }
+            }
+
+            if (!validPassword)
+            {
+                ViewBag.Error = "Username atau Password salah";
+                return View();
+            }
+
+            // =========================
+            // SIMPAN SESSION
+            // =========================
+            HttpContext.Session.SetString("Username", user.Username ?? "");
+            HttpContext.Session.SetString("Nama", user.Nama ?? "");
+            HttpContext.Session.SetString("Role", user.Role ?? "");
+            HttpContext.Session.SetString("NomorPegawai", user.NomorPegawai ?? "");
+
+            return RedirectToAction("Index", "Home");
         }
 
         // =========================

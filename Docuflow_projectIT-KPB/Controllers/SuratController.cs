@@ -13,8 +13,13 @@ using System.Linq;
 using System.Threading.Tasks;
 using System.Collections.Generic;
 
+// TAMBAH INI (WAJIB)
+using Docuflow_projectIT_KPB.Filters;
+
 namespace Docuflow_projectIT_KPB.Controllers
 {
+    // STEP 8: WAJIB LOGIN
+    [SessionAuthorize]
     public class SuratController : Controller
     {
         private readonly ApplicationDbContext _context;

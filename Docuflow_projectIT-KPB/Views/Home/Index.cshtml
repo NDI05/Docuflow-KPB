@@ -97,7 +97,7 @@
     <div class="dashboard-header">
         <div>
             <h3>Beranda</h3>
-            <p>Selamat Datang, @User.Identity.Name</p>
+            <p>Selamat Datang, <b>@Context.Session.GetString("Nama")</b></p>
         </div>
     </div>
 

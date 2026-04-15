@@ -17,6 +17,23 @@ namespace Docuflow_projectIT_KPB.Services
         {
             var tahun = DateTime.Now.Year;
 
+            // AMBIL NAMA JENIS SURAT
+            var namaJenisFull = await _context.JenisSurat
+                .Where(j => j.Id == jenisSuratId)
+                .Select(j => j.NamaJenis)
+                .FirstOrDefaultAsync();
+
+            if (string.IsNullOrEmpty(namaJenisFull))
+                namaJenisFull = "SURAT";
+
+            // AMBIL SINGKATAN SAJA (SEBELUM "-")
+            string singkatan = namaJenisFull;
+
+            if (namaJenisFull.Contains("-"))
+            {
+                singkatan = namaJenisFull.Split('-')[0].Trim();
+            }
+
             var counter = await _context.CounterNomorSurat
                 .FirstOrDefaultAsync(x => x.JenisSuratId == jenisSuratId && x.Tahun == tahun);
 
@@ -39,10 +56,11 @@ namespace Docuflow_projectIT_KPB.Services
             await _context.SaveChangesAsync();
 
             string nomorUrut = counter.NomorTerakhir.ToString("D3");
-            string kodeTetap = "KPB2340"; // nanti bisa kita buat setting
-            string kodeJenis = "S0"; // nanti bisa kita mapping per jenis
+            string kodeTetap = "KPB2340";
+            string kodeJenis = "S0";
 
-            return $"{nomorUrut}/{kodeTetap}/{tahun}/{kodeJenis}";
+            // FORMAT BARU: BAPB 004/KPB2340/2026/S0
+            return $"{singkatan} {nomorUrut}/{kodeTetap}/{tahun}/{kodeJenis}";
         }
     }
 }

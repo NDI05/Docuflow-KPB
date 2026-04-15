@@ -10,193 +10,248 @@
     <title>Preview Surat</title>
 
     <style>
-
-        body {
-            background: #f2f2f2;
-            font-family: Arial, Helvetica, sans-serif;
-        }
-
-        /* KERTAS */
-
-        .paper {
-            width: 900px;
-            margin: 40px auto;
-            background: white;
-            padding: 50px;
-            box-shadow: 0 0 15px rgba(0,0,0,0.15);
-            font-size: 14px;
-        }
-
-        /* HEADER */
-
-        .header {
-            position: relative;
-            text-align: center;
-            margin-bottom: 20px;
-        }
-
-        /* LOGO */
-
-        .logo {
-            position: absolute;
-            left: 0;
-            top: 0;
-            width: 140px;
-        }
-
-        /* TEXT TENGAH */
-
-        .header-center {
-            text-align: center;
-        }
-
-        .company {
-            font-size: 20px;
-            font-weight: bold;
-        }
-
-        .company-sub {
-            font-size: 18px;
-            font-weight: bold;
-        }
-
-        .alamat {
-            font-size: 13px;
-            margin-top: 5px;
-        }
-
-        /* BOX INFO KANAN */
-
-        .box-info {
-            position: absolute;
-            right: 0;
-            top: 0;
-            border-collapse: collapse;
-            font-size: 13px;
-            width: 280px;
-        }
-
-            .box-info td {
-                border: 1px solid black;
-                padding: 4px 6px;
-                text-align: left;
+            body {
+                margin: 0;
+                padding: 20px;
+                background: #f2f2f2;
+                font-family: Arial, Helvetica, sans-serif;
             }
 
-        /* TITLE */
-
-        .title {
-            text-align: center;
-            font-weight: bold;
-            margin-top: 40px;
-            margin-bottom: 25px;
-            text-decoration: underline;
-            font-size: 16px;
-        }
-
-        /* TABLE UMUM */
-
-        table {
-            width: 100%;
-            border-collapse: collapse;
-        }
-
-        th, td {
-            border: 1px solid #444;
-            padding: 8px;
-            text-align: center;
-        }
-
-        th {
-            background: #f3f3f3;
-        }
-
-        /* INFO TABLE */
-
-        .info-table {
-            margin-bottom: 20px;
-        }
-
-            .info-table td {
-                border: none;
-                text-align: left;
-                padding: 4px;
+            .paper {
+                width: 900px;
+                margin: 20px auto;
+                background: #fff;
+                padding: 35px 45px 45px 45px;
+                box-shadow: 0 0 12px rgba(0,0,0,0.15);
+                font-size: 14px;
+                color: #000;
             }
 
-        /* PARAGRAPH */
+            /* ================= HEADER ================= */
+            .header {
+                position: relative;
+                min-height: 120px;
+                margin-bottom: 30px;
+            }
 
-        .paragraph {
-            margin-top: 14px;
-            text-align: justify;
-            line-height: 1.5;
-        }
+            /* logo dibesarin dikit */
+            .logo {
+                position: absolute;
+                top: 0;
+                left: 0;
+                width: 150px;
+            }
 
-        /* SIGNATURE */
-
-        .signature {
-            margin-top: 50px;
-        }
-
-            .signature td {
-                border: none;
+            /* kop surat digeser agak ke kanan */
+            .header-center {
+                margin-left: 115px;
+                margin-right: 280px;
                 text-align: center;
-                padding-top: 50px;
+                padding-top: 2px;
             }
 
-        .signature-name {
-            margin-top: 60px;
-            font-weight: bold;
-        }
+            .company {
+                font-size: 18px;
+                font-weight: bold;
+                line-height: 1.2;
+            }
 
+            .company-sub {
+                font-size: 18px;
+                font-weight: bold;
+                margin-top: 2px;
+            }
+
+            .alamat {
+                margin-top: 8px;
+                font-size: 13px;
+                line-height: 1.4;
+            }
+
+            /* box kanan tanpa garis vertikal berlebih */
+            .box-info {
+                position: absolute;
+                top: 0;
+                right: 0;
+                width: 255px;
+                border: 1px solid #000;
+                border-collapse: collapse;
+                font-size: 13px;
+            }
+
+                .box-info td {
+                    border-bottom: 1px solid #000;
+                    padding: 4px 8px;
+                    vertical-align: top;
+                }
+
+                .box-info tr:last-child td {
+                    border-bottom: none;
+                }
+
+                .box-info .label {
+                    width: 65px;
+                    white-space: nowrap;
+                    border-right: none;
+                    padding-right: 2px;
+                }
+
+                .box-info .separator {
+                    width: 10px;
+                    text-align: center;
+                    border-left: none;
+                    border-right: none;
+                    padding-left: 0;
+                    padding-right: 0;
+                }
+
+                .box-info .value {
+                    border-left: none;
+                    font-weight: bold;
+                    padding-left: 2px;
+                }
+
+            /* ================= TITLE ================= */
+            .title {
+                text-align: center;
+                font-size: 16px;
+                font-weight: bold;
+                text-decoration: underline;
+                margin: 10px 0 22px 0;
+            }
+
+            /* ================= INFO TABLE ================= */
+            .info-table {
+                width: 100%;
+                border-collapse: collapse;
+                margin-bottom: 18px;
+            }
+
+                .info-table td {
+                    border: none;
+                    padding: 3px 0;
+                    vertical-align: top;
+                    font-size: 14px;
+                }
+
+                .info-table .label {
+                    width: 210px;
+                }
+
+                .info-table .colon {
+                    width: 15px;
+                    text-align: center;
+                }
+
+                .info-table .value {
+                    width: 260px;
+                }
+
+            /* ================= TABEL BARANG ================= */
+            .barang-table {
+                width: 100%;
+                border-collapse: collapse;
+                margin-top: 10px;
+                font-size: 13px;
+            }
+
+                .barang-table th,
+                .barang-table td {
+                    border: 1px solid #000;
+                    padding: 7px 8px;
+                }
+
+                .barang-table th {
+                    text-align: center;
+                    background: #f3f3f3;
+                    font-weight: bold;
+                }
+
+                .barang-table td {
+                    vertical-align: top;
+                }
+
+            .text-left {
+                text-align: left;
+            }
+
+            .text-center {
+                text-align: center;
+            }
+
+            /* ================= PARAGRAPH ================= */
+            .paragraph {
+                margin-top: 12px;
+                text-align: justify;
+                line-height: 1.5;
+                font-size: 13px;
+            }
+
+            /* ================= SIGNATURE ================= */
+            .signature {
+                width: 100%;
+                border-collapse: collapse;
+                margin-top: 45px;
+            }
+
+                .signature td {
+                    border: none;
+                    text-align: center;
+                    vertical-align: top;
+                    width: 25%;
+                    padding: 0 10px;
+                    font-size: 13px;
+                }
+
+            .sign-space {
+                height: 75px;
+            }
+
+            .signature-name {
+                font-weight: bold;
+                text-decoration: underline;
+            }
     </style>
-
 </head>
-
 <body>
 
     <div class="paper">
 
         <div class="header">
 
-            <img src="/images/pertamina.png" class="logo" />
+            <img src="/images/Logo_pertamina.png" class="logo" />
 
             <div class="header-center">
-
                 <div class="company">PT KILANG PERTAMINA</div>
                 <div class="company-sub">BALIKPAPAN</div>
 
                 <div class="alamat">
-                    Kantor NSO PT Kilang Pertamina Balikpapan<br>
+                    Kantor NSO PT Kilang Pertamina Balikpapan<br />
                     JL. Yos Sudarso No.1 Balikpapan
                 </div>
-
             </div>
 
             <table class="box-info">
-
                 <tr>
-                    <td width="70">Nomor</td>
-                    <td width="10">:</td>
-                    <td>@Model.NomorSurat</td>
+                    <td class="label">Nomor</td>
+                    <td class="separator">:</td>
+                    <td class="value">@Model.NomorSurat</td>
                 </tr>
-
                 <tr>
-                    <td>Tanggal</td>
-                    <td>:</td>
-                    <td>@Model.Tanggal.ToString("dd MMMM yyyy")</td>
+                    <td class="label">Tanggal</td>
+                    <td class="separator">:</td>
+                    <td class="value">@Model.Tanggal.ToString("dd MMMM yyyy")</td>
                 </tr>
-
                 <tr>
-                    <td>Dari</td>
-                    <td>:</td>
-                    <td>Ruang IT KPB</td>
+                    <td class="label">Dari</td>
+                    <td class="separator">:</td>
+                    <td class="value">Ruang IT KPB</td>
                 </tr>
-
                 <tr>
-                    <td>Tujuan</td>
-                    <td>:</td>
-                    <td>@Model.Tujuan</td>
+                    <td class="label">Tujuan</td>
+                    <td class="separator">:</td>
+                    <td class="value">@Model.Tujuan</td>
                 </tr>
-
             </table>
 
         </div>
@@ -206,35 +261,30 @@
         </div>
 
         <table class="info-table">
-
             <tr>
-                <td width="200">Nama Penanggung Jawab</td>
-                <td width="10">:</td>
-                <td>@Model.NamaPenanggungJawab</td>
-            </tr>
+                <td class="label"><b>Nama Penanggung Jawab</b></td>
+                <td class="colon">:</td>
+                <td class="value">@Model.NamaPenanggungJawab</td>
 
-            <tr>
-                <td>Jabatan</td>
-                <td>:</td>
-                <td>@Model.Jabatan</td>
-            </tr>
-
-            <tr>
-                <td>No. Pekerja</td>
-                <td>:</td>
+                <td class="label" style="width:120px;"><b>No. Pekerja</b></td>
+                <td class="colon">:</td>
                 <td>@Model.NoPekerja</td>
             </tr>
 
             <tr>
-                <td>Alamat</td>
-                <td>:</td>
-                <td>@Model.Alamat</td>
+                <td class="label"><b>Jabatan</b></td>
+                <td class="colon">:</td>
+                <td class="value">@Model.Jabatan</td>
             </tr>
 
+            <tr>
+                <td class="label"><b>Alamat</b></td>
+                <td class="colon">:</td>
+                <td class="value">@Model.Alamat</td>
+            </tr>
         </table>
 
-        <table>
-
+        <table class="barang-table">
             <thead>
                 <tr>
                     <th width="50">No</th>
@@ -246,7 +296,6 @@
             </thead>
 
             <tbody>
-
                 @if (Model.BarangList != null && Model.BarangList.Any())
                 {
                     int no = 1;
@@ -254,11 +303,11 @@
                     foreach (var barang in Model.BarangList)
                     {
                         <tr>
-                            <td>@no</td>
-                            <td>@barang.NamaBarang</td>
-                            <td>@barang.Jumlah</td>
-                            <td>@barang.MerkType</td>
-                            <td>@barang.Pengguna</td>
+                            <td class="text-center">@no</td>
+                            <td class="text-left">@barang.NamaBarang</td>
+                            <td class="text-center">@barang.Jumlah</td>
+                            <td class="text-center">@barang.MerkType</td>
+                            <td class="text-center">@barang.Pengguna</td>
                         </tr>
 
                         no++;
@@ -267,16 +316,15 @@
                 else
                 {
                     <tr>
-                        <td colspan="5">Tidak ada data barang</td>
+                        <td colspan="5" class="text-center">Tidak ada data barang</td>
                     </tr>
                 }
-
             </tbody>
-
         </table>
 
         <div class="paragraph">
-            <b>Catatan : Pemenuhan Permintaan Berdasarkan</b> @Model.JenisTiket No @Model.NoTiket
+            <b>Catatan : Pemenuhan Permintaan Berdasarkan</b>
+            @Model.JenisTiket No @Model.NoTiket
         </div>
 
         <div class="paragraph">
@@ -309,15 +357,21 @@
         </div>
 
         <table class="signature">
-
             <tr>
                 <td>Yang Menyerahkan</td>
-                <td>Mengetahui<br>Ast Manager IT | PT. KPB</td>
+                <td>Mengetahui<br />Ast Manager IT | PT. KPB</td>
                 <td>Yang Bertanggung Jawab</td>
                 <td>
-                    Balikpapan, @Model.Tanggal.ToString("dd.MM.yyyy")<br>
+                    Balikpapan, @Model.Tanggal.ToString("dd.MM.yyyy")<br />
                     Yang Menerima
                 </td>
+            </tr>
+
+            <tr>
+                <td class="sign-space"></td>
+                <td class="sign-space"></td>
+                <td class="sign-space"></td>
+                <td class="sign-space"></td>
             </tr>
 
             <tr>
@@ -326,7 +380,6 @@
                 <td class="signature-name">@Model.NamaPenanggungJawab</td>
                 <td class="signature-name">@Model.YangMenerima</td>
             </tr>
-
         </table>
 
     </div>
