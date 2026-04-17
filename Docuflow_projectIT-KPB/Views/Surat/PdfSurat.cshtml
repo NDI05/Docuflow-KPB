@@ -278,6 +278,15 @@
             </tr>
 
             <tr>
+                <td class="label"><b>Fungsi/Direktorat</b></td>
+                <td class="colon">:</td>
+                <td class="value">@Model.FungsiDirektorat</td>
+                <td></td>
+                <td></td>
+                <td></td>
+            </tr>
+
+            <tr>
                 <td class="label"><b>Alamat</b></td>
                 <td class="colon">:</td>
                 <td class="value">@Model.Alamat</td>
@@ -289,7 +298,7 @@
                 <tr>
                     <th width="50">No</th>
                     <th>Nama Barang</th>
-                    <th width="80">Jumlah</th>
+                    <th width="180">Serial Number</th>
                     <th width="160">Merk Type</th>
                     <th width="160">Pengguna</th>
                 </tr>
@@ -305,7 +314,7 @@
                         <tr>
                             <td class="text-center">@no</td>
                             <td class="text-left">@barang.NamaBarang</td>
-                            <td class="text-center">@barang.Jumlah</td>
+                            <td class="text-center">@barang.SerialNumber</td>
                             <td class="text-center">@barang.MerkType</td>
                             <td class="text-center">@barang.Pengguna</td>
                         </tr>

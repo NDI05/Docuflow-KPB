@@ -18,7 +18,12 @@ namespace Docuflow_projectIT_KPB.Models
         [Required]
         public string NamaBarang { get; set; } = string.Empty;
 
-        public int Jumlah { get; set; }
+        // ❌ OPSIONAL (boleh dihapus kalau udah full pindah ke SN)
+        public int? Jumlah { get; set; }
+
+        // ✅ BARU (ganti dari Jumlah)
+        [Display(Name = "Serial Number")]
+        public string SerialNumber { get; set; } = string.Empty;
 
         public string MerkType { get; set; } = string.Empty;
 

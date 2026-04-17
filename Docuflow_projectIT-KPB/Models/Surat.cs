@@ -8,14 +8,13 @@ namespace Docuflow_projectIT_KPB.Models
         // ======================
         // PRIMARY KEY
         // ======================
-
+        [Key]
         public int Id { get; set; }
 
 
         // ======================
         // NOMOR SURAT
         // ======================
-
         [Required]
         public string NomorSurat { get; set; } = string.Empty;
 
@@ -23,26 +22,24 @@ namespace Docuflow_projectIT_KPB.Models
         // ======================
         // JENIS SURAT
         // ======================
-
         [Required]
         public int JenisSuratId { get; set; }
 
+        [ForeignKey("JenisSuratId")]
         public JenisSurat? JenisSurat { get; set; }
 
 
         // ======================
         // TANGGAL
         // ======================
+        public DateTime Tanggal { get; set; } = DateTime.Now;
 
-        public DateTime Tanggal { get; set; }
-
-        public DateTime? CreatedAt { get; set; }
+        public DateTime? CreatedAt { get; set; } = DateTime.Now;
 
 
         // ======================
         // INFORMASI SURAT
         // ======================
-
         public string? Deskripsi { get; set; }
 
         public string? Tujuan { get; set; }
@@ -53,7 +50,6 @@ namespace Docuflow_projectIT_KPB.Models
         // ======================
         // CATATAN TIKET
         // ======================
-
         public string? JenisTiket { get; set; }
 
         public string? NoTiket { get; set; }
@@ -62,10 +58,12 @@ namespace Docuflow_projectIT_KPB.Models
         // ======================
         // DATA PENANGGUNG JAWAB
         // ======================
-
         public string? NamaPenanggungJawab { get; set; }
 
         public string? Jabatan { get; set; }
+
+        // ✅ TAMBAHAN BARU
+        public string? FungsiDirektorat { get; set; }
 
         public string? NoPekerja { get; set; }
 
@@ -77,31 +75,31 @@ namespace Docuflow_projectIT_KPB.Models
         // ======================
         // RELASI USER SYSTEM
         // ======================
-
         public int? StaffId { get; set; }
 
         public int? ManagerId { get; set; }
 
         public int? PenanggungJawabId { get; set; }
 
+        [ForeignKey("StaffId")]
         public User? Staff { get; set; }
 
+        [ForeignKey("ManagerId")]
         public User? Manager { get; set; }
 
+        [ForeignKey("PenanggungJawabId")]
         public User? PenanggungJawab { get; set; }
 
 
         // ======================
         // FILE UPLOAD
         // ======================
-
         public string? FilePath { get; set; }
 
 
         // ======================
         // BARANG LIST
         // ======================
-
-        public List<BarangSurat>? BarangList { get; set; }
+        public List<BarangSurat>? BarangList { get; set; } = new List<BarangSurat>();
     }
 }

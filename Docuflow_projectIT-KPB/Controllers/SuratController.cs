@@ -13,12 +13,10 @@ using System.Linq;
 using System.Threading.Tasks;
 using System.Collections.Generic;
 
-// TAMBAH INI (WAJIB)
 using Docuflow_projectIT_KPB.Filters;
 
 namespace Docuflow_projectIT_KPB.Controllers
 {
-    // STEP 8: WAJIB LOGIN
     [SessionAuthorize]
     public class SuratController : Controller
     {
@@ -31,9 +29,6 @@ namespace Docuflow_projectIT_KPB.Controllers
             _nomorService = nomorService;
         }
 
-        // =========================
-        // LIST SURAT (PAGINATION + SEARCH)
-        // =========================
         public async Task<IActionResult> Index(string search, int page = 1)
         {
             int pageSize = 15;
@@ -46,9 +41,6 @@ namespace Docuflow_projectIT_KPB.Controllers
                 .OrderByDescending(s => s.CreatedAt)
                 .AsQueryable();
 
-            // =========================
-            // SEARCH FILTER
-            // =========================
             if (!string.IsNullOrWhiteSpace(search))
             {
                 search = search.Trim();
@@ -60,24 +52,13 @@ namespace Docuflow_projectIT_KPB.Controllers
                 );
             }
 
-            // =========================
-            // COUNT TOTAL DATA
-            // =========================
             int totalData = await query.CountAsync();
             int totalPages = (int)Math.Ceiling((double)totalData / pageSize);
 
-            if (totalPages == 0)
-                totalPages = 1;
+            if (totalPages == 0) totalPages = 1;
+            if (page < 1) page = 1;
+            if (page > totalPages) page = totalPages;
 
-            if (page < 1)
-                page = 1;
-
-            if (page > totalPages)
-                page = totalPages;
-
-            // =========================
-            // PAGINATION DATA
-            // =========================
             var suratList = await query
                 .Skip((page - 1) * pageSize)
                 .Take(pageSize)
@@ -90,9 +71,6 @@ namespace Docuflow_projectIT_KPB.Controllers
             return View(suratList);
         }
 
-        // =========================
-        // CREATE FORM
-        // =========================
         public async Task<IActionResult> Create()
         {
             ViewBag.JenisSurat = await _context.JenisSurat
@@ -107,7 +85,7 @@ namespace Docuflow_projectIT_KPB.Controllers
         }
 
         // =========================
-        // CREATE POST
+        // ✅ FIXED CREATE POST
         // =========================
         [HttpPost]
         [ValidateAntiForgeryToken]
@@ -119,23 +97,31 @@ namespace Docuflow_projectIT_KPB.Controllers
             surat.CreatedAt = now;
 
             // =========================
-            // AMBIL DATA BARANG DARI FORM
+            // 🔥 FIX ARRAY FORM
             // =========================
             var namaBarang = Request.Form["NamaBarang[]"];
-            var jumlah = Request.Form["Jumlah[]"];
+            var serialNumber = Request.Form["SerialNumber[]"];
             var merkType = Request.Form["MerkType[]"];
             var pengguna = Request.Form["Pengguna[]"];
 
             surat.BarangList = new List<BarangSurat>();
 
-            for (int i = 0; i < namaBarang.Count; i++)
+            int max = new int[]
+            {
+                namaBarang.Count,
+                serialNumber.Count,
+                merkType.Count,
+                pengguna.Count
+            }.Min(); // 🔥 ANTI CRASH
+
+            for (int i = 0; i < max; i++)
             {
                 if (!string.IsNullOrWhiteSpace(namaBarang[i]))
                 {
                     surat.BarangList.Add(new BarangSurat
                     {
                         NamaBarang = namaBarang[i],
-                        Jumlah = int.TryParse(jumlah[i], out int j) ? j : 0,
+                        SerialNumber = serialNumber[i], // ✅ GANTI
                         MerkType = merkType[i],
                         Pengguna = pengguna[i]
                     });
@@ -143,7 +129,7 @@ namespace Docuflow_projectIT_KPB.Controllers
             }
 
             // =========================
-            // UPLOAD FILE
+            // FILE UPLOAD (AMAN)
             // =========================
             if (file != null && file.Length > 0)
             {
@@ -156,8 +142,7 @@ namespace Docuflow_projectIT_KPB.Controllers
                 if (!Directory.Exists(uploadsFolder))
                     Directory.CreateDirectory(uploadsFolder);
 
-                var safeFileName = Path.GetFileName(file.FileName);
-                var fileName = $"{DateTime.Now:yyyyMMddHHmmss}_{safeFileName}";
+                var fileName = $"{DateTime.Now:yyyyMMddHHmmss}_{Path.GetFileName(file.FileName)}";
                 var filePath = Path.Combine(uploadsFolder, fileName);
 
                 using (var stream = new FileStream(filePath, FileMode.Create))
@@ -169,12 +154,12 @@ namespace Docuflow_projectIT_KPB.Controllers
             }
 
             // =========================
-            // GENERATE NOMOR SURAT
+            // NOMOR SURAT
             // =========================
             surat.NomorSurat = await _nomorService.GenerateNomorSurat(surat.JenisSuratId);
 
             // =========================
-            // AUTO ASSIGN PENANGGUNG JAWAB
+            // AUTO PENANGGUNG JAWAB
             // =========================
             var pj = await _context.Users
                 .FirstOrDefaultAsync(u => u.Role == "PenanggungJawab");
@@ -183,7 +168,7 @@ namespace Docuflow_projectIT_KPB.Controllers
                 surat.PenanggungJawabId = pj.Id;
 
             // =========================
-            // SAVE SURAT + BARANG
+            // SAVE
             // =========================
             _context.Surat.Add(surat);
             await _context.SaveChangesAsync();
@@ -191,9 +176,6 @@ namespace Docuflow_projectIT_KPB.Controllers
             return RedirectToAction(nameof(Details), new { id = surat.Id });
         }
 
-        // =========================
-        // DETAIL SURAT
-        // =========================
         public async Task<IActionResult> Details(int id)
         {
             var surat = await _context.Surat
@@ -210,9 +192,6 @@ namespace Docuflow_projectIT_KPB.Controllers
             return View(surat);
         }
 
-        // =========================
-        // PREVIEW
-        // =========================
         public async Task<IActionResult> Preview(int id)
         {
             var surat = await _context.Surat
@@ -230,9 +209,6 @@ namespace Docuflow_projectIT_KPB.Controllers
             return View("SuratTemplate", surat);
         }
 
-        // =========================
-        // GENERATE PDF
-        // =========================
         public async Task<IActionResult> GeneratePdf(int id)
         {
             var surat = await _context.Surat
@@ -255,9 +231,6 @@ namespace Docuflow_projectIT_KPB.Controllers
             };
         }
 
-        // =========================
-        // DOWNLOAD
-        // =========================
         public async Task<IActionResult> Download(int id)
         {
             var surat = await _context.Surat
@@ -298,12 +271,9 @@ namespace Docuflow_projectIT_KPB.Controllers
                 return File(bytes, contentType, $"{surat.NomorSurat}{ext}");
             }
 
-            return RedirectToAction(nameof(GeneratePdf), new { id = id });
+            return RedirectToAction(nameof(GeneratePdf), new { id });
         }
 
-        // =========================
-        // DELETE
-        // =========================
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Delete(int id)

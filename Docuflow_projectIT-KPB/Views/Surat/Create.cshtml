@@ -22,19 +22,6 @@
         align-items: center;
     }
 
-    .page-header h5 {
-        margin: 0;
-        font-weight: 800;
-        color: #111827;
-    }
-
-    .btn-header {
-        border-radius: 10px;
-        font-weight: 700;
-        font-size: 13px;
-        padding: 7px 14px;
-    }
-
     .form-wrapper {
         background: #f4f6fb;
         padding: 20px;
@@ -52,40 +39,16 @@
         padding: 8px 12px;
         border-radius: 10px;
         font-weight: 800;
-        color: #111827;
-        font-size: 14px;
         margin-bottom: 12px;
     }
 
-    label {
-        font-size: 13px;
-        font-weight: 700;
-        color: #111827;
-        margin-bottom: 5px;
-    }
-
-    .form-control, .select2-container--default .select2-selection--single {
+    .form-control {
         border-radius: 10px !important;
         height: 38px;
-        border: 1px solid #b6b9cc;
-        font-size: 14px;
     }
 
     textarea.form-control {
         height: auto !important;
-    }
-
-    .select2-container--default .select2-selection--single {
-        display: flex;
-        align-items: center;
-    }
-
-    .select2-container--default .select2-selection--single .select2-selection__arrow {
-        height: 36px;
-    }
-
-    .select2-container--default .select2-results__options {
-        max-height: 350px;
     }
 
     .table-custom {
@@ -94,161 +57,122 @@
         overflow: hidden;
     }
 
-    .table-custom thead {
-        background: #c6c8d9;
-        font-weight: 800;
-        text-align: center;
-    }
-
-    .table-custom tbody td {
-        vertical-align: middle;
-        font-size: 13px;
-    }
-
-    .btn-action {
-        border-radius: 10px;
-        font-weight: 700;
-        font-size: 13px;
-        padding: 6px 12px;
-    }
+        .table-custom thead {
+            background: #c6c8d9;
+            text-align: center;
+        }
 
     .btn-add {
         border-radius: 10px;
         font-weight: 700;
-        font-size: 13px;
         padding: 7px 12px;
-    }
-
-    .footer-actions {
-        display: flex;
-        justify-content: center;
-        gap: 10px;
-        margin-top: 20px;
-    }
-
-    .footer-actions .btn {
-        border-radius: 10px;
-        font-weight: 800;
-        padding: 7px 22px;
-        font-size: 13px;
     }
 </style>
 
 <div class="card page-card">
 
-    <!-- HEADER -->
     <div class="page-header">
         <h5>Buat Surat</h5>
-
-        <button type="submit" form="formSurat" class="btn btn-success btn-header">
-            Simpan
-        </button>
+        <button type="submit" form="formSurat" class="btn btn-success">Simpan</button>
     </div>
 
     <div class="form-wrapper">
 
-        <form asp-action="Create" method="post" enctype="multipart/form-data" id="formSurat">
+        <!-- ❌ enctype multipart dihapus karena tidak ada upload -->
+        <form asp-action="Create" method="post" id="formSurat">
 
-            <!-- INFORMASI SURAT -->
+            <!-- JENIS SURAT + TUJUAN -->
             <div class="section-box">
-                <div class="section-title">Informasi Surat</div>
+                <div class="section-title">Jenis Surat & Tujuan</div>
 
                 <div class="row g-3">
                     <div class="col-md-6">
                         <label>Jenis Surat</label>
-                        <select asp-for="JenisSuratId" class="form-control select2">
+                        <select asp-for="JenisSuratId" class="form-control" required>
                             <option value="">-- Pilih Jenis Surat --</option>
-                            @foreach (var item in ViewBag.JenisSurat)
+                            @foreach (var j in ViewBag.JenisSurat)
                             {
-                                <option value="@item.Id">@item.NamaJenis</option>
+                                <option value="@j.Id">@j.NamaJenis</option>
                             }
                         </select>
+                        <span asp-validation-for="JenisSuratId" class="text-danger"></span>
                     </div>
 
                     <div class="col-md-6">
                         <label>Tujuan</label>
-                        <input type="text" name="Tujuan" class="form-control" />
+                        <input asp-for="Tujuan" class="form-control" placeholder="Masukkan tujuan surat" required />
+                        <span asp-validation-for="Tujuan" class="text-danger"></span>
                     </div>
                 </div>
             </div>
 
-            <!-- DATA PENANGGUNG JAWAB -->
+            <!-- PENANGGUNG JAWAB -->
             <div class="section-box">
                 <div class="section-title">Data Penanggung Jawab</div>
 
                 <div class="row g-3">
                     <div class="col-md-4">
-                        <label>Nama Penanggung Jawab</label>
-                        <input type="text" name="NamaPenanggungJawab" class="form-control" />
+                        <label>Nama</label>
+                        <input asp-for="NamaPenanggungJawab" class="form-control" />
                     </div>
 
                     <div class="col-md-4">
                         <label>Jabatan</label>
-                        <input type="text" name="Jabatan" class="form-control" />
+                        <input asp-for="Jabatan" class="form-control" />
                     </div>
 
                     <div class="col-md-4">
-                        <label>ID Badge</label>
-                        <input type="text" name="NoPekerja" class="form-control" />
+                        <label>Fungsi/Direktorat</label>
+                        <input asp-for="FungsiDirektorat" class="form-control" />
                     </div>
 
-                    <div class="col-md-6">
+                    <div class="col-md-4">
+                        <label>No Pekerja</label>
+                        <input asp-for="NoPekerja" class="form-control" />
+                    </div>
+
+                    <div class="col-md-8">
                         <label>Alamat</label>
-                        <textarea name="Alamat" class="form-control" rows="4"></textarea>
+                        <textarea asp-for="Alamat" class="form-control"></textarea>
                     </div>
                 </div>
             </div>
 
-            <!-- DAFTAR BARANG -->
+            <!-- DEVICE -->
+            <div class="section-box">
+                <div class="section-title">Jenis Perangkat</div>
+
+                <select id="deviceType" class="form-control">
+                    <option value="">-- Pilih --</option>
+                    <option value="PC">PC</option>
+                    <option value="Laptop">Laptop</option>
+                    <option value="HT">HT</option>
+                    <option value="Lainnya">Lainnya</option>
+                </select>
+            </div>
+
+            <!-- TABEL -->
             <div class="section-box">
                 <div class="section-title">Daftar Barang</div>
 
                 <div class="table-responsive table-custom">
-                    <table class="table table-bordered mb-0" id="barangTable">
+                    <table class="table table-bordered" id="barangTable">
                         <thead>
                             <tr>
-                                <th width="60">No.</th>
+                                <th>No</th>
                                 <th>Nama Barang</th>
-                                <th width="90">Jumlah</th>
-                                <th>Merk/Type</th>
-                                <th>Nama Pengguna</th>
-                                <th width="100">Aksi</th>
+                                <th>Serial Number</th>
+                                <th>Merk</th>
+                                <th>Pengguna</th>
+                                <th>Aksi</th>
                             </tr>
                         </thead>
-
-                        <tbody>
-                            <tr>
-                                <td class="text-center">1</td>
-
-                                <td>
-                                    <input type="text" name="NamaBarang[]" class="form-control" />
-                                </td>
-
-                                <td>
-                                    <input type="number" name="Jumlah[]" class="form-control" />
-                                </td>
-
-                                <td>
-                                    <input type="text" name="MerkType[]" class="form-control" />
-                                </td>
-
-                                <td>
-                                    <input type="text" name="Pengguna[]" class="form-control" />
-                                </td>
-
-                                <td class="text-center">
-                                    <button type="button" class="btn btn-danger btn-sm btn-action removeRow">
-                                        Hapus
-                                    </button>
-                                </td>
-                            </tr>
-                        </tbody>
-
+                        <tbody></tbody>
                     </table>
                 </div>
 
-                <button type="button" class="btn btn-primary btn-add mt-3" id="addRow">
-                    + Tambah Barang
+                <button type="button" id="addRow" class="btn btn-primary btn-add mt-3">
+                    + Tambah Manual
                 </button>
             </div>
 
@@ -256,36 +180,27 @@
             <div class="section-box">
                 <div class="section-title">Catatan</div>
 
-                <div class="row g-3 align-items-end">
-                    <div class="col-md-12">
-                        <label>Catatan</label>
+                <div class="d-flex gap-2 align-items-center flex-wrap">
+                    <span>Pemenuhan Berdasarkan</span>
 
-                        <div class="d-flex flex-wrap gap-2 align-items-center">
-                            <span style="font-size:13px; font-weight:600;">Pemenuhan Permintaan Berdasarkan</span>
+                    <select asp-for="JenisTiket" class="form-control" style="width:150px;">
+                        <option value="Tiket MySSC">Tiket MySSC</option>
+                        <option value="Tiket BAST">Tiket BAST</option>
+                    </select>
 
-                            <select name="JenisTiket" class="form-control" style="width:160px;">
-                                <option value="Tiket MySSC">Tiket MySSC</option>
-                                <option value="Tiket BAST">Tiket BAST</option>
-                                <option value="Dokumen Lain">Dokumen Lain</option>
-                            </select>
-
-                            <span style="font-size:13px; font-weight:600;">No.</span>
-
-                            <input type="text" name="NoTiket" class="form-control" style="width:220px;" />
-                        </div>
-                    </div>
+                    <span>No</span>
+                    <input asp-for="NoTiket" class="form-control" style="width:200px;" />
                 </div>
             </div>
 
-            <!-- TANDA TANGAN -->
+            <!-- TTD -->
             <div class="section-box">
                 <div class="section-title">Tanda Tangan</div>
 
                 <div class="row g-3">
                     <div class="col-md-4">
-                        <label>Yang Menyerahkan (Staff)</label>
-                        <select asp-for="StaffId" class="form-control select2">
-                            <option value="">-- Pilih Staff --</option>
+                        <select asp-for="StaffId" class="form-control">
+                            <option value="">Staff</option>
                             @foreach (var user in ViewBag.Users)
                             {
                                 if (user.Role == "Staff")
@@ -297,9 +212,8 @@
                     </div>
 
                     <div class="col-md-4">
-                        <label>Yang Mengetahui (Manager)</label>
-                        <select asp-for="ManagerId" class="form-control select2">
-                            <option value="">-- Pilih Manager --</option>
+                        <select asp-for="ManagerId" class="form-control">
+                            <option value="">Manager</option>
                             @foreach (var user in ViewBag.Users)
                             {
                                 if (user.Role == "Manager")
@@ -311,77 +225,62 @@
                     </div>
 
                     <div class="col-md-4">
-                        <label>Yang Menerima</label>
-                        <input type="text" name="YangMenerima" class="form-control" />
+                        <input asp-for="YangMenerima" class="form-control" placeholder="Yang Menerima" />
                     </div>
                 </div>
             </div>
 
-            <!-- FOOTER ACTIONS -->
-            <div class="footer-actions">
-                <button type="submit" class="btn btn-success">
-                    Simpan
-                </button>
-
-                <a href="/Surat" class="btn btn-secondary">
-                    Kembali
-                </a>
-            </div>
-
         </form>
-
     </div>
 </div>
 
-
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0/dist/js/select2.min.js"></script>
 
 <script>
-    $(document).ready(function () {
-        $('.select2').select2({
-            width: '100%',
-            dropdownAutoWidth: true
-        });
+    let rowNumber = 0;
+
+    const templates = {
+    "PC": ["PC", "Monitor", "VGA", "Keyboard", "Mouse", "Hostname"],
+    "Laptop": ["Notebook", "Adaptor", "Backpack", "Mouse", "Ethernet", "Chainlock", "Hostname"],
+    "HT": ["HT", "Charger", "Battery", "Antenna"]
+    };
+
+    function addRow(nama = "") {
+    rowNumber++;
+
+    $("#barangTable tbody").append(`
+    <tr>
+    <td>${rowNumber}</td>
+    <td><input name="NamaBarang[]" class="form-control" value="${nama}" /></td>
+    <td><input name="SerialNumber[]" class="form-control" /></td>
+    <td><input name="MerkType[]" class="form-control" /></td>
+    <td><input name="Pengguna[]" class="form-control" /></td>
+    <td><button type="button" class="btn btn-danger removeRow">X</button></td>
+    </tr>
+    `);
+    }
+
+    $("#deviceType").change(function () {
+    let val = $(this).val();
+    $("#barangTable tbody").empty();
+    rowNumber = 0;
+
+    if (templates[val]) {
+    templates[val].forEach(x => addRow(x));
+    } else {
+    addRow("");
+    }
     });
 
-    let rowNumber = 1;
+    $("#addRow").click(() => addRow(""));
 
-    document.getElementById("addRow").addEventListener("click", function () {
+    $(document).on("click", ".removeRow", function () {
+    $(this).closest("tr").remove();
 
-        rowNumber++;
-
-        let table = document.getElementById("barangTable").getElementsByTagName('tbody')[0];
-
-        let row = table.insertRow();
-
-        row.innerHTML = `
-            <td class="text-center">${rowNumber}</td>
-            <td><input type="text" name="NamaBarang[]" class="form-control"/></td>
-            <td><input type="number" name="Jumlah[]" class="form-control"/></td>
-            <td><input type="text" name="MerkType[]" class="form-control"/></td>
-            <td><input type="text" name="Pengguna[]" class="form-control"/></td>
-            <td class="text-center">
-                <button type="button" class="btn btn-danger btn-sm btn-action removeRow">Hapus</button>
-            </td>
-        `;
+    rowNumber = 0;
+    $("#barangTable tbody tr").each(function () {
+    rowNumber++;
+    $(this).find("td:first").text(rowNumber);
     });
-
-    document.addEventListener("click", function (e) {
-
-        if (e.target.classList.contains("removeRow")) {
-
-            let row = e.target.closest("tr");
-            row.remove();
-
-            // reset nomor urut biar rapih
-            let rows = document.querySelectorAll("#barangTable tbody tr");
-            rowNumber = 0;
-
-            rows.forEach((r) => {
-                rowNumber++;
-                r.children[0].innerText = rowNumber;
-            });
-        }
     });
 </script>

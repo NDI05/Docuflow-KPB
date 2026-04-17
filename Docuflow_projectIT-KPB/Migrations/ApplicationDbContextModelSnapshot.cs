@@ -30,7 +30,7 @@ namespace Docuflow_projectIT_KPB.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
-                    b.Property<int>("Jumlah")
+                    b.Property<int?>("Jumlah")
                         .HasColumnType("int");
 
                     b.Property<string>("MerkType")
@@ -42,6 +42,10 @@ namespace Docuflow_projectIT_KPB.Migrations
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("Pengguna")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("SerialNumber")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
@@ -121,6 +125,9 @@ namespace Docuflow_projectIT_KPB.Migrations
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("FormatSerahTerima")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("FungsiDirektorat")
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("Jabatan")
