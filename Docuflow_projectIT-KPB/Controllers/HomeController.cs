@@ -20,9 +20,19 @@ namespace Docuflow_projectIT_KPB.Controllers
 
         public IActionResult Index()
         {
+            // =========================
+            // TOTAL USERS
+            // =========================
             ViewBag.TotalUsers = _context.Users.Count();
+
+            // =========================
+            // TOTAL SURAT
+            // =========================
             ViewBag.TotalSurat = _context.Surat.Count();
 
+            // =========================
+            // SURAT PER JENIS
+            // =========================
             var suratPerJenis = _context.Surat
                 .Include(s => s.JenisSurat)
                 .GroupBy(s => s.JenisSurat.NamaJenis)
@@ -35,6 +45,14 @@ namespace Docuflow_projectIT_KPB.Controllers
 
             ViewBag.SuratPerJenis = suratPerJenis;
 
+            // =========================
+            // AUDIT LOG TERBARU
+            // =========================
+            ViewBag.AktivitasTerbaru = _context.AuditLogs
+                .OrderByDescending(a => a.Waktu)
+                .Take(10)
+                .ToList();
+
             return View();
         }
 
@@ -43,12 +61,16 @@ namespace Docuflow_projectIT_KPB.Controllers
             return View();
         }
 
-        [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
+        [ResponseCache(
+            Duration = 0,
+            Location = ResponseCacheLocation.None,
+            NoStore = true)]
         public IActionResult Error()
         {
             return View(new ErrorViewModel
             {
-                RequestId = Activity.Current?.Id ?? HttpContext.TraceIdentifier
+                RequestId = Activity.Current?.Id
+                            ?? HttpContext.TraceIdentifier
             });
         }
     }

@@ -1,19 +1,18 @@
-﻿using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
-using Microsoft.AspNetCore.Http;
+﻿using Docuflow.Services;
 using Docuflow_projectIT_KPB.Data;
+using Docuflow_projectIT_KPB.Filters;
 using Docuflow_projectIT_KPB.Models;
 using Docuflow_projectIT_KPB.Services;
+using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using Rotativa.AspNetCore;
 using Rotativa.AspNetCore.Options;
-
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
-using System.Collections.Generic;
-
-using Docuflow_projectIT_KPB.Filters;
 
 namespace Docuflow_projectIT_KPB.Controllers
 {
@@ -22,11 +21,16 @@ namespace Docuflow_projectIT_KPB.Controllers
     {
         private readonly ApplicationDbContext _context;
         private readonly NomorSuratService _nomorService;
+        private readonly AuditLogService _auditLog;
 
-        public SuratController(ApplicationDbContext context, NomorSuratService nomorService)
+        public SuratController(
+            ApplicationDbContext context,
+            NomorSuratService nomorService,
+            AuditLogService auditLog)
         {
             _context = context;
             _nomorService = nomorService;
+            _auditLog = auditLog;
         }
 
         public async Task<IActionResult> Index(string search, int page = 1)
@@ -84,9 +88,6 @@ namespace Docuflow_projectIT_KPB.Controllers
             return View();
         }
 
-        // =========================
-        // ✅ FIXED CREATE POST
-        // =========================
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create(Surat surat, IFormFile file)
@@ -96,9 +97,6 @@ namespace Docuflow_projectIT_KPB.Controllers
             surat.Tanggal = now;
             surat.CreatedAt = now;
 
-            // =========================
-            // 🔥 FIX ARRAY FORM
-            // =========================
             var namaBarang = Request.Form["NamaBarang[]"];
             var serialNumber = Request.Form["SerialNumber[]"];
             var merkType = Request.Form["MerkType[]"];
@@ -112,7 +110,7 @@ namespace Docuflow_projectIT_KPB.Controllers
                 serialNumber.Count,
                 merkType.Count,
                 pengguna.Count
-            }.Min(); // 🔥 ANTI CRASH
+            }.Min();
 
             for (int i = 0; i < max; i++)
             {
@@ -121,16 +119,13 @@ namespace Docuflow_projectIT_KPB.Controllers
                     surat.BarangList.Add(new BarangSurat
                     {
                         NamaBarang = namaBarang[i],
-                        SerialNumber = serialNumber[i], // ✅ GANTI
+                        SerialNumber = serialNumber[i],
                         MerkType = merkType[i],
                         Pengguna = pengguna[i]
                     });
                 }
             }
 
-            // =========================
-            // FILE UPLOAD (AMAN)
-            // =========================
             if (file != null && file.Length > 0)
             {
                 var uploadsFolder = Path.Combine(
@@ -153,25 +148,23 @@ namespace Docuflow_projectIT_KPB.Controllers
                 surat.FilePath = "/uploads/" + fileName;
             }
 
-            // =========================
-            // NOMOR SURAT
-            // =========================
             surat.NomorSurat = await _nomorService.GenerateNomorSurat(surat.JenisSuratId);
 
-            // =========================
-            // AUTO PENANGGUNG JAWAB
-            // =========================
             var pj = await _context.Users
                 .FirstOrDefaultAsync(u => u.Role == "PenanggungJawab");
 
             if (pj != null)
                 surat.PenanggungJawabId = pj.Id;
 
-            // =========================
-            // SAVE
-            // =========================
             _context.Surat.Add(surat);
             await _context.SaveChangesAsync();
+
+            // AUDIT LOG
+            _auditLog.Log(
+                HttpContext.Session.GetString("Username") ?? "-",
+                "Generate Nomor Surat",
+                $"Membuat surat nomor {surat.NomorSurat}"
+            );
 
             return RedirectToAction(nameof(Details), new { id = surat.Id });
         }
@@ -294,6 +287,13 @@ namespace Docuflow_projectIT_KPB.Controllers
                 if (System.IO.File.Exists(fullPath))
                     System.IO.File.Delete(fullPath);
             }
+
+            // AUDIT LOG
+            _auditLog.Log(
+                HttpContext.Session.GetString("Username") ?? "-",
+                "Hapus Surat",
+                $"Menghapus surat nomor {surat.NomorSurat}"
+            );
 
             _context.Surat.Remove(surat);
             await _context.SaveChangesAsync();

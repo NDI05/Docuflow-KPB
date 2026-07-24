@@ -1,6 +1,7 @@
-using Microsoft.EntityFrameworkCore;
+using Docuflow.Services;
 using Docuflow_projectIT_KPB.Data;
 using Docuflow_projectIT_KPB.Services;
+using Microsoft.EntityFrameworkCore;
 using Rotativa.AspNetCore;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -31,6 +32,9 @@ builder.Services.AddDbContext<ApplicationDbContext>(options =>
 // REGISTER SERVICES
 // =============================
 builder.Services.AddScoped<NomorSuratService>();
+
+// TAMBAHKAN INI
+builder.Services.AddScoped<AuditLogService>();
 
 var app = builder.Build();
 

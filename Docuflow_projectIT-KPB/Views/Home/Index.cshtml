@@ -1,4 +1,8 @@
-﻿@{
+﻿@using Microsoft.AspNetCore.Http
+@using Docuflow_projectIT_KPB.Models
+@using System.Linq
+
+@{
     ViewData["Title"] = "Dashboard";
 }
 
@@ -90,6 +94,41 @@
         color: #111827;
         margin: 0;
     }
+
+    .audit-card {
+        border-radius: 16px;
+        background: white;
+        padding: 18px;
+        box-shadow: 0px 8px 20px rgba(0,0,0,0.08);
+    }
+
+    .audit-item {
+        padding: 14px 0;
+        border-bottom: 1px solid #eceff5;
+    }
+
+        .audit-item:last-child {
+            border-bottom: none;
+        }
+
+    .audit-activity {
+        font-size: 16px;
+        font-weight: 700;
+        color: #1f2d3d;
+        margin-bottom: 8px;
+    }
+
+    .audit-user {
+        font-size: 13px;
+        color: #6c757d;
+        margin-bottom: 4px;
+        padding-left: 10px;
+    }
+
+    .audit-count {
+        color: #2563eb;
+        font-weight: 600;
+    }
 </style>
 
 <div class="dashboard-container">
@@ -97,40 +136,123 @@
     <div class="dashboard-header">
         <div>
             <h3>Beranda</h3>
-            <p>Selamat Datang, <b>@Context.Session.GetString("Nama")</b></p>
+            <p>
+                Selamat Datang,
+                <b>@Context.Session.GetString("Nama")</b>
+            </p>
         </div>
     </div>
 
-    <!-- Statistik utama -->
     <div class="row g-4">
+
         <div class="col-md-6">
             <div class="stat-card">
-                <div class="stat-title">Total Surat</div>
-                <h2 class="stat-value">@ViewBag.TotalSurat</h2>
+                <div class="stat-title">
+                    Total Surat
+                </div>
+
+                <h2 class="stat-value">
+                    @ViewBag.TotalSurat
+                </h2>
             </div>
         </div>
 
         <div class="col-md-6">
             <div class="stat-card">
-                <div class="stat-title">Total Users</div>
-                <h2 class="stat-value">@ViewBag.TotalUsers</h2>
+                <div class="stat-title">
+                    Total Users
+                </div>
+
+                <h2 class="stat-value">
+                    @ViewBag.TotalUsers
+                </h2>
             </div>
         </div>
+
     </div>
 
-    <!-- Total surat per jenis -->
-    <h5 class="section-title">Total Surat per Jenis</h5>
+    <h5 class="section-title">
+        Total Surat per Jenis
+    </h5>
 
     <div class="row g-3">
+
         @foreach (var item in ViewBag.SuratPerJenis)
         {
             <div class="col-lg-3 col-md-4 col-sm-6">
+
                 <div class="jenis-card">
-                    <div class="jenis-title">@item.NamaJenis</div>
-                    <h3 class="jenis-value">@item.Total</h3>
+
+                    <div class="jenis-title">
+                        @item.NamaJenis
+                    </div>
+
+                    <h3 class="jenis-value">
+                        @item.Total
+                    </h3>
+
                 </div>
+
             </div>
         }
+
     </div>
+
+    @if (Context.Session.GetString("Role") == "Admin")
+    {
+        <h5 class="section-title">
+            Aktivitas Terbaru
+        </h5>
+
+        <div class="audit-card">
+
+            @{
+                var logs = ViewBag.AktivitasTerbaru as List<AuditLog>;
+            }
+
+            @if (logs != null && logs.Any())
+            {
+                var groupedLogs = logs
+                    .GroupBy(x => x.Aktivitas)
+                    .OrderByDescending(x => x.Count());
+
+                @foreach (var group in groupedLogs)
+                {
+                    <div class="audit-item">
+
+                        <div class="audit-activity">
+                            @group.Key
+                            <span class="audit-count">
+                                (@group.Count())
+                            </span>
+                        </div>
+
+                        @foreach (var item in group.Take(5))
+                        {
+                            <div class="audit-user">
+                                • @item.Username
+                                (@item.Waktu.ToString("dd/MM/yyyy HH:mm"))
+                            </div>
+                        }
+
+                        @if (group.Count() > 5)
+                        {
+                            <div class="audit-user">
+                                + @(group.Count() - 5) aktivitas lainnya
+                            </div>
+                        }
+
+                    </div>
+                }
+            }
+            else
+            {
+                <div class="text-muted">
+                    Belum ada aktivitas tercatat.
+                </div>
+            }
+
+        </div>
+    }
 
 </div>
