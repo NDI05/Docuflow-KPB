@@ -1,230 +1,105 @@
-﻿<!DOCTYPE html>
-<html lang="en">
+<!DOCTYPE html>
+<html lang="id">
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>@ViewData["Title"] - Docuflow</title>
+    <meta name="theme-color" content="#161B22" />
+    <title>@ViewData["Title"] &middot; Docuflow KPB</title>
+
+    <link rel="icon" href="~/images/brand/logo-kpb.png" />
+
+    <link rel="preconnect" href="https://api.fontshare.com" crossorigin />
+    <link rel="stylesheet" href="https://api.fontshare.com/v2/css?f[]=supreme@@400,500,700,800&display=swap" />
 
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet" />
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" />
+    <link rel="stylesheet" href="~/css/kpb.css" asp-append-version="true" />
 
-    <style>
-        body {
-            background: #eef1f7;
-            font-family: 'Segoe UI', sans-serif;
-        }
-
-        .dashboard-wrapper {
-            display: flex;
-            min-height: 100vh;
-        }
-
-        .sidebar {
-            width: 240px;
-            background: linear-gradient(180deg, #1d2bff, #0d1a8a);
-            color: white;
-            padding: 20px 15px;
-            position: fixed;
-            height: 100vh;
-            border-top-right-radius: 18px;
-            border-bottom-right-radius: 18px;
-            box-shadow: 4px 0px 20px rgba(0,0,0,0.15);
-        }
-
-        .sidebar .brand {
-            font-size: 22px;
-            font-weight: 800;
-            margin-bottom: 30px;
-            padding-left: 10px;
-        }
-
-        .sidebar a {
-            text-decoration: none;
-            color: white;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            padding: 12px 14px;
-            border-radius: 12px;
-            margin-bottom: 10px;
-            font-weight: 600;
-            transition: 0.2s ease-in-out;
-        }
-
-        .sidebar a:hover {
-            background: rgba(255,255,255,0.18);
-        }
-
-        .sidebar i {
-            font-size: 18px;
-        }
-
-        .main-content {
-            margin-left: 240px;
-            width: 100%;
-            padding: 20px 30px;
-        }
-
-        .topbar {
-            background: #d9dbe7;
-            border-radius: 18px;
-            padding: 14px 18px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 25px;
-            box-shadow: 0px 6px 18px rgba(0,0,0,0.08);
-        }
-
-        .search-box {
-            width: 350px;
-            max-width: 100%;
-            background: #eceef7;
-            border-radius: 12px;
-            padding: 8px 14px;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-
-        .search-box input {
-            border: none;
-            outline: none;
-            background: transparent;
-            width: 100%;
-            font-size: 14px;
-        }
-
-        .profile-box {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-        }
-
-        .profile-icon {
-            width: 42px;
-            height: 42px;
-            border-radius: 50%;
-            background: white;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 22px;
-            box-shadow: 0px 4px 12px rgba(0,0,0,0.12);
-        }
-
-        .profile-box small {
-            display: block;
-            font-size: 12px;
-            color: #333;
-            margin-top: -3px;
-        }
-
-        .btn-mini {
-            border-radius: 10px;
-            font-size: 13px;
-            font-weight: 600;
-            padding: 7px 12px;
-        }
-
-        .footer {
-            text-align: center;
-            padding: 20px;
-            font-size: 13px;
-            color: #777;
-            margin-top: 40px;
-        }
-
-        @@media(max-width: 768px) {
-            .sidebar { width: 200px; }
-            .main-content { margin-left: 200px; padding: 15px; }
-            .search-box { width: 200px; }
-        }
-
-        @@media(max-width: 576px) {
-            .sidebar { position: relative; width: 100%; height: auto; border-radius: 0; }
-            .main-content { margin-left: 0; }
-            .topbar { flex-direction: column; gap: 15px; align-items: flex-start; }
-            .search-box { width: 100%; }
-        }
-    </style>
+    @await RenderSectionAsync("Head", required: false)
 </head>
 
 <body>
 @{
     var nama = Context.Session.GetString("Nama");
     var role = Context.Session.GetString("Role");
+    var controller = ViewContext.RouteData.Values["controller"]?.ToString();
+    var initial = string.IsNullOrWhiteSpace(nama) ? "?" : nama.Trim().Substring(0, 1).ToUpperInvariant();
 }
 
-<div class="dashboard-wrapper">
+<div class="kpb-shell">
 
-    <!-- Sidebar -->
-    <div class="sidebar">
-        <div class="brand">
-            Docuflow
-        </div>
+    <aside class="kpb-sidebar">
 
-        <a asp-controller="Home" asp-action="Index">
-            <i class="bi bi-grid-fill"></i>
-            Beranda
-        </a>
+        <div class="kpb-brand">
+            <img src="~/images/brand/logo-kpb.png" alt="PT Kilang Pertamina Balikpapan" />
 
-        <a asp-controller="Surat" asp-action="Index">
-            <i class="bi bi-envelope-paper-fill"></i>
-            Daftar Surat
-        </a>
-
-        @if (role == "Admin")
-        {
-            <a asp-controller="Users" asp-action="Index">
-                <i class="bi bi-people-fill"></i>
-                Data Users
-            </a>
-        }
-
-        <hr style="border-color: rgba(255,255,255,0.3);" />
-
-        <a asp-controller="Account" asp-action="Logout">
-            <i class="bi bi-box-arrow-right"></i>
-            Logout
-        </a>
-    </div>
-
-    <!-- Main Content -->
-    <div class="main-content">
-
-        <!-- Topbar -->
-        <div class="topbar">
-
-            <div class="search-box">
-                <i class="bi bi-search text-secondary"></i>
-                <input type="text" placeholder="Search" />
-            </div>
-
-            <div class="profile-box">
+            <div class="kpb-brand-app">
+                <div class="kpb-mark on-dark" aria-hidden="true"><span></span><span></span><span></span></div>
                 <div>
-                    <div style="font-weight:700; font-size:14px;">
-                        @(nama ?? "User")
-                    </div>
-                    <small>@(role ?? "-")</small>
-                </div>
-
-                <div class="profile-icon">
-                    <i class="bi bi-person-fill text-primary"></i>
+                    <div class="kpb-brand-name">Docuflow</div>
+                    <div class="kpb-brand-sub">Information Technology</div>
                 </div>
             </div>
         </div>
 
-        @RenderBody()
+        <nav class="kpb-nav">
+            <div class="kpb-nav-label">Menu</div>
 
-        <div class="footer">
-            Copy Rights &copy; IT-KPB 2026
+            <a asp-controller="Home" asp-action="Index" class="@(controller == "Home" ? "active" : "")">
+                <i class="bi bi-grid-1x2-fill"></i>
+                Beranda
+            </a>
+
+            <a asp-controller="Surat" asp-action="Index" class="@(controller == "Surat" ? "active" : "")">
+                <i class="bi bi-file-earmark-text-fill"></i>
+                Daftar Surat
+            </a>
+
+            @if (role == "Admin")
+            {
+                <a asp-controller="Users" asp-action="Index" class="@(controller == "Users" ? "active" : "")">
+                    <i class="bi bi-people-fill"></i>
+                    Data Users
+                </a>
+            }
+        </nav>
+
+        <div class="kpb-nav-foot">
+            <a asp-controller="Account" asp-action="Logout">
+                <i class="bi bi-box-arrow-left"></i>
+                Keluar
+            </a>
         </div>
+    </aside>
+
+    <div class="kpb-main">
+
+        <header class="kpb-topbar">
+            <div class="kpb-breadcrumb">@ViewData["Title"]</div>
+
+            <div class="kpb-user">
+                <div>
+                    <div class="kpb-user-name">@(nama ?? "Pengguna")</div>
+                    <div class="kpb-user-role">@(role ?? "-")</div>
+                </div>
+                <div class="kpb-avatar" aria-hidden="true">@initial</div>
+            </div>
+        </header>
+
+        <main class="kpb-content">
+            @RenderBody()
+        </main>
+
+        <footer class="kpb-footer">
+            <div class="kpb-mark" aria-hidden="true"><span></span><span></span><span></span></div>
+            <span>PT Kilang Pertamina Balikpapan &middot; Information Technology &middot; 2026</span>
+        </footer>
 
     </div>
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+@await RenderSectionAsync("Scripts", required: false)
 
 </body>
 </html>

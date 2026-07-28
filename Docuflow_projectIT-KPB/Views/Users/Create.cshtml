@@ -1,78 +1,81 @@
-﻿@model Docuflow_projectIT_KPB.Models.User
+@model Docuflow_projectIT_KPB.Models.User
 
 @{
     ViewData["Title"] = "Tambah User";
 }
 
-<div class="card shadow-lg border-0" style="border-radius:18px; overflow:hidden;">
-
-    <div class="card-header" style="background:#c6c8d9;">
-        <h5 class="mb-0" style="font-weight:800;">Tambah User</h5>
+<div class="kpb-head">
+    <div>
+        <h1>Tambah User</h1>
+        <p>Akun baru langsung dapat digunakan untuk masuk.</p>
     </div>
 
-    <div class="card-body" style="background:#f4f6fb;">
+    <div class="kpb-head-actions">
+        <a asp-action="Index" class="btn btn-ghost-ink btn-sm">Batal</a>
+        <button type="submit" form="formUser" class="btn btn-on-ink btn-sm">Simpan User</button>
+    </div>
+</div>
 
-        @if (TempData["Error"] != null)
-        {
-            <div class="alert alert-danger">
-                @TempData["Error"]
+<div class="kpb-panel-body">
+
+    @if (TempData["Error"] != null)
+    {
+        <div class="alert alert-danger" role="alert">@TempData["Error"]</div>
+    }
+
+    <form asp-action="Create" method="post" id="formUser">
+        @Html.AntiForgeryToken()
+
+        <div class="kpb-field-group">
+            <div class="kpb-section">
+                <div class="kpb-mark" aria-hidden="true"><span></span><span></span><span></span></div>
+                <h2>Identitas</h2>
+                <div class="kpb-rule"></div>
             </div>
-        }
 
-        <form asp-action="Create" method="post">
-            @Html.AntiForgeryToken()
-
-            <div class="row">
-
-                <div class="col-md-4 mb-3">
-                    <label class="form-label fw-bold">Nomor Pegawai</label>
+            <div class="row g-3">
+                <div class="col-md-4">
+                    <label class="form-label" asp-for="NomorPegawai">Nomor Pegawai</label>
                     <input asp-for="NomorPegawai" class="form-control" required />
                 </div>
 
-                <div class="col-md-4 mb-3">
-                    <label class="form-label fw-bold">Nama</label>
+                <div class="col-md-4">
+                    <label class="form-label" asp-for="Nama">Nama Lengkap</label>
                     <input asp-for="Nama" class="form-control" required />
                 </div>
 
-                <div class="col-md-4 mb-3">
-                    <label class="form-label fw-bold">Role</label>
-                    <select asp-for="Role" class="form-control" required>
-                        <option value="">-- Pilih Role --</option>
+                <div class="col-md-4">
+                    <label class="form-label" asp-for="Role">Role</label>
+                    <select asp-for="Role" class="form-select" required>
+                        <option value="">Pilih role</option>
                         <option value="Admin">Admin</option>
                         <option value="Staff">Staff</option>
                         <option value="Manager">Manager</option>
                     </select>
                 </div>
+            </div>
+        </div>
 
+        <div class="kpb-field-group">
+            <div class="kpb-section">
+                <div class="kpb-mark" aria-hidden="true"><span></span><span></span><span></span></div>
+                <h2>Akses Masuk</h2>
+                <div class="kpb-rule"></div>
             </div>
 
-            <div class="row">
-
-                <div class="col-md-6 mb-3">
-                    <label class="form-label fw-bold">Username (untuk login)</label>
-                    <input asp-for="Username" class="form-control" required />
+            <div class="row g-3">
+                <div class="col-md-6">
+                    <label class="form-label" asp-for="Username">Username</label>
+                    <input asp-for="Username" class="form-control" autocomplete="off" required />
                 </div>
 
-                <div class="col-md-6 mb-3">
-                    <label class="form-label fw-bold">Password</label>
-
-                    <!-- INI WAJIB name="password" -->
-                    <input type="password" name="password" class="form-control" required />
+                <div class="col-md-6">
+                    <label class="form-label" for="password">Kata Sandi</label>
+                    <input type="password" name="password" id="password" class="form-control" autocomplete="new-password" required />
                 </div>
-
             </div>
+        </div>
 
-            <div class="text-end mt-3">
-                <button type="submit" class="btn btn-success">
-                    Simpan
-                </button>
+    </form>
 
-                <a asp-action="Index" class="btn btn-secondary">
-                    Kembali
-                </a>
-            </div>
-
-        </form>
-
-    </div>
 </div>

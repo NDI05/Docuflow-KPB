@@ -1,4 +1,4 @@
-﻿@model List<Docuflow_projectIT_KPB.Models.User>
+@model List<Docuflow_projectIT_KPB.Models.User>
 
 @{
     ViewData["Title"] = "Data Users";
@@ -6,235 +6,156 @@
     int currentPage = ViewBag.CurrentPage ?? 1;
     int totalPages = ViewBag.TotalPages ?? 1;
     string search = ViewBag.Search ?? "";
+
+    Func<string, string> badgeClass = r => r switch
+    {
+        "Admin" => "is-admin",
+        "Manager" => "is-manager",
+        "PenanggungJawab" => "is-pj",
+        _ => "is-staff"
+    };
 }
 
-<style>
-    .page-card {
-        border-radius: 18px;
-        overflow: hidden;
-        border: none;
-        box-shadow: 0px 10px 25px rgba(0,0,0,0.10);
-    }
-
-    .page-header {
-        background: #c6c8d9;
-        padding: 14px 20px;
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-    }
-
-        .page-header h5 {
-            margin: 0;
-            font-weight: 800;
-            color: #111827;
-        }
-
-    .search-box {
-        width: 220px;
-        border-radius: 12px;
-        font-size: 13px;
-    }
-
-    .btn-mini {
-        border-radius: 10px;
-        font-weight: 700;
-        font-size: 13px;
-        padding: 7px 12px;
-    }
-
-    .table-custom {
-        background: white;
-        border-radius: 14px;
-        overflow: hidden;
-    }
-
-        .table-custom thead {
-            background: #c6c8d9;
-            font-weight: 800;
-            text-align: center;
-        }
-
-        .table-custom tbody td {
-            vertical-align: middle;
-            font-size: 13px;
-        }
-
-    .pagination .page-link {
-        border-radius: 10px;
-        margin: 0 3px;
-        font-weight: 700;
-        color: #0d1a8a;
-    }
-
-    .pagination .active .page-link {
-        background: #0d1a8a;
-        border-color: #0d1a8a;
-        color: white;
-    }
-</style>
-
-<div class="card page-card">
-
-    <div class="page-header">
-        <h5>Data Users</h5>
-
-        <div class="d-flex gap-2 align-items-center">
-
-            <form method="get" asp-action="Index" class="d-flex gap-2">
-                <input type="text"
-                       name="search"
-                       value="@search"
-                       class="form-control form-control-sm search-box"
-                       placeholder="Search" />
-
-                <button type="submit" class="btn btn-primary btn-mini">
-                    Cari
-                </button>
-            </form>
-
-            <a asp-action="Create" class="btn btn-primary btn-mini">
-                Tambah Users +
-            </a>
-
-        </div>
+<div class="kpb-head">
+    <div>
+        <h1>Data Users</h1>
+        <p>Akun yang dapat masuk ke Docuflow.</p>
     </div>
 
-    <div class="card-body" style="background:#f4f6fb;">
+    <div class="kpb-head-actions">
+        <form method="get" asp-action="Index" class="kpb-search" role="search">
+            <input type="text"
+                   name="search"
+                   value="@search"
+                   class="form-control"
+                   aria-label="Cari nama atau username"
+                   placeholder="Cari nama atau username" />
 
-        <!-- ALERT ERROR -->
-        @if (TempData["Error"] != null)
-        {
-            <div class="alert alert-danger">
-                @TempData["Error"]
-            </div>
-        }
+            <button type="submit" class="btn btn-ghost-ink btn-sm">Cari</button>
+        </form>
 
-        <!-- ALERT SUCCESS -->
-        @if (TempData["Message"] != null)
-        {
-            <div class="alert alert-success">
-                @TempData["Message"]
-            </div>
-        }
+        <a asp-action="Create" class="btn btn-on-ink btn-sm">
+            <i class="bi bi-plus-lg"></i> Tambah User
+        </a>
+    </div>
+</div>
 
-        <div class="table-responsive table-custom">
-            <table class="table table-bordered table-hover mb-0">
+<div class="kpb-panel-body">
 
-                <thead>
-                    <tr>
-                        <th width="60">No.</th>
-                        <th width="150">ID Badge</th>
-                        <th>Nama</th>
-                        <th width="120">Role</th>
-                        <th>Username</th>
-                        <th width="200">Aksi</th>
-                    </tr>
-                </thead>
+    @if (TempData["Error"] != null)
+    {
+        <div class="alert alert-danger" role="alert">@TempData["Error"]</div>
+    }
 
-                <tbody>
-                    @{
-                        int no = ((currentPage - 1) * 15) + 1;
-                    }
+    @if (TempData["Message"] != null)
+    {
+        <div class="alert alert-success" role="status">@TempData["Message"]</div>
+    }
 
-                    @if (Model != null && Model.Any())
+    <div class="kpb-table-wrap">
+        <table class="kpb-table">
+
+            <thead>
+                <tr>
+                    <th style="width:60px;">No</th>
+                    <th style="width:140px;">ID Badge</th>
+                    <th>Nama</th>
+                    <th style="width:150px;">Role</th>
+                    <th style="width:180px;">Username</th>
+                    <th class="is-center" style="width:230px;">Aksi</th>
+                </tr>
+            </thead>
+
+            <tbody>
+                @{
+                    int no = ((currentPage - 1) * 15) + 1;
+                }
+
+                @if (Model != null && Model.Any())
+                {
+                    foreach (var user in Model)
                     {
-                        foreach (var user in Model)
-                        {
-                            <tr>
-                                <td class="text-center">@no</td>
-                                <td class="text-center">@user.NomorPegawai</td>
+                        <tr>
+                            <td class="is-center">@no</td>
+                            <td>@user.NomorPegawai</td>
+                            <td class="is-key">@user.Nama</td>
 
-                                <td style="font-weight:700;">
-                                    @user.Nama
-                                </td>
+                            <td>
+                                <span class="kpb-badge @badgeClass(user.Role)">@user.Role</span>
+                            </td>
 
-                                <td class="text-center">
-                                    <span class="badge bg-secondary">@user.Role</span>
-                                </td>
+                            <td>@user.Username</td>
 
-                                <td class="text-center">
-                                    @user.Username
-                                </td>
-
-                                <td class="text-center">
-
+                            <td>
+                                <div class="kpb-actions">
                                     <a asp-action="ResetPassword"
-                                           asp-route-id="@user.Id"
-                                           class="btn btn-sm btn-primary btn-mini">
-                                        Reset
+                                       asp-route-id="@user.Id"
+                                       class="btn btn-outline-ink btn-sm">
+                                        Reset Sandi
                                     </a>
 
                                     <form asp-action="Delete"
                                           method="post"
-                                          style="display:inline"
-                                          onsubmit="return confirm('Yakin hapus user ini?');">
+                                          onsubmit="return confirm('Hapus user @(user.Nama)? Tindakan ini tidak bisa dibatalkan.');">
 
                                         @Html.AntiForgeryToken()
 
                                         <input type="hidden" name="id" value="@user.Id" />
 
-                                        <button type="submit"
-                                                class="btn btn-danger btn-sm btn-mini">
-                                            Delete
-                                        </button>
+                                        <button type="submit" class="btn btn-outline-danger btn-sm">Hapus</button>
                                     </form>
-
-                                </td>
-                            </tr>
-
-                            no++;
-                        }
-                    }
-                    else
-                    {
-                        <tr>
-                            <td colspan="6" class="text-center text-muted">
-                                Belum ada data user
+                                </div>
                             </td>
                         </tr>
+
+                        no++;
                     }
-                </tbody>
+                }
+                else
+                {
+                    <tr>
+                        <td colspan="6" class="is-empty">
+                            @if (string.IsNullOrWhiteSpace(search))
+                            {
+                                <text>Belum ada user terdaftar.</text>
+                            }
+                            else
+                            {
+                                <text>Tidak ada user yang cocok dengan &ldquo;@search&rdquo;.</text>
+                            }
+                        </td>
+                    </tr>
+                }
+            </tbody>
 
-            </table>
-        </div>
-
-        <!-- PAGINATION -->
-        <div class="d-flex justify-content-between align-items-center mt-3">
-            <div class="text-muted" style="font-size:14px;">
-                Page <b>@currentPage</b> of <b>@totalPages</b>
-            </div>
-
-            <nav>
-                <ul class="pagination mb-0">
-
-                    <li class="page-item @(currentPage == 1 ? "disabled" : "")">
-                        <a class="page-link"
-                               href="/Users/Index?page=@(currentPage - 1)&search=@search">
-                            &laquo;
-                        </a>
-                    </li>
-
-                    @for (int i = 1; i <= totalPages; i++)
-                    {
-                        <li class="page-item @(i == currentPage ? "active" : "")">
-                            <a class="page-link"
-                                   href="/Users/Index?page=@i&search=@search">
-                                @i
-                            </a>
-                        </li>
-                    }
-
-                    <li class="page-item @(currentPage == totalPages ? "disabled" : "")">
-                        <a class="page-link"
-                               href="/Users/Index?page=@(currentPage + 1)&search=@search">
-                            &raquo;
-                        </a>
-                    </li>
-
-                </ul>
-            </nav>
-        </div>
-
+        </table>
     </div>
+
+    <div class="kpb-pager">
+        <div class="kpb-pager-count">
+            Halaman <b>@currentPage</b> dari <b>@totalPages</b>
+        </div>
+
+        <nav aria-label="Navigasi halaman">
+            <ul class="pagination">
+
+                <li class="page-item @(currentPage == 1 ? "disabled" : "")">
+                    <a class="page-link" href="/Users/Index?page=@(currentPage - 1)&search=@search" aria-label="Sebelumnya">&laquo;</a>
+                </li>
+
+                @for (int i = 1; i <= totalPages; i++)
+                {
+                    <li class="page-item @(i == currentPage ? "active" : "")">
+                        <a class="page-link" href="/Users/Index?page=@i&search=@search">@i</a>
+                    </li>
+                }
+
+                <li class="page-item @(currentPage == totalPages ? "disabled" : "")">
+                    <a class="page-link" href="/Users/Index?page=@(currentPage + 1)&search=@search" aria-label="Berikutnya">&raquo;</a>
+                </li>
+
+            </ul>
+        </nav>
+    </div>
+
 </div>

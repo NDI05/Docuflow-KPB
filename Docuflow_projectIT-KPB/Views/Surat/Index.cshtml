@@ -1,4 +1,4 @@
-﻿@model List<Docuflow_projectIT_KPB.Models.Surat>
+@model List<Docuflow_projectIT_KPB.Models.Surat>
 
 @{
     ViewData["Title"] = "Daftar Surat";
@@ -8,217 +8,138 @@
     string search = ViewBag.Search ?? "";
 }
 
-<style>
-    .table thead th {
-        text-align: center;
-        vertical-align: middle;
-        font-weight: 800;
-        font-size: 14px;
-    }
-
-    .table tbody td {
-        vertical-align: middle;
-        font-size: 13px;
-    }
-
-    .pagination .page-link {
-        border-radius: 10px;
-        margin: 0 3px;
-        font-weight: 700;
-        color: #0d1a8a;
-    }
-
-    .pagination .active .page-link {
-        background: #0d1a8a;
-        border-color: #0d1a8a;
-        color: white;
-    }
-
-    .btn-action {
-        border-radius: 10px;
-        font-weight: 700;
-        font-size: 12px;
-        padding: 6px 12px;
-    }
-
-    .table-custom {
-        background: white;
-        border-radius: 14px;
-        overflow: hidden;
-    }
-
-    .wrap-text {
-        white-space: normal !important;
-        word-break: break-word;
-    }
-</style>
-
-<div class="card shadow-lg border-0" style="border-radius:18px; overflow:hidden;">
-
-    <div class="card-header d-flex justify-content-between align-items-center"
-         style="background:#c6c8d9; padding:15px 20px;">
-
-        <h5 class="mb-0 fw-bold text-dark">Daftar Surat</h5>
-
-        <div class="d-flex gap-2 align-items-center">
-
-            <!-- SEARCH FORM -->
-            <form method="get" asp-action="Index" class="d-flex gap-2 align-items-center">
-                <input type="text"
-                       name="search"
-                       value="@search"
-                       class="form-control form-control-sm"
-                       placeholder="Search"
-                       style="border-radius:12px; width:220px;" />
-
-                <button type="submit"
-                        class="btn btn-primary btn-sm"
-                        style="border-radius:12px; font-weight:700;">
-                    Cari
-                </button>
-            </form>
-
-            <a href="/Surat/Create"
-                   class="btn btn-primary btn-sm"
-                   style="border-radius:12px; font-weight:700;">
-                Buat Surat +
-            </a>
-
-        </div>
+<div class="kpb-head">
+    <div>
+        <h1>Daftar Surat</h1>
+        <p>Arsip berita acara dan serah terima perangkat IT.</p>
     </div>
 
-    <div class="card-body" style="background:#f4f6fb;">
+    <div class="kpb-head-actions">
+        <form method="get" asp-action="Index" class="kpb-search" role="search">
+            <input type="text"
+                   name="search"
+                   value="@search"
+                   class="form-control"
+                   aria-label="Cari nomor surat atau jenis"
+                   placeholder="Cari nomor atau jenis surat" />
 
-        @if (TempData["Message"] != null)
-        {
-            <div class="alert alert-success">
-                @TempData["Message"]
-            </div>
-        }
+            <button type="submit" class="btn btn-ghost-ink btn-sm">Cari</button>
+        </form>
 
-        <div class="table-responsive table-custom">
-            <table class="table table-bordered table-hover align-middle mb-0 w-100">
+        <a asp-action="Create" class="btn btn-on-ink btn-sm">
+            <i class="bi bi-plus-lg"></i> Buat Surat
+        </a>
+    </div>
+</div>
 
-                <thead style="background:#c6c8d9;">
-                    <tr>
-                        <th style="width:260px;">Nomor</th>
-                        <th style="width:380px;">Jenis Surat</th>
-                        <th style="width:140px;">Tanggal Surat</th>
-                        <th style="width:140px;">Staff</th>
-                        <th style="width:120px;">Upload</th>
-                        <th style="width:260px;">Aksi</th>
-                    </tr>
-                </thead>
+<div class="kpb-panel-body">
 
-                <tbody>
-                    @if (Model != null && Model.Any())
+    @if (TempData["Message"] != null)
+    {
+        <div class="alert alert-success" role="status">@TempData["Message"]</div>
+    }
+
+    <div class="kpb-table-wrap">
+        <table class="kpb-table">
+
+            <thead>
+                <tr>
+                    <th style="min-width:220px;">Nomor Surat</th>
+                    <th style="min-width:280px;">Jenis Surat</th>
+                    <th class="is-center">Tanggal</th>
+                    <th class="is-center">Staff</th>
+                    <th class="is-center">Dibuat</th>
+                    <th class="is-center" style="min-width:230px;">Aksi</th>
+                </tr>
+            </thead>
+
+            <tbody>
+                @if (Model != null && Model.Any())
+                {
+                    foreach (var item in Model)
                     {
-                        foreach (var item in Model)
-                        {
-                            <tr>
-                                <td class="wrap-text fw-bold">
-                                    @(item.NomorSurat ?? "-")
-                                </td>
+                        <tr>
+                            <td class="is-key">@(item.NomorSurat ?? "-")</td>
 
-                                <td class="wrap-text">
-                                    @(item.JenisSurat?.NamaJenis ?? "-")
-                                </td>
+                            <td>@(item.JenisSurat?.NamaJenis ?? "-")</td>
 
-                                <td class="text-center">
-                                    @item.Tanggal.ToString("dd/MM/yyyy")
-                                </td>
+                            <td class="is-center">@item.Tanggal.ToString("dd/MM/yyyy")</td>
 
-                                <td class="text-center">
-                                    @(item.Staff?.Nama ?? "-")
-                                </td>
+                            <td class="is-center">@(item.Staff?.Nama ?? "-")</td>
 
-                                <td class="text-center">
-                                    @((item.CreatedAt ?? item.Tanggal).ToString("HH:mm:ss"))
-                                </td>
+                            <td class="is-center">@((item.CreatedAt ?? item.Tanggal).ToString("HH:mm"))</td>
 
-                                <td class="text-center">
-
-                                    <a href="/Surat/Details/@item.Id"
-                                           class="btn btn-info btn-sm text-white btn-action">
+                            <td>
+                                <div class="kpb-actions">
+                                    <a href="/Surat/Details/@item.Id" class="btn btn-outline-ink btn-sm">
                                         Detail
                                     </a>
 
-                                    <a href="/Surat/GeneratePDF/@item.Id"
-                                           class="btn btn-warning btn-sm text-white btn-action">
-                                        Download
+                                    <a href="/Surat/GeneratePDF/@item.Id" class="btn btn-outline-ink btn-sm">
+                                        Unduh PDF
                                     </a>
 
                                     <form asp-controller="Surat"
                                           asp-action="Delete"
                                           method="post"
-                                          style="display:inline"
-                                          onsubmit="return confirm('Yakin ingin menghapus surat ini?');">
+                                          onsubmit="return confirm('Hapus surat @(item.NomorSurat)? Tindakan ini tidak bisa dibatalkan.');">
 
                                         @Html.AntiForgeryToken()
 
                                         <input type="hidden" name="id" value="@item.Id" />
 
-                                        <button type="submit"
-                                                class="btn btn-danger btn-sm btn-action">
-                                            Delete
-                                        </button>
+                                        <button type="submit" class="btn btn-outline-danger btn-sm">Hapus</button>
                                     </form>
-
-                                </td>
-                            </tr>
-                        }
-                    }
-                    else
-                    {
-                        <tr>
-                            <td colspan="6" class="text-center text-muted">
-                                Belum ada data surat
+                                </div>
                             </td>
                         </tr>
                     }
-                </tbody>
+                }
+                else
+                {
+                    <tr>
+                        <td colspan="6" class="is-empty">
+                            @if (string.IsNullOrWhiteSpace(search))
+                            {
+                                <text>Belum ada surat. Mulai dengan menekan &ldquo;Buat Surat&rdquo;.</text>
+                            }
+                            else
+                            {
+                                <text>Tidak ada surat yang cocok dengan &ldquo;@search&rdquo;.</text>
+                            }
+                        </td>
+                    </tr>
+                }
+            </tbody>
 
-            </table>
-        </div>
-
-        <!-- PAGINATION -->
-        <div class="d-flex justify-content-between align-items-center mt-3">
-            <div class="text-muted" style="font-size:14px;">
-                Page <b>@currentPage</b> of <b>@totalPages</b>
-            </div>
-
-            <nav>
-                <ul class="pagination mb-0">
-
-                    <!-- Prev -->
-                    <li class="page-item @(currentPage == 1 ? "disabled" : "")">
-                        <a class="page-link"
-                               href="/Surat/Index?page=@(currentPage - 1)&search=@search">
-                            &laquo;
-                        </a>
-                    </li>
-
-                    @for (int i = 1; i <= totalPages; i++)
-                    {
-                        <li class="page-item @(i == currentPage ? "active" : "")">
-                            <a class="page-link"
-                                   href="/Surat/Index?page=@i&search=@search">
-                                @i
-                            </a>
-                        </li>
-                    }
-
-                    <!-- Next -->
-                    <li class="page-item @(currentPage == totalPages ? "disabled" : "")">
-                        <a class="page-link"
-                               href="/Surat/Index?page=@(currentPage + 1)&search=@search">
-                            &raquo;
-                        </a>
-                    </li>
-
-                </ul>
-            </nav>
-        </div>
-
+        </table>
     </div>
+
+    <div class="kpb-pager">
+        <div class="kpb-pager-count">
+            Halaman <b>@currentPage</b> dari <b>@totalPages</b>
+        </div>
+
+        <nav aria-label="Navigasi halaman">
+            <ul class="pagination">
+
+                <li class="page-item @(currentPage == 1 ? "disabled" : "")">
+                    <a class="page-link" href="/Surat/Index?page=@(currentPage - 1)&search=@search" aria-label="Sebelumnya">&laquo;</a>
+                </li>
+
+                @for (int i = 1; i <= totalPages; i++)
+                {
+                    <li class="page-item @(i == currentPage ? "active" : "")">
+                        <a class="page-link" href="/Surat/Index?page=@i&search=@search">@i</a>
+                    </li>
+                }
+
+                <li class="page-item @(currentPage == totalPages ? "disabled" : "")">
+                    <a class="page-link" href="/Surat/Index?page=@(currentPage + 1)&search=@search" aria-label="Berikutnya">&raquo;</a>
+                </li>
+
+            </ul>
+        </nav>
+    </div>
+
 </div>

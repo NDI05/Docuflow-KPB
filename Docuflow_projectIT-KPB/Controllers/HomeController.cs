@@ -43,7 +43,9 @@ namespace Docuflow_projectIT_KPB.Controllers
                 })
                 .ToList();
 
-            ViewBag.SuratPerJenis = suratPerJenis;
+            // Dictionary, not an anonymous type: the view reads it without dynamic binding.
+            ViewBag.SuratPerJenis = suratPerJenis
+                .ToDictionary(x => x.NamaJenis ?? "Tanpa jenis", x => x.Total);
 
             // =========================
             // AUDIT LOG TERBARU
@@ -53,11 +55,6 @@ namespace Docuflow_projectIT_KPB.Controllers
                 .Take(10)
                 .ToList();
 
-            return View();
-        }
-
-        public IActionResult Privacy()
-        {
             return View();
         }
 
