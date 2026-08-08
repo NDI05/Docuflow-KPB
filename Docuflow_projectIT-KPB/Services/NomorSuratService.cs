@@ -1,4 +1,4 @@
-﻿using Docuflow_projectIT_KPB.Data;
+using Docuflow_projectIT_KPB.Data;
 using Docuflow_projectIT_KPB.Models;
 using Microsoft.EntityFrameworkCore;
 
@@ -8,40 +8,59 @@ namespace Docuflow_projectIT_KPB.Services
     {
         private readonly ApplicationDbContext _context;
 
+        // Bagian nomor yang tidak berubah. Kalau suatu saat berbeda per unit
+        // atau per tahun, dua konstanta inilah yang pindah ke konfigurasi.
+        private const string KodeKilang = "KPB3240";
+        private const string KodeAkhir = "S0";
+
         public NomorSuratService(ApplicationDbContext context)
         {
             _context = context;
         }
 
+        /// <summary>
+        /// Menaikkan counter dan mengembalikan nomor surat berikutnya dengan
+        /// bentuk <c>{KODE} No.{NNN}/KPB3240/{tahun}-S0</c>.
+        ///
+        /// WAJIB dipanggil di dalam transaksi milik pemanggil (lihat
+        /// SuratController.Create). Di luar transaksi, UPDLOCK/HOLDLOCK di bawah
+        /// dilepas begitu statement selesai dan dua submit bersamaan kembali bisa
+        /// mendapat nomor yang sama.
+        /// </summary>
         public async Task<string> GenerateNomorSurat(int jenisSuratId)
         {
             var tahun = DateTime.Now.Year;
 
-            // AMBIL NAMA JENIS SURAT
-            var namaJenisFull = await _context.JenisSurat
+            // Kode diambil dari kolom Kode, bukan dipotong dari NamaJenis.
+            // Dengan begitu nama jenis boleh ditulis manusiawi, dan beberapa
+            // jenis boleh berbagi satu kode.
+            var kode = await _context.JenisSurat
                 .Where(j => j.Id == jenisSuratId)
-                .Select(j => j.NamaJenis)
+                .Select(j => j.Kode)
                 .FirstOrDefaultAsync();
 
-            if (string.IsNullOrEmpty(namaJenisFull))
-                namaJenisFull = "SURAT";
+            if (string.IsNullOrWhiteSpace(kode))
+                kode = "BA";
 
-            // AMBIL SINGKATAN SAJA (SEBELUM "-")
-            string singkatan = namaJenisFull;
+            kode = kode.Trim().ToUpperInvariant();
 
-            if (namaJenisFull.Contains("-"))
-            {
-                singkatan = namaJenisFull.Split('-')[0].Trim();
-            }
-
+            // UPDLOCK: transaksi lain yang menjalankan SELECT yang sama akan
+            // menunggu, bukan ikut membaca nilai lama (update lock tidak
+            // kompatibel dengan update lock).
+            // HOLDLOCK: kunci ditahan sampai transaksi commit — termasuk
+            // key-range lock kalau baris counter belum ada, sehingga dua
+            // transaksi tidak bisa sama-sama menyisipkan counter baru.
             var counter = await _context.CounterNomorSurat
-                .FirstOrDefaultAsync(x => x.JenisSuratId == jenisSuratId && x.Tahun == tahun);
+                .FromSqlInterpolated($@"
+                    SELECT * FROM CounterNomorSurat WITH (UPDLOCK, HOLDLOCK)
+                    WHERE Kode = {kode} AND Tahun = {tahun}")
+                .FirstOrDefaultAsync();
 
             if (counter == null)
             {
                 counter = new CounterNomorSurat
                 {
-                    JenisSuratId = jenisSuratId,
+                    Kode = kode,
                     Tahun = tahun,
                     NomorTerakhir = 1
                 };
@@ -55,12 +74,9 @@ namespace Docuflow_projectIT_KPB.Services
 
             await _context.SaveChangesAsync();
 
-            string nomorUrut = counter.NomorTerakhir.ToString("D3");
-            string kodeTetap = "KPB2340";
-            string kodeJenis = "S0";
+            var nomorUrut = counter.NomorTerakhir.ToString("D3");
 
-            // FORMAT BARU: BAPB 004/KPB2340/2026/S0
-            return $"{singkatan} {nomorUrut}/{kodeTetap}/{tahun}/{kodeJenis}";
+            return $"{kode} No.{nomorUrut}/{KodeKilang}/{tahun}-{KodeAkhir}";
         }
     }
 }

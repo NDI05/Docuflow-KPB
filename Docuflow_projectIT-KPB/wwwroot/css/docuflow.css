@@ -1,0 +1,656 @@
+/* =====================================================================
+   Docuflow — sistem desain
+   Kilang Pertamina Balikpapan, fungsi IT
+
+   Dimuat SETELAH bootstrap.min.css. Lapisan ini menyetel ulang variabel
+   Bootstrap dan menambah komponen milik Docuflow sendiri; markup view
+   yang sudah memakai kelas Bootstrap tetap jalan tanpa diubah.
+
+   Aturan warna yang tidak boleh dilanggar:
+   - Merah (#ED1A2F) rasio kontrasnya 4.0:1 di atas putih — DI BAWAH ambang
+     4.5:1 untuk teks biasa. Jadi merah hanya untuk penanda, garis, ikon,
+     dan teks besar. Jangan untuk teks isi.
+   - Aksi utama memakai biru (#006BB8, 4.6:1). Merah disimpan untuk
+     penanda arsip dan aksi merusak, supaya tetap berarti saat muncul.
+   ===================================================================== */
+
+/* ---------------------------------------------------------------------
+   1. Token
+   --------------------------------------------------------------------- */
+:root {
+    /* Warna merek */
+    --kpb-red:      #ED1A2F;
+    --kpb-blue:     #006BB8;
+    --kpb-green:    #A6C210;
+    --kpb-ink:      #161B22;
+
+    /* Permukaan — sejuk, bukan krem hangat */
+    --paper:        #FFFFFF;
+    --ground:       #F2F5F7;
+    --sunken:       #E9EEF2;
+
+    /* Teks */
+    --ink:          #161B22;
+    --ink-2:        #59636E;
+    --ink-3:        #8A939C;
+
+    /* Garis */
+    --rule:         #DFE4E9;
+    --rule-strong:  #C6CED6;
+
+    /* Status */
+    --ok:           #6F8A0B;
+    --ok-bg:        #F3F7E2;
+    --warn-bg:      #FDF1E7;
+    --danger:       #C4142A;
+    --danger-bg:    #FDECEE;
+
+    /* Bentuk — tajam. Radius besar bikin terlihat seperti template. */
+    --r-chip:       2px;
+    --r:            6px;
+
+    /* Jarak */
+    --s1: 4px;  --s2: 8px;  --s3: 12px; --s4: 16px;
+    --s5: 24px; --s6: 32px; --s7: 48px;
+
+    --rail-w: 244px;
+
+    --font: "Supreme", "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
+    /* Mono hanya untuk nomor surat & serial number: di sana beda 0 dan O
+       menentukan benar-salah. */
+    --mono: ui-monospace, SFMono-Regular, "SF Mono", "JetBrains Mono", Menlo, Consolas, monospace;
+}
+
+/* Path font ditulis relatif ("../fonts/"), bukan dari root ("/fonts/"):
+   aplikasi dipasang sebagai sub-aplikasi IIS di /docflow, sehingga path
+   yang dimulai dari root menunjuk ke luar aplikasi dan gagal dimuat.
+
+   Supreme = typeface merek Pertamina. Berkas ditaruh di wwwroot/fonts/.
+   Kalau belum ada, stack cadangan di --font yang dipakai; tata letak tidak
+   berubah karena metriknya berdekatan. */
+@font-face {
+    font-family: "Supreme";
+    src: url("../fonts/Supreme-Regular.woff2") format("woff2");
+    font-weight: 400; font-style: normal; font-display: swap;
+}
+@font-face {
+    font-family: "Supreme";
+    src: url("../fonts/Supreme-Medium.woff2") format("woff2");
+    font-weight: 500; font-style: normal; font-display: swap;
+}
+@font-face {
+    font-family: "Supreme";
+    src: url("../fonts/Supreme-Bold.woff2") format("woff2");
+    font-weight: 700; font-style: normal; font-display: swap;
+}
+@font-face {
+    font-family: "Supreme";
+    src: url("../fonts/Supreme-Extrabold.woff2") format("woff2");
+    font-weight: 800; font-style: normal; font-display: swap;
+}
+
+/* ---------------------------------------------------------------------
+   2. Setel ulang Bootstrap lewat variabelnya sendiri
+   --------------------------------------------------------------------- */
+:root {
+    --bs-primary:        #006BB8;
+    --bs-primary-rgb:    0, 107, 184;
+    --bs-danger:         #C4142A;
+    --bs-danger-rgb:     196, 20, 42;
+    --bs-body-color:     #161B22;
+    --bs-body-bg:        #F2F5F7;
+    --bs-border-color:   #DFE4E9;
+    --bs-border-radius:  6px;
+    --bs-link-color:     #006BB8;
+    --bs-link-hover-color: #005490;
+    --bs-font-sans-serif: "Supreme", "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
+}
+
+/* ---------------------------------------------------------------------
+   3. Dasar
+   --------------------------------------------------------------------- */
+body {
+    background: var(--ground);
+    color: var(--ink);
+    font-family: var(--font);
+    font-size: 14px;
+    line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+}
+
+h1, h2, h3, h4 { font-weight: 700; letter-spacing: -0.015em; color: var(--ink); }
+h1 { font-size: 26px; }
+h2 { font-size: 20px; }
+h3 { font-size: 16px; }
+
+a { color: var(--kpb-blue); text-decoration: none; }
+a:hover { text-decoration: underline; }
+
+:focus-visible {
+    outline: 2px solid var(--kpb-blue);
+    outline-offset: 2px;
+    border-radius: var(--r-chip);
+}
+
+/* Angka dalam tabel harus sejajar kolomnya */
+table, .tabular { font-variant-numeric: tabular-nums; }
+
+/* ---------------------------------------------------------------------
+   4. Motif tunggal: kemiringan dari logo Pertamina
+
+   Jajar genjang pada logo miring ~14 derajat. Motif itu dipakai di TIGA
+   tempat saja — chip kode surat, penanda menu aktif, dan garis eyebrow.
+   Menambah tempat keempat akan membuatnya jadi hiasan, bukan tanda.
+   --------------------------------------------------------------------- */
+.shear { transform: skewX(-14deg); }
+.shear > * { display: block; transform: skewX(14deg); }
+
+/* ---------------------------------------------------------------------
+   5. Kerangka aplikasi
+   --------------------------------------------------------------------- */
+.app { display: flex; min-height: 100vh; }
+
+.rail {
+    width: var(--rail-w);
+    flex: 0 0 var(--rail-w);
+    background: var(--paper);
+    border-right: 1px solid var(--rule);
+    padding: var(--s5) 0 var(--s4);
+    position: fixed;
+    inset: 0 auto 0 0;
+    display: flex;
+    flex-direction: column;
+    z-index: 20;
+}
+
+.rail__brand {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0 var(--s5) var(--s5);
+    border-bottom: 1px solid var(--rule);
+    margin-bottom: var(--s4);
+}
+/* Diukur dari lebar, bukan tinggi: rail punya lebar tetap, jadi logo mengisi
+   ruang yang tersedia dan tingginya mengikuti rasio. Menyetel tinggi saja
+   menyisakan ruang kosong di kiri-kanan. */
+.rail__brand img {
+    display: block;
+    width: 100%;
+    max-width: 180px;
+    height: auto;
+}
+
+.rail__label {
+    font-size: 10px; font-weight: 700; letter-spacing: 0.11em;
+    text-transform: uppercase; color: var(--ink-3);
+    padding: var(--s3) var(--s5) var(--s2);
+}
+
+.rail__nav { display: flex; flex-direction: column; flex: 1; }
+
+.rail__link {
+    display: flex; align-items: center; gap: var(--s3);
+    padding: 10px var(--s5);
+    color: var(--ink-2);
+    font-weight: 500;
+    border-left: 3px solid transparent;
+    transition: background .12s ease, color .12s ease;
+}
+.rail__link:hover { background: var(--ground); color: var(--ink); text-decoration: none; }
+.rail__link svg { width: 17px; height: 17px; flex: none; }
+
+.rail__link.is-active {
+    color: var(--ink);
+    font-weight: 700;
+    background: var(--ground);
+    border-left-color: var(--kpb-red);
+}
+
+/* Identitas dan Keluar adalah satu blok: nama, peran, lalu jalan keluar,
+   tersusun dalam satu kolom dengan tepi kiri yang sama seperti menu di
+   atasnya. Kolomnya dinyatakan eksplisit supaya tidak bergantung pada
+   perilaku bawaan blok. */
+.rail__foot {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    padding: var(--s4) 0 0;
+    border-top: 1px solid var(--rule);
+}
+
+.rail__user { padding: 0 var(--s5) var(--s2); line-height: 1.3; }
+.rail__user-nama {
+    display: block; font-size: 13px; font-weight: 700; color: var(--ink);
+    overflow-wrap: anywhere;
+}
+.rail__user-peran {
+    display: block; font-size: 10px; font-weight: 700; letter-spacing: 0.09em;
+    text-transform: uppercase; color: var(--ink-3);
+}
+
+.canvas {
+    margin-left: var(--rail-w);
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+}
+
+/* ---------------------------------------------------------------------
+   6. Judul halaman
+
+   Tidak ada bar atas. Navigasi seluruhnya di rail kiri, dan menu aktif
+   sudah menandai posisi — bar terpisah hanya akan mengulanginya. Judul
+   ikut mengalir sebagai bagian isi halaman.
+   --------------------------------------------------------------------- */
+.pagetitle { margin-bottom: var(--s5); }
+.pagetitle__eyebrow {
+    font-size: 10px; font-weight: 700; letter-spacing: 0.11em;
+    text-transform: uppercase; color: var(--ink-3); margin-bottom: 2px;
+}
+.pagetitle h1 { margin: 0; }
+.pagetitle__sub { color: var(--ink-2); margin: var(--s1) 0 0; }
+
+.main { padding: var(--s6); flex: 1; }
+
+.foot {
+    padding: var(--s5) var(--s6);
+    color: var(--ink-3);
+    font-size: 12px;
+    border-top: 1px solid var(--rule);
+}
+
+/* ---------------------------------------------------------------------
+   7. Nomor surat — elemen tanda tangan
+
+   Nomor surat adalah benda yang benar-benar dipakai orang untuk mencari
+   dan merujuk berita acara. Jadi ia dirender sebagai satu objek: chip
+   kode miring (mengikut logo), nomor urut mono, sisanya diredam.
+   --------------------------------------------------------------------- */
+.nomor { display: inline-flex; align-items: stretch; gap: var(--s2); }
+
+.nomor__kode {
+    background: var(--kpb-red);
+    color: #fff;
+    font-size: 11px; font-weight: 800; letter-spacing: 0.06em;
+    padding: 3px 9px;
+    transform: skewX(-14deg);
+    border-radius: var(--r-chip);
+}
+.nomor__kode > span { display: block; transform: skewX(14deg); }
+
+.nomor__body { font-family: var(--mono); font-size: 13px; line-height: 1.55; }
+.nomor__urut { font-weight: 700; color: var(--ink); }
+.nomor__rest { color: var(--ink-3); }
+
+/* Varian besar untuk halaman detail */
+.nomor--lg .nomor__kode { font-size: 13px; padding: 5px 12px; }
+.nomor--lg .nomor__body { font-size: 17px; }
+
+/* ---------------------------------------------------------------------
+   8. Panel & tabel ledger
+   --------------------------------------------------------------------- */
+.panel {
+    background: var(--paper);
+    border: 1px solid var(--rule);
+    border-radius: var(--r);
+}
+.panel__head {
+    padding: var(--s4) var(--s5);
+    border-bottom: 1px solid var(--rule);
+    display: flex; align-items: center; justify-content: space-between; gap: var(--s3);
+}
+.panel__head h2, .panel__head h3 { margin: 0; }
+.panel__body { padding: var(--s5); }
+
+/* Eyebrow bergaris miring — pemakaian ketiga dan terakhir dari motif */
+.eyebrow {
+    display: flex; align-items: center; gap: var(--s2);
+    font-size: 10px; font-weight: 700; letter-spacing: 0.11em;
+    text-transform: uppercase; color: var(--ink-3);
+}
+.eyebrow::before {
+    content: ""; width: 14px; height: 3px;
+    background: var(--kpb-red); transform: skewX(-14deg);
+}
+
+.ledger { width: 100%; border-collapse: collapse; }
+.ledger thead th {
+    font-size: 10px; font-weight: 700; letter-spacing: 0.09em;
+    text-transform: uppercase; color: var(--ink-3);
+    text-align: left; padding: var(--s3) var(--s4);
+    border-bottom: 1px solid var(--rule-strong);
+    white-space: nowrap;
+    background: var(--paper);
+}
+.ledger tbody td {
+    padding: var(--s3) var(--s4);
+    border-bottom: 1px solid var(--rule);
+    vertical-align: middle;
+}
+.ledger tbody tr:last-child td { border-bottom: 0; }
+.ledger tbody tr:hover { background: var(--ground); }
+.ledger .num { text-align: right; font-variant-numeric: tabular-nums; }
+.ledger .serial { font-family: var(--mono); font-size: 12px; color: var(--ink-2); }
+
+.ledger--wrap { overflow-x: auto; }
+
+/* ---------------------------------------------------------------------
+   9. Chip & lencana
+   --------------------------------------------------------------------- */
+.chip {
+    display: inline-block;
+    font-size: 11px; font-weight: 700; letter-spacing: 0.04em;
+    padding: 2px 8px;
+    border-radius: var(--r-chip);
+    border: 1px solid var(--rule-strong);
+    color: var(--ink-2);
+    background: var(--paper);
+    white-space: nowrap;
+}
+.chip--role { text-transform: uppercase; }
+.chip--admin   { border-color: var(--kpb-red); color: var(--danger); background: var(--danger-bg); }
+.chip--manager { border-color: var(--kpb-blue); color: var(--kpb-blue); background: #E9F3FA; }
+.chip--ok      { border-color: var(--kpb-green); color: var(--ok); background: var(--ok-bg); }
+
+/* ---------------------------------------------------------------------
+   10. Tombol
+   --------------------------------------------------------------------- */
+.btn {
+    --bs-btn-border-radius: var(--r);
+    font-weight: 600;
+    font-size: 13px;
+    padding: 8px 14px;
+}
+.btn-primary {
+    --bs-btn-bg: var(--kpb-blue);
+    --bs-btn-border-color: var(--kpb-blue);
+    --bs-btn-hover-bg: #005490;
+    --bs-btn-hover-border-color: #005490;
+    --bs-btn-active-bg: #00447A;
+}
+.btn-outline-secondary {
+    --bs-btn-color: var(--ink-2);
+    --bs-btn-border-color: var(--rule-strong);
+    --bs-btn-hover-bg: var(--ground);
+    --bs-btn-hover-color: var(--ink);
+    --bs-btn-hover-border-color: var(--rule-strong);
+}
+.btn-danger {
+    --bs-btn-bg: var(--danger);
+    --bs-btn-border-color: var(--danger);
+    --bs-btn-hover-bg: #A50F22;
+    --bs-btn-hover-border-color: #A50F22;
+}
+.btn svg { width: 15px; height: 15px; vertical-align: -3px; margin-right: 5px; }
+
+/* ---------------------------------------------------------------------
+   11. Form
+   --------------------------------------------------------------------- */
+.form-label {
+    font-size: 11px; font-weight: 700; letter-spacing: 0.06em;
+    text-transform: uppercase; color: var(--ink-2);
+    margin-bottom: var(--s1);
+}
+.form-control, .form-select {
+    border-color: var(--rule-strong);
+    border-radius: var(--r);
+    font-size: 14px;
+    padding: 8px 12px;
+    color: var(--ink);
+}
+.form-control:focus, .form-select:focus {
+    border-color: var(--kpb-blue);
+    box-shadow: 0 0 0 3px rgba(0, 107, 184, .14);
+}
+.form-control::placeholder { color: var(--ink-3); }
+
+/* Bagian isian bernomor. Penomoran dipakai karena mengisi berita acara
+   memang berurutan — bukan sekadar hiasan struktur. */
+.fieldset { border-top: 1px solid var(--rule); padding-top: var(--s5); margin-top: var(--s5); }
+.fieldset:first-of-type { border-top: 0; padding-top: 0; margin-top: 0; }
+.fieldset__head { display: flex; align-items: baseline; gap: var(--s3); margin-bottom: var(--s4); }
+.fieldset__no {
+    font-family: var(--mono); font-size: 12px; font-weight: 700;
+    color: var(--kpb-red);
+}
+.fieldset__head h3 { margin: 0; font-size: 15px; }
+.fieldset__hint { font-size: 12px; color: var(--ink-3); margin: 2px 0 0; }
+
+/* Penyunting poin laporan (jenis surat berkode BA).
+   Kedalaman ditandai lekukan kiri, jadi jenjangnya terbaca sebagai bentuk
+   sebelum orang membaca nomornya. */
+.poin {
+    border: 1px solid var(--rule);
+    border-radius: var(--r);
+    padding: var(--s3);
+    margin-bottom: var(--s2);
+    background: var(--paper);
+    transition: margin-left .12s ease;
+}
+.poin__head { display: flex; align-items: center; gap: var(--s2); margin-bottom: var(--s2); }
+.poin__no {
+    font-family: var(--mono); font-size: 13px; font-weight: 700;
+    min-width: 40px; color: var(--kpb-red);
+}
+.poin__head .form-control { flex: 1; }
+.poin__aksi { display: flex; gap: 2px; }
+.poin__aksi .btn { padding: 4px 8px; }
+.poin__berkas { margin-top: var(--s2); }
+.poin__berkas .form-control { font-size: 12px; }
+
+/* ---------------------------------------------------------------------
+   12. Ringkasan dashboard
+
+   Bukan deretan kartu statistik berikon — angkanya sedikit, jadi
+   diperlakukan sebagai tipografi, dan sebaran per jenis dibaca sebagai
+   ledger, bukan diagram lingkaran.
+   --------------------------------------------------------------------- */
+.tally { display: flex; gap: var(--s7); flex-wrap: wrap; }
+.tally__item { min-width: 120px; }
+.tally__n {
+    font-size: 40px; font-weight: 800; letter-spacing: -0.03em;
+    line-height: 1; color: var(--ink); font-variant-numeric: tabular-nums;
+}
+.tally__l {
+    font-size: 10px; font-weight: 700; letter-spacing: 0.11em;
+    text-transform: uppercase; color: var(--ink-3); margin-top: var(--s2);
+}
+
+.dist { display: flex; flex-direction: column; gap: var(--s3); }
+.dist__row { display: grid; grid-template-columns: 1fr auto; gap: var(--s2) var(--s4); align-items: center; }
+.dist__name { font-weight: 500; }
+.dist__n { font-family: var(--mono); font-weight: 700; font-variant-numeric: tabular-nums; }
+.dist__track { grid-column: 1 / -1; height: 6px; background: var(--sunken); border-radius: var(--r-chip); overflow: hidden; }
+.dist__bar { height: 100%; background: var(--kpb-blue); border-radius: var(--r-chip); }
+.dist__row:nth-child(4n+2) .dist__bar { background: var(--kpb-red); }
+.dist__row:nth-child(4n+3) .dist__bar { background: var(--kpb-green); }
+.dist__row:nth-child(4n+4) .dist__bar { background: var(--ink-2); }
+
+/* Grafik bulanan — batang bertumpuk, murni CSS.
+
+   Tanpa pustaka grafik: satu-satunya bentuk yang dibutuhkan adalah batang
+   bertumpuk 12 kolom, dan itu lebih sedikit kode daripada memuat Chart.js —
+   sekaligus menjaga janji "nol permintaan keluar saat runtime". */
+.chart { display: flex; flex-direction: column; gap: var(--s4); }
+
+.chart__plot {
+    display: grid;
+    grid-template-columns: repeat(12, 1fr);
+    gap: var(--s2);
+    align-items: end;
+    height: 200px;
+    padding-top: var(--s5);
+    border-bottom: 1px solid var(--rule-strong);
+}
+
+.chart__col { display: flex; flex-direction: column; justify-content: flex-end; height: 100%; position: relative; }
+
+.chart__total {
+    position: absolute; top: -18px; left: 0; right: 0;
+    text-align: center;
+    font-family: var(--mono); font-size: 11px; font-weight: 700;
+    color: var(--ink-3);
+}
+
+.chart__stack { display: flex; flex-direction: column-reverse; min-height: 2px; }
+
+.chart__seg { display: block; width: 100%; }
+.chart__seg:first-child { border-radius: 0 0 var(--r-chip) var(--r-chip); }
+.chart__seg:last-child  { border-radius: var(--r-chip) var(--r-chip) 0 0; }
+
+/* Kolom bulan tanpa data tetap terlihat sebagai garis tipis, supaya sumbu
+   waktunya terbaca utuh dan bulan kosong tidak menghilang begitu saja. */
+.chart__kosong { height: 2px; background: var(--rule); border-radius: var(--r-chip); }
+
+.chart__x {
+    text-align: center;
+    font-size: 10px; font-weight: 700; letter-spacing: 0.06em;
+    text-transform: uppercase; color: var(--ink-3);
+    padding-top: var(--s2);
+}
+.chart__x.is-now { color: var(--ink); }
+
+.legend { display: flex; flex-wrap: wrap; gap: var(--s2) var(--s4); }
+.legend__item { display: flex; align-items: center; gap: var(--s2); font-size: 12px; }
+.legend__dot { width: 10px; height: 10px; border-radius: var(--r-chip); flex: none; }
+
+.feed { display: flex; flex-direction: column; }
+.feed__row {
+    display: grid; grid-template-columns: 92px 1fr; gap: var(--s4);
+    padding: var(--s3) 0; border-bottom: 1px solid var(--rule);
+}
+.feed__row:last-child { border-bottom: 0; }
+.feed__time { font-family: var(--mono); font-size: 11px; color: var(--ink-3); padding-top: 2px; }
+.feed__what { font-weight: 600; }
+.feed__who { font-size: 12px; color: var(--ink-2); }
+
+/* ---------------------------------------------------------------------
+   13. Keadaan kosong, notifikasi, pagination
+   --------------------------------------------------------------------- */
+.empty { padding: var(--s7) var(--s5); text-align: center; }
+.empty h3 { margin: 0 0 var(--s2); }
+.empty p { color: var(--ink-2); margin: 0 0 var(--s4); }
+
+.note {
+    display: flex; gap: var(--s3); align-items: flex-start;
+    padding: var(--s3) var(--s4);
+    border: 1px solid var(--rule);
+    border-left: 3px solid var(--kpb-blue);
+    border-radius: var(--r);
+    background: var(--paper);
+    margin-bottom: var(--s4);
+}
+.note--ok     { border-left-color: var(--kpb-green); background: var(--ok-bg); }
+.note--danger { border-left-color: var(--kpb-red);   background: var(--danger-bg); }
+
+.pager { display: flex; align-items: center; justify-content: space-between; gap: var(--s4); padding-top: var(--s4); }
+.pager__info { font-size: 12px; color: var(--ink-3); }
+.pager__links { display: flex; gap: var(--s1); }
+.pager__links a, .pager__links span {
+    min-width: 32px; height: 32px;
+    display: inline-flex; align-items: center; justify-content: center;
+    border: 1px solid var(--rule); border-radius: var(--r);
+    font-size: 13px; font-weight: 600; color: var(--ink-2);
+    padding: 0 var(--s2);
+}
+.pager__links a:hover { background: var(--ground); color: var(--ink); text-decoration: none; }
+.pager__links .is-current { background: var(--ink); border-color: var(--ink); color: #fff; }
+.pager__links .is-disabled { opacity: .4; pointer-events: none; }
+
+/* Kotak cari yang benar-benar terhubung ke form */
+.finder { display: flex; gap: var(--s2); max-width: 460px; }
+.finder .form-control { flex: 1; }
+
+/* ---------------------------------------------------------------------
+   14. Login
+   --------------------------------------------------------------------- */
+/* Foto di kolom KIRI dan dominan, form di kanan.
+
+   Kolom form dikunci lebarnya (maks 460px), bukan diberi pecahan seperti
+   1fr. Kalau memakai pecahan, di layar lebar kolomnya ikut melar sementara
+   isinya tetap 380px — sisanya jadi ruang kosong. Dengan lebar terkunci,
+   layar yang makin lebar menambah porsi foto, bukan ruang kosong.
+
+   Logo tetap di sisi form. Wordmark "PERTAMINA" berwarna hitam; di atas
+   panel foto gelap tulisannya akan hilang. */
+.gate { display: grid; grid-template-columns: 1fr minmax(360px, 460px); min-height: 100vh; }
+
+.gate__form {
+    background: var(--paper);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: flex-start;
+    padding: var(--s7) clamp(var(--s5), 4vw, 56px);
+}
+.gate__inner { width: 100%; max-width: 360px; }
+
+/* kpb-logo-mark.png: sudah dipotong sampai batas isi dan latar putihnya
+   dijadikan transparan, jadi tingginya benar-benar tinggi logo. */
+.gate__logo { display: block; height: 58px; width: auto; margin-bottom: var(--s6); }
+
+.gate__aside {
+    position: relative;
+    background: var(--kpb-ink) center/cover no-repeat;
+    color: #fff;
+    padding: var(--s7);
+    display: flex; flex-direction: column; justify-content: flex-end; gap: var(--s5);
+}
+.gate__aside::after {
+    content: "";
+    position: absolute; inset: 0;
+    background: linear-gradient(180deg, rgba(22,27,34,.55) 0%, rgba(22,27,34,.92) 100%);
+}
+.gate__aside > * { position: relative; z-index: 1; }
+.gate__claim { font-size: 30px; font-weight: 800; letter-spacing: -0.025em; line-height: 1.2; max-width: 16ch; margin: 0; }
+.gate__claim em { font-style: normal; color: var(--kpb-red); }
+.gate__meta { font-size: 12px; color: rgba(255,255,255,.62); margin: 0; }
+
+@media (max-width: 900px) {
+    .gate { grid-template-columns: 1fr; }
+    .gate__aside { display: none; }
+    .gate__form { justify-content: flex-start; padding-top: var(--s6); }
+    .gate__logo { height: 46px; }
+}
+
+/* ---------------------------------------------------------------------
+   15. Responsif — rail jadi bar atas di layar sempit
+   --------------------------------------------------------------------- */
+@media (max-width: 860px) {
+    .app { display: block; }
+    .rail {
+        position: static; width: auto; flex: none;
+        flex-direction: row; align-items: center; gap: var(--s2);
+        padding: var(--s3) var(--s4);
+        border-right: 0; border-bottom: 1px solid var(--rule);
+        overflow-x: auto;
+    }
+    /* Di bar horizontal ruangnya sempit — logo dibatasi lebarnya supaya
+       tidak mendesak menu. */
+    .rail__brand { border-bottom: 0; margin: 0 var(--s3) 0 0; padding: 0; flex: none; }
+    .rail__brand img { max-width: 120px; }
+    .rail__label { display: none; }
+    .rail__nav { flex-direction: row; flex: 1; gap: var(--s1); }
+    .rail__link { border-left: 0; border-bottom: 3px solid transparent; padding: var(--s2) var(--s3); white-space: nowrap; }
+    .rail__link.is-active { border-left: 0; border-bottom-color: var(--kpb-red); }
+    /* Rail jadi bar horizontal, jadi kaki rail ikut mendatar — nama dan
+       Keluar berdampingan karena tidak ada tinggi untuk menumpuknya. */
+    .rail__foot { border-top: 0; padding: 0; flex-direction: row; align-items: center; gap: var(--s2); }
+    .rail__user { padding: 0 var(--s2) 0 0; white-space: nowrap; }
+    .rail__user-peran { display: none; }
+    .canvas { margin-left: 0; }
+    .main, .foot { padding-left: var(--s4); padding-right: var(--s4); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    * { transition: none !important; animation: none !important; }
+}
+
+/* Cetak: rail dan aksi tidak ikut tercetak */
+@media print {
+    .rail, .foot, .no-print { display: none !important; }
+    .canvas { margin-left: 0; }
+    body { background: #fff; }
+}

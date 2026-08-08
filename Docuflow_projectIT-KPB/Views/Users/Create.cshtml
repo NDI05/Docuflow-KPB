@@ -1,78 +1,125 @@
-﻿@model Docuflow_projectIT_KPB.Models.User
+@model Docuflow_projectIT_KPB.Models.User
 
 @{
-    ViewData["Title"] = "Tambah User";
+    ViewData["Title"] = "Tambah pengguna";
+    ViewData["Eyebrow"] = "Administrasi";
+    ViewData["Sub"] = "Akun langsung aktif setelah disimpan. Tidak ada halaman pendaftaran mandiri.";
 }
 
-<div class="card shadow-lg border-0" style="border-radius:18px; overflow:hidden;">
+<div class="row">
+    <div class="col-lg-8 col-xl-7">
+        <div class="panel">
+            <form asp-action="Create" method="post">
+                @Html.AntiForgeryToken()
 
-    <div class="card-header" style="background:#c6c8d9;">
-        <h5 class="mb-0" style="font-weight:800;">Tambah User</h5>
-    </div>
+                <div class="panel__body">
 
-    <div class="card-body" style="background:#f4f6fb;">
+                    <div class="fieldset">
+                        <div class="fieldset__head">
+                            <span class="fieldset__no">01</span>
+                            <div>
+                                <h3>Identitas</h3>
+                                <p class="fieldset__hint">Nama yang muncul sebagai penanda tangan pada berita acara.</p>
+                            </div>
+                        </div>
 
-        @if (TempData["Error"] != null)
-        {
-            <div class="alert alert-danger">
-                @TempData["Error"]
-            </div>
-        }
+                        <div class="row g-3">
+                            <div class="col-md-7">
+                                <label class="form-label" asp-for="Nama">Nama lengkap</label>
+                                <input asp-for="Nama" class="form-control" required autofocus />
+                            </div>
 
-        <form asp-action="Create" method="post">
-            @Html.AntiForgeryToken()
+                            <div class="col-md-6">
+                                <label class="form-label" asp-for="NomorPegawai">Nomor pegawai</label>
+                                <input asp-for="NomorPegawai" class="form-control" />
+                            </div>
 
-            <div class="row">
+                            <div class="col-md-6">
+                                <label class="form-label" asp-for="Npk">NPK</label>
+                                <input asp-for="Npk" class="form-control" />
+                            </div>
+                        </div>
+                    </div>
 
-                <div class="col-md-4 mb-3">
-                    <label class="form-label fw-bold">Nomor Pegawai</label>
-                    <input asp-for="NomorPegawai" class="form-control" required />
+                    <div class="fieldset">
+                        <div class="fieldset__head">
+                            <span class="fieldset__no">02</span>
+                            <div>
+                                <h3>Hak akses</h3>
+                                <p class="fieldset__hint">Menentukan menu apa yang terbuka. Tidak ada kaitannya dengan tanda tangan.</p>
+                            </div>
+                        </div>
+
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label class="form-label" asp-for="Role">Peran</label>
+                                <select asp-for="Role" class="form-select" required>
+                                    <option value="">Pilih peran</option>
+                                    <option value="Admin">Admin — membuat berita acara</option>
+                                    <option value="SuperAdmin">Super Admin — mengelola pengguna dan jejak audit</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="fieldset">
+                        <div class="fieldset__head">
+                            <span class="fieldset__no">03</span>
+                            <div>
+                                <h3>Posisi tanda tangan</h3>
+                                <p class="fieldset__hint">
+                                    Menentukan di kolom mana nama orang ini muncul pada dokumen.
+                                    Kosongkan kalau ia tidak pernah menandatangani.
+                                </p>
+                            </div>
+                        </div>
+
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label class="form-label" asp-for="PosisiTtd">Posisi</label>
+                                <select asp-for="PosisiTtd" class="form-select">
+                                    <option value="">Tidak menandatangani</option>
+                                    <option value="Staff">Staff — penyusun dokumen</option>
+                                    <option value="Manager">Manager — kolom “Mengetahui”</option>
+                                    <option value="PenanggungJawab">Penanggung Jawab</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="fieldset">
+                        <div class="fieldset__head">
+                            <span class="fieldset__no">04</span>
+                            <div>
+                                <h3>Akses masuk</h3>
+                                <p class="fieldset__hint">Sandi disimpan sebagai hash BCrypt, tidak bisa dibaca kembali.</p>
+                            </div>
+                        </div>
+
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label class="form-label" asp-for="Username">Username</label>
+                                <input asp-for="Username" class="form-control" autocomplete="off" required />
+                            </div>
+
+                            <div class="col-md-6">
+                                <label class="form-label" for="password">Kata sandi</label>
+                                @* name="password" wajib: controller menerimanya sebagai parameter terpisah,
+                                   bukan lewat model binding. *@
+                                <input type="password" id="password" name="password"
+                                       class="form-control" autocomplete="new-password" required />
+                            </div>
+                        </div>
+                    </div>
+
                 </div>
 
-                <div class="col-md-4 mb-3">
-                    <label class="form-label fw-bold">Nama</label>
-                    <input asp-for="Nama" class="form-control" required />
+                <div class="panel__head" style="border-top:1px solid var(--rule); border-bottom:0;">
+                    <a class="btn btn-outline-secondary" asp-action="Index">Batal</a>
+                    <button type="submit" class="btn btn-primary">Simpan pengguna</button>
                 </div>
 
-                <div class="col-md-4 mb-3">
-                    <label class="form-label fw-bold">Role</label>
-                    <select asp-for="Role" class="form-control" required>
-                        <option value="">-- Pilih Role --</option>
-                        <option value="Admin">Admin</option>
-                        <option value="Staff">Staff</option>
-                        <option value="Manager">Manager</option>
-                    </select>
-                </div>
-
-            </div>
-
-            <div class="row">
-
-                <div class="col-md-6 mb-3">
-                    <label class="form-label fw-bold">Username (untuk login)</label>
-                    <input asp-for="Username" class="form-control" required />
-                </div>
-
-                <div class="col-md-6 mb-3">
-                    <label class="form-label fw-bold">Password</label>
-
-                    <!-- INI WAJIB name="password" -->
-                    <input type="password" name="password" class="form-control" required />
-                </div>
-
-            </div>
-
-            <div class="text-end mt-3">
-                <button type="submit" class="btn btn-success">
-                    Simpan
-                </button>
-
-                <a asp-action="Index" class="btn btn-secondary">
-                    Kembali
-                </a>
-            </div>
-
-        </form>
-
+            </form>
+        </div>
     </div>
 </div>

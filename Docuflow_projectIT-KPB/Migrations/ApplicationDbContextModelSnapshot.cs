@@ -22,7 +22,7 @@ namespace Docuflow_projectIT_KPB.Migrations
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
 
-            modelBuilder.Entity("Docuflow.Models.AuditLog", b =>
+            modelBuilder.Entity("Docuflow_projectIT_KPB.Models.AuditLog", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -95,8 +95,10 @@ namespace Docuflow_projectIT_KPB.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
-                    b.Property<int>("JenisSuratId")
-                        .HasColumnType("int");
+                    b.Property<string>("Kode")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)");
 
                     b.Property<int>("NomorTerakhir")
                         .HasColumnType("int");
@@ -106,9 +108,36 @@ namespace Docuflow_projectIT_KPB.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("JenisSuratId");
+                    b.HasIndex("Kode", "Tahun")
+                        .IsUnique();
 
                     b.ToTable("CounterNomorSurat");
+                });
+
+            modelBuilder.Entity("Docuflow_projectIT_KPB.Models.GambarPoin", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("FilePath")
+                        .IsRequired()
+                        .HasMaxLength(400)
+                        .HasColumnType("nvarchar(400)");
+
+                    b.Property<int>("PoinSuratId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("Urutan")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("PoinSuratId");
+
+                    b.ToTable("GambarPoin");
                 });
 
             modelBuilder.Entity("Docuflow_projectIT_KPB.Models.JenisSurat", b =>
@@ -130,6 +159,38 @@ namespace Docuflow_projectIT_KPB.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("JenisSurat");
+                });
+
+            modelBuilder.Entity("Docuflow_projectIT_KPB.Models.PoinSurat", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Judul")
+                        .IsRequired()
+                        .HasMaxLength(300)
+                        .HasColumnType("nvarchar(300)");
+
+                    b.Property<string>("Keterangan")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("Level")
+                        .HasColumnType("int");
+
+                    b.Property<int>("SuratId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("Urutan")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("SuratId");
+
+                    b.ToTable("PoinSurat");
                 });
 
             modelBuilder.Entity("Docuflow_projectIT_KPB.Models.Surat", b =>
@@ -234,6 +295,9 @@ namespace Docuflow_projectIT_KPB.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<string>("PosisiTtd")
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<string>("Role")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
@@ -261,15 +325,26 @@ namespace Docuflow_projectIT_KPB.Migrations
                     b.Navigation("Surat");
                 });
 
-            modelBuilder.Entity("Docuflow_projectIT_KPB.Models.CounterNomorSurat", b =>
+            modelBuilder.Entity("Docuflow_projectIT_KPB.Models.GambarPoin", b =>
                 {
-                    b.HasOne("Docuflow_projectIT_KPB.Models.JenisSurat", "JenisSurat")
-                        .WithMany()
-                        .HasForeignKey("JenisSuratId")
+                    b.HasOne("Docuflow_projectIT_KPB.Models.PoinSurat", "Poin")
+                        .WithMany("Gambar")
+                        .HasForeignKey("PoinSuratId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.Navigation("JenisSurat");
+                    b.Navigation("Poin");
+                });
+
+            modelBuilder.Entity("Docuflow_projectIT_KPB.Models.PoinSurat", b =>
+                {
+                    b.HasOne("Docuflow_projectIT_KPB.Models.Surat", "Surat")
+                        .WithMany("PoinList")
+                        .HasForeignKey("SuratId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Surat");
                 });
 
             modelBuilder.Entity("Docuflow_projectIT_KPB.Models.Surat", b =>
@@ -301,9 +376,16 @@ namespace Docuflow_projectIT_KPB.Migrations
                     b.Navigation("Staff");
                 });
 
+            modelBuilder.Entity("Docuflow_projectIT_KPB.Models.PoinSurat", b =>
+                {
+                    b.Navigation("Gambar");
+                });
+
             modelBuilder.Entity("Docuflow_projectIT_KPB.Models.Surat", b =>
                 {
                     b.Navigation("BarangList");
+
+                    b.Navigation("PoinList");
                 });
 #pragma warning restore 612, 618
         }

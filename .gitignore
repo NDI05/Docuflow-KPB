@@ -361,3 +361,32 @@ MigrationBackup/
 
 # Fody - auto-generated XML schema
 FodyWeavers.xsd
+# =====================================================================
+# Docuflow — repo ini PUBLIK. Yang di bawah sengaja tidak dipublikasikan.
+# =====================================================================
+
+# Dokumen yang diunggah pengguna. Data, bukan kode — dan isinya berita acara
+# asli kilang.
+Docuflow_projectIT-KPB/wwwroot/uploads/
+
+# Grafik pengetahuan hasil generate. Bisa dibuat ulang: graphify update .
+graphify-out/
+Docuflow_projectIT-KPB/graphify-out/
+
+# Catatan operasional internal: IP VM, akun SSH, sandi seed.
+CLAUDE.md
+
+# Seed lama: memuat hash sandi, dan sudah basi sejak peran dipisah.
+db/seed-testing.sql
+
+# Nilai khusus mesin untuk deploy.sh (IP VM, akun SSH).
+.deploy.local
+
+# Perkakas agent, bukan bagian aplikasi.
+.claude/
+.agents/
+skills-lock.json
+
+# macOS
+.DS_Store
+**/.DS_Store

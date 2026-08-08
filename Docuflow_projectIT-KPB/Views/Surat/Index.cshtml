@@ -1,224 +1,159 @@
-﻿@model List<Docuflow_projectIT_KPB.Models.Surat>
+@model List<Docuflow_projectIT_KPB.Models.Surat>
 
 @{
-    ViewData["Title"] = "Daftar Surat";
+    ViewData["Title"] = "Berita Acara";
+    ViewData["Eyebrow"] = "Arsip";
 
-    int currentPage = ViewBag.CurrentPage ?? 1;
-    int totalPages = ViewBag.TotalPages ?? 1;
-    string search = ViewBag.Search ?? "";
+    int halaman = ViewBag.CurrentPage ?? 1;
+    int totalHalaman = ViewBag.TotalPages ?? 1;
+    string cari = ViewBag.Search ?? "";
+
+    ViewData["Sub"] = string.IsNullOrEmpty(cari)
+        ? "Semua dokumen yang pernah diterbitkan."
+        : $"Hasil pencarian untuk “{cari}”.";
+
+    // Jendela pagination: pertama, terakhir, dan sekitar halaman aktif.
+    // Merender seluruh nomor halaman jadi tembok angka begitu arsip membesar.
+    var jendela = new List<int>();
+    for (int i = 1; i <= totalHalaman; i++)
+    {
+        if (i == 1 || i == totalHalaman || (i >= halaman - 2 && i <= halaman + 2))
+        {
+            jendela.Add(i);
+        }
+    }
 }
 
-<style>
-    .table thead th {
-        text-align: center;
-        vertical-align: middle;
-        font-weight: 800;
-        font-size: 14px;
-    }
+<div class="panel">
 
-    .table tbody td {
-        vertical-align: middle;
-        font-size: 13px;
-    }
+    @* Aksi utama sejajar dengan pencarian: keduanya milik halaman ini, dan
+       yang dicari orang di sini adalah "temukan" atau "buat baru". *@
+    <div class="panel__head">
+        <form method="get" asp-action="Index" class="finder" role="search">
+            <input type="search" name="search" value="@cari" class="form-control"
+                   placeholder="Cari nomor, jenis, atau nama staff"
+                   aria-label="Cari berita acara" />
+            <button type="submit" class="btn btn-outline-secondary">Cari</button>
+            @if (!string.IsNullOrEmpty(cari))
+            {
+                <a class="btn btn-outline-secondary" asp-action="Index">Bersihkan</a>
+            }
+        </form>
 
-    .pagination .page-link {
-        border-radius: 10px;
-        margin: 0 3px;
-        font-weight: 700;
-        color: #0d1a8a;
-    }
-
-    .pagination .active .page-link {
-        background: #0d1a8a;
-        border-color: #0d1a8a;
-        color: white;
-    }
-
-    .btn-action {
-        border-radius: 10px;
-        font-weight: 700;
-        font-size: 12px;
-        padding: 6px 12px;
-    }
-
-    .table-custom {
-        background: white;
-        border-radius: 14px;
-        overflow: hidden;
-    }
-
-    .wrap-text {
-        white-space: normal !important;
-        word-break: break-word;
-    }
-</style>
-
-<div class="card shadow-lg border-0" style="border-radius:18px; overflow:hidden;">
-
-    <div class="card-header d-flex justify-content-between align-items-center"
-         style="background:#c6c8d9; padding:15px 20px;">
-
-        <h5 class="mb-0 fw-bold text-dark">Daftar Surat</h5>
-
-        <div class="d-flex gap-2 align-items-center">
-
-            <!-- SEARCH FORM -->
-            <form method="get" asp-action="Index" class="d-flex gap-2 align-items-center">
-                <input type="text"
-                       name="search"
-                       value="@search"
-                       class="form-control form-control-sm"
-                       placeholder="Search"
-                       style="border-radius:12px; width:220px;" />
-
-                <button type="submit"
-                        class="btn btn-primary btn-sm"
-                        style="border-radius:12px; font-weight:700;">
-                    Cari
-                </button>
-            </form>
-
-            <a href="/Surat/Create"
-                   class="btn btn-primary btn-sm"
-                   style="border-radius:12px; font-weight:700;">
-                Buat Surat +
-            </a>
-
-        </div>
+        <a class="btn btn-primary" asp-action="Create">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                <path d="M12 5v14M5 12h14"/>
+            </svg>
+            Buat berita acara
+        </a>
     </div>
 
-    <div class="card-body" style="background:#f4f6fb;">
-
-        @if (TempData["Message"] != null)
-        {
-            <div class="alert alert-success">
-                @TempData["Message"]
-            </div>
-        }
-
-        <div class="table-responsive table-custom">
-            <table class="table table-bordered table-hover align-middle mb-0 w-100">
-
-                <thead style="background:#c6c8d9;">
+    @if (Model != null && Model.Any())
+    {
+        <div class="ledger--wrap">
+            <table class="ledger">
+                <thead>
                     <tr>
-                        <th style="width:260px;">Nomor</th>
-                        <th style="width:380px;">Jenis Surat</th>
-                        <th style="width:140px;">Tanggal Surat</th>
-                        <th style="width:140px;">Staff</th>
-                        <th style="width:120px;">Upload</th>
-                        <th style="width:260px;">Aksi</th>
+                        <th>Nomor</th>
+                        <th>Jenis</th>
+                        <th>Tanggal</th>
+                        <th>Staff</th>
+                        <th><span class="visually-hidden">Aksi</span></th>
                     </tr>
                 </thead>
-
                 <tbody>
-                    @if (Model != null && Model.Any())
-                    {
-                        foreach (var item in Model)
-                        {
-                            <tr>
-                                <td class="wrap-text fw-bold">
-                                    @(item.NomorSurat ?? "-")
-                                </td>
-
-                                <td class="wrap-text">
-                                    @(item.JenisSurat?.NamaJenis ?? "-")
-                                </td>
-
-                                <td class="text-center">
-                                    @item.Tanggal.ToString("dd/MM/yyyy")
-                                </td>
-
-                                <td class="text-center">
-                                    @(item.Staff?.Nama ?? "-")
-                                </td>
-
-                                <td class="text-center">
-                                    @((item.CreatedAt ?? item.Tanggal).ToString("HH:mm:ss"))
-                                </td>
-
-                                <td class="text-center">
-
-                                    <a href="/Surat/Details/@item.Id"
-                                           class="btn btn-info btn-sm text-white btn-action">
-                                        Detail
-                                    </a>
-
-                                    <a href="/Surat/GeneratePDF/@item.Id"
-                                           class="btn btn-warning btn-sm text-white btn-action">
-                                        Download
-                                    </a>
-
-                                    <form asp-controller="Surat"
-                                          asp-action="Delete"
-                                          method="post"
-                                          style="display:inline"
-                                          onsubmit="return confirm('Yakin ingin menghapus surat ini?');">
-
-                                        @Html.AntiForgeryToken()
-
-                                        <input type="hidden" name="id" value="@item.Id" />
-
-                                        <button type="submit"
-                                                class="btn btn-danger btn-sm btn-action">
-                                            Delete
-                                        </button>
-                                    </form>
-
-                                </td>
-                            </tr>
-                        }
-                    }
-                    else
+                    @foreach (var item in Model)
                     {
                         <tr>
-                            <td colspan="6" class="text-center text-muted">
-                                Belum ada data surat
+                            <td>
+                                <a asp-action="Details" asp-route-id="@item.Id">
+                                    @await Html.PartialAsync("_Nomor", item.NomorSurat)
+                                </a>
+                            </td>
+
+                            <td>@(item.JenisSurat?.NamaJenis ?? "—")</td>
+
+                            <td>
+                                @item.Tanggal.ToString("dd/MM/yyyy")
+                                <div class="feed__time">@((item.CreatedAt ?? item.Tanggal).ToString("HH:mm"))</div>
+                            </td>
+
+                            <td>@(item.Staff?.Nama ?? "—")</td>
+
+                            <td>
+                                <div class="d-flex gap-2 justify-content-end">
+                                    <a class="btn btn-outline-secondary btn-sm"
+                                       asp-action="Details" asp-route-id="@item.Id">Detail</a>
+
+                                    <a class="btn btn-outline-secondary btn-sm"
+                                       asp-action="GeneratePdf" asp-route-id="@item.Id">PDF</a>
+
+                                    <form asp-action="Delete" method="post" class="d-inline"
+                                          onsubmit="return confirm('Hapus berita acara @item.NomorSurat? Tindakan ini tidak bisa dibatalkan.');">
+                                        @Html.AntiForgeryToken()
+                                        <input type="hidden" name="id" value="@item.Id" />
+                                        <button type="submit" class="btn btn-outline-secondary btn-sm text-danger">Hapus</button>
+                                    </form>
+                                </div>
                             </td>
                         </tr>
                     }
                 </tbody>
-
             </table>
         </div>
 
-        <!-- PAGINATION -->
-        <div class="d-flex justify-content-between align-items-center mt-3">
-            <div class="text-muted" style="font-size:14px;">
-                Page <b>@currentPage</b> of <b>@totalPages</b>
-            </div>
+        <div class="panel__body">
+            <div class="pager">
+                <span class="pager__info">Halaman @halaman dari @totalHalaman</span>
 
-            <nav>
-                <ul class="pagination mb-0">
+                <nav class="pager__links" aria-label="Navigasi halaman">
+                    <a class="@(halaman == 1 ? "is-disabled" : "")"
+                       asp-action="Index" asp-route-page="@(halaman - 1)" asp-route-search="@cari"
+                       aria-label="Halaman sebelumnya">‹</a>
 
-                    <!-- Prev -->
-                    <li class="page-item @(currentPage == 1 ? "disabled" : "")">
-                        <a class="page-link"
-                               href="/Surat/Index?page=@(currentPage - 1)&search=@search">
-                            &laquo;
-                        </a>
-                    </li>
-
-                    @for (int i = 1; i <= totalPages; i++)
+                    @{ int sebelumnya = 0; }
+                    @foreach (var n in jendela)
                     {
-                        <li class="page-item @(i == currentPage ? "active" : "")">
-                            <a class="page-link"
-                                   href="/Surat/Index?page=@i&search=@search">
-                                @i
-                            </a>
-                        </li>
+                        if (sebelumnya > 0 && n - sebelumnya > 1)
+                        {
+                            <span class="is-disabled">…</span>
+                        }
+
+                        if (n == halaman)
+                        {
+                            <span class="is-current" aria-current="page">@n</span>
+                        }
+                        else
+                        {
+                            <a asp-action="Index" asp-route-page="@n" asp-route-search="@cari">@n</a>
+                        }
+
+                        sebelumnya = n;
                     }
 
-                    <!-- Next -->
-                    <li class="page-item @(currentPage == totalPages ? "disabled" : "")">
-                        <a class="page-link"
-                               href="/Surat/Index?page=@(currentPage + 1)&search=@search">
-                            &raquo;
-                        </a>
-                    </li>
-
-                </ul>
-            </nav>
+                    <a class="@(halaman == totalHalaman ? "is-disabled" : "")"
+                       asp-action="Index" asp-route-page="@(halaman + 1)" asp-route-search="@cari"
+                       aria-label="Halaman berikutnya">›</a>
+                </nav>
+            </div>
         </div>
+    }
+    else
+    {
+        <div class="empty">
+            @if (!string.IsNullOrEmpty(cari))
+            {
+                <h3>Tidak ada yang cocok</h3>
+                <p>Tidak ada berita acara dengan nomor, jenis, atau staff yang mengandung “@cari”.</p>
+                <a class="btn btn-outline-secondary" asp-action="Index">Tampilkan semua</a>
+            }
+            else
+            {
+                <h3>Arsip masih kosong</h3>
+                <p>Berita acara yang dibuat akan tersimpan dan bisa dicetak ulang dari sini.</p>
+                <a class="btn btn-primary" asp-action="Create">Buat berita acara</a>
+            }
+        </div>
+    }
 
-    </div>
 </div>

@@ -1,0 +1,180 @@
+@model Docuflow_projectIT_KPB.Models.Surat
+@{
+    Layout = null;
+
+    // Penomoran 1 / 1.1 / 1.1.1 dihitung dari urutan dan level, sama seperti
+    // di penyunting. Tidak disimpan di database supaya tidak pernah basi.
+    var hitung = new int[3];
+
+    string NomorPoin(int level)
+    {
+        level = Math.Clamp(level, 0, 2);
+        hitung[level]++;
+        for (var d = level + 1; d < hitung.Length; d++) hitung[d] = 0;
+        return string.Join(".", hitung.Take(level + 1));
+    }
+}
+
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="utf-8" />
+    <title>@Model.NomorSurat</title>
+
+    <style>
+        @@page { size: A4; margin: 20mm 18mm 20mm 18mm; }
+
+        body {
+            margin: 0; padding: 0;
+            font-family: Arial, Helvetica, sans-serif;
+            font-size: 12px; line-height: 1.5; color: #000; background: #f2f2f2;
+        }
+
+        .paper { width: 210mm; min-height: 297mm; margin: 15px auto; background: #fff; box-shadow: 0 0 10px rgba(0,0,0,0.15); box-sizing: border-box; }
+        .page-content { padding: 20mm 18mm 20mm 18mm; box-sizing: border-box; }
+
+        .header { position: relative; min-height: 112px; margin-bottom: 15px; }
+        .logo { position: absolute; top: 0; left: 0; width: 115px; }
+        .header-center { text-align: center; padding-top: 5px; margin-left: 120px; margin-right: 288px; }
+        .company     { font-size: 16px; font-weight: bold; }
+        .company-sub { font-size: 16px; font-weight: bold; margin-top: 2px; }
+        .alamat      { margin-top: 6px; font-size: 11px; }
+
+        .box-info { position: absolute; top: 0; right: 0; width: 278px; border: 1px solid #000; border-collapse: collapse; font-size: 11px; }
+        .box-info td { border-bottom: 1px solid #000; padding: 4px 6px; vertical-align: top; }
+        .box-info tr:last-child td { border-bottom: none; }
+        .box-info .label { width: 52px; white-space: nowrap; }
+        .box-info .separator { width: 10px; text-align: center; }
+        .box-info .value { font-weight: bold; }
+
+        .title { text-align: center; font-size: 14px; font-weight: bold; text-decoration: underline; margin: 18px 0 4px; }
+        .subtitle { text-align: center; font-size: 11px; margin-bottom: 18px; }
+
+        .deskripsi { text-align: justify; margin-bottom: 18px; }
+
+        /* Poin laporan. Lekukan kiri menandai kedalaman, sama seperti di form. */
+        .poin { margin-bottom: 12px; }
+        .poin-1 { margin-left: 24px; }
+        .poin-2 { margin-left: 48px; }
+
+        .poin-judul { font-weight: bold; margin-bottom: 3px; }
+        .poin-judul .no { display: inline-block; min-width: 34px; }
+        .poin-ket { text-align: justify; margin-left: 34px; }
+
+        .poin-gambar { margin: 8px 0 0 34px; }
+        .poin-gambar img {
+            max-width: 240px; max-height: 170px;
+            border: 1px solid #999; padding: 2px;
+            margin: 0 8px 8px 0;
+        }
+
+        .penutup { margin: 20px 0; text-align: justify; }
+
+        .signature { width: 100%; margin-top: 28px; border-collapse: collapse; }
+        .signature td { width: 33.33%; text-align: center; vertical-align: top; font-size: 11.5px; }
+        .signature .ruang { height: 62px; }
+        .signature-name { font-weight: bold; text-decoration: underline; }
+    </style>
+</head>
+
+<body>
+
+<div class="paper">
+    <div class="page-content">
+
+        <div class="header">
+            <img src="@Url.Content("~/images/kpb-logo.png")" class="logo" alt="Kilang Pertamina Balikpapan" />
+
+            <div class="header-center">
+                <div class="company">PT KILANG PERTAMINA</div>
+                <div class="company-sub">BALIKPAPAN</div>
+                <div class="alamat">
+                    Kantor NSO PT Kilang Pertamina Balikpapan<br />
+                    JL. Yos Sudarso No.1 Balikpapan
+                </div>
+            </div>
+
+            @* Tanpa baris Tanggal: dokumen BA sengaja tidak bertanggal. *@
+            <table class="box-info">
+                <tr>
+                    <td class="label">Nomor</td>
+                    <td class="separator">:</td>
+                    <td class="value">@Model.NomorSurat</td>
+                </tr>
+                <tr>
+                    <td class="label">Dari</td>
+                    <td class="separator">:</td>
+                    <td class="value">Ruang IT KPB</td>
+                </tr>
+                <tr>
+                    <td class="label">Tujuan</td>
+                    <td class="separator">:</td>
+                    <td class="value">@Model.Tujuan</td>
+                </tr>
+            </table>
+        </div>
+
+        <div class="title">@(Model.JenisSurat?.NamaJenis?.ToUpper())</div>
+        <div class="subtitle">Nomor: @Model.NomorSurat</div>
+
+        @if (!string.IsNullOrWhiteSpace(Model.Deskripsi))
+        {
+            <div class="deskripsi">@Model.Deskripsi</div>
+        }
+
+        @if (Model.PoinList != null && Model.PoinList.Any())
+        {
+            foreach (var poin in Model.PoinList)
+            {
+                var lv = Math.Clamp(poin.Level, 0, 2);
+                var no = NomorPoin(lv);
+
+                <div class="poin poin-@lv">
+                    <div class="poin-judul"><span class="no">@no</span>@poin.Judul</div>
+
+                    @if (!string.IsNullOrWhiteSpace(poin.Keterangan))
+                    {
+                        <div class="poin-ket">@poin.Keterangan</div>
+                    }
+
+                    @if (poin.Gambar != null && poin.Gambar.Any())
+                    {
+                        <div class="poin-gambar">
+                            @foreach (var g in poin.Gambar)
+                            {
+                                <img src="@Url.Content("~" + g.FilePath)" alt="Lampiran @no" />
+                            }
+                        </div>
+                    }
+                </div>
+            }
+        }
+
+        <div class="penutup">
+            Demikian berita acara ini dibuat dengan sebenar-benarnya untuk dapat
+            dipergunakan sebagaimana mestinya.
+        </div>
+
+        <table class="signature">
+            <tr>
+                <td>Dibuat oleh</td>
+                <td>Mengetahui<br />Ast Manager IT | PT. KPB</td>
+                <td>Penanggung Jawab</td>
+            </tr>
+            <tr>
+                <td class="ruang"></td>
+                <td class="ruang"></td>
+                <td class="ruang"></td>
+            </tr>
+            <tr>
+                <td class="signature-name">@Model.Staff?.Nama</td>
+                <td class="signature-name">@Model.Manager?.Nama</td>
+                <td class="signature-name">@Model.NamaPenanggungJawab</td>
+            </tr>
+        </table>
+
+    </div>
+</div>
+
+</body>
+</html>

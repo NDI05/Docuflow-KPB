@@ -7,7 +7,9 @@ using BCrypt.Net;
 
 namespace Docuflow_projectIT_KPB.Controllers
 {
-    [SessionAuthorize]
+    // Seluruh menu pengguna milik Super Admin. Admin biasa mengurus berita
+    // acara dan tidak berkepentingan menambah atau menghapus akun.
+    [SessionAuthorize("SuperAdmin")]
     public class UsersController : Controller
     {
         private readonly ApplicationDbContext _context;
@@ -18,21 +20,10 @@ namespace Docuflow_projectIT_KPB.Controllers
         }
 
         // =========================
-        // CHECK ADMIN
-        // =========================
-        private bool IsAdmin()
-        {
-            return HttpContext.Session.GetString("Role") == "Admin";
-        }
-
-        // =========================
         // LIST USERS (SEARCH + PAGINATION)
         // =========================
         public async Task<IActionResult> Index(string search, int page = 1)
         {
-            if (!IsAdmin())
-                return RedirectToAction("Index", "Home");
-
             int pageSize = 15;
 
             var query = _context.Users.AsQueryable();
@@ -74,9 +65,6 @@ namespace Docuflow_projectIT_KPB.Controllers
         // =========================
         public IActionResult Create()
         {
-            if (!IsAdmin())
-                return RedirectToAction("Index", "Home");
-
             return View();
         }
 
@@ -87,17 +75,35 @@ namespace Docuflow_projectIT_KPB.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create(User user, string password)
         {
-            if (!IsAdmin())
-                return RedirectToAction("Index", "Home");
-
             if (string.IsNullOrWhiteSpace(user.Nama) ||
                 string.IsNullOrWhiteSpace(user.Username) ||
                 string.IsNullOrWhiteSpace(password) ||
                 string.IsNullOrWhiteSpace(user.Role))
             {
-                TempData["Error"] = "Semua data wajib diisi.";
+                TempData["Error"] = "Nama, username, peran, dan kata sandi wajib diisi.";
                 return View(user);
             }
+
+            // Role menentukan hak akses dan datang dari form, jadi tidak boleh
+            // dipercaya begitu saja. Isi <select> hanya petunjuk untuk manusia;
+            // siapa pun bisa mengirim nilai lain.
+            if (user.Role != "SuperAdmin" && user.Role != "Admin")
+            {
+                TempData["Error"] = "Peran tidak dikenali.";
+                return View(user);
+            }
+
+            if (!string.IsNullOrWhiteSpace(user.PosisiTtd) &&
+                user.PosisiTtd != "Staff" &&
+                user.PosisiTtd != "Manager" &&
+                user.PosisiTtd != "PenanggungJawab")
+            {
+                TempData["Error"] = "Posisi tanda tangan tidak dikenali.";
+                return View(user);
+            }
+
+            if (string.IsNullOrWhiteSpace(user.PosisiTtd))
+                user.PosisiTtd = null;
 
             // cek username duplicate
             bool usernameExist = await _context.Users.AnyAsync(x => x.Username == user.Username);
@@ -122,9 +128,6 @@ namespace Docuflow_projectIT_KPB.Controllers
         // =========================
         public async Task<IActionResult> ResetPassword(int id)
         {
-            if (!IsAdmin())
-                return RedirectToAction("Index", "Home");
-
             var user = await _context.Users.FindAsync(id);
             if (user == null)
                 return NotFound();
@@ -139,9 +142,6 @@ namespace Docuflow_projectIT_KPB.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> ResetPassword(int id, string newPassword, string confirmPassword)
         {
-            if (!IsAdmin())
-                return RedirectToAction("Index", "Home");
-
             var user = await _context.Users.FindAsync(id);
             if (user == null)
                 return NotFound();
@@ -180,9 +180,6 @@ namespace Docuflow_projectIT_KPB.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Delete(int id)
         {
-            if (!IsAdmin())
-                return RedirectToAction("Index", "Home");
-
             var user = await _context.Users.FindAsync(id);
             if (user == null)
                 return NotFound();

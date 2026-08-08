@@ -1,286 +1,466 @@
-﻿@model Docuflow_projectIT_KPB.Models.Surat
+@model Docuflow_projectIT_KPB.Models.Surat
 
 @{
-    ViewData["Title"] = "Buat Surat";
+    ViewData["Title"] = "Buat berita acara";
+    ViewData["Eyebrow"] = "Arsip";
+    ViewData["Sub"] = "Nomor surat dibuat otomatis saat disimpan.";
 }
 
-<link href="https://cdn.jsdelivr.net/npm/select2@4.1.0/dist/css/select2.min.css" rel="stylesheet" />
+@* Tombol simpan hanya ada di kaki form. Sebelumnya ada dua — satu di bar
+   atas, satu di bawah — dan dua tombol dengan tujuan sama membuat orang
+   ragu apakah keduanya melakukan hal yang berbeda. *@
+<div class="panel">
+    @* enctype wajib: SuratController.Create menerima IFormFile. Tanpa ini
+       lampiran tidak pernah sampai ke server dan FilePath selalu kosong. *@
+    <form asp-action="Create" method="post" id="formSurat" enctype="multipart/form-data">
+        @Html.AntiForgeryToken()
 
-<style>
-    .page-card {
-        border-radius: 18px;
-        overflow: hidden;
-        border: none;
-        box-shadow: 0px 10px 25px rgba(0,0,0,0.10);
-    }
+        <div class="panel__body">
 
-    .page-header {
-        background: #c6c8d9;
-        padding: 14px 20px;
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-    }
-
-    .form-wrapper {
-        background: #f4f6fb;
-        padding: 20px;
-    }
-
-    .section-box {
-        background: #dcdfee;
-        border-radius: 14px;
-        padding: 12px;
-        margin-bottom: 16px;
-    }
-
-    .section-title {
-        background: #bfc2d9;
-        padding: 8px 12px;
-        border-radius: 10px;
-        font-weight: 800;
-        margin-bottom: 12px;
-    }
-
-    .form-control {
-        border-radius: 10px !important;
-        height: 38px;
-    }
-
-    textarea.form-control {
-        height: auto !important;
-    }
-
-    .table-custom {
-        background: white;
-        border-radius: 12px;
-        overflow: hidden;
-    }
-
-        .table-custom thead {
-            background: #c6c8d9;
-            text-align: center;
-        }
-
-    .btn-add {
-        border-radius: 10px;
-        font-weight: 700;
-        padding: 7px 12px;
-    }
-</style>
-
-<div class="card page-card">
-
-    <div class="page-header">
-        <h5>Buat Surat</h5>
-        <button type="submit" form="formSurat" class="btn btn-success">Simpan</button>
-    </div>
-
-    <div class="form-wrapper">
-
-        <!-- ❌ enctype multipart dihapus karena tidak ada upload -->
-        <form asp-action="Create" method="post" id="formSurat">
-
-            <!-- JENIS SURAT + TUJUAN -->
-            <div class="section-box">
-                <div class="section-title">Jenis Surat & Tujuan</div>
+            <div class="fieldset">
+                <div class="fieldset__head">
+                    <span class="fieldset__no">01</span>
+                    <div><h3>Jenis dan tujuan</h3></div>
+                </div>
 
                 <div class="row g-3">
                     <div class="col-md-6">
-                        <label>Jenis Surat</label>
-                        <select asp-for="JenisSuratId" class="form-control" required>
-                            <option value="">-- Pilih Jenis Surat --</option>
+                        <label class="form-label" asp-for="JenisSuratId">Jenis berita acara</label>
+                        @* data-kode dipakai JS untuk menentukan bagian mana yang
+                           ditampilkan: BAST butuh tabel barang, BA butuh poin laporan. *@
+                        <select asp-for="JenisSuratId" class="form-select" required>
+                            <option value="">Pilih jenis</option>
                             @foreach (var j in ViewBag.JenisSurat)
                             {
-                                <option value="@j.Id">@j.NamaJenis</option>
+                                <option value="@j.Id" data-kode="@j.Kode">@j.NamaJenis</option>
                             }
                         </select>
                         <span asp-validation-for="JenisSuratId" class="text-danger"></span>
                     </div>
 
                     <div class="col-md-6">
-                        <label>Tujuan</label>
-                        <input asp-for="Tujuan" class="form-control" placeholder="Masukkan tujuan surat" required />
+                        <label class="form-label" asp-for="Tujuan">Tujuan</label>
+                        <input asp-for="Tujuan" class="form-control" placeholder="Ditujukan kepada" required />
                         <span asp-validation-for="Tujuan" class="text-danger"></span>
                     </div>
                 </div>
             </div>
 
-            <!-- PENANGGUNG JAWAB -->
-            <div class="section-box">
-                <div class="section-title">Data Penanggung Jawab</div>
+            <div class="fieldset">
+                <div class="fieldset__head">
+                    <span class="fieldset__no">02</span>
+                    <div>
+                        <h3>Penanggung jawab</h3>
+                        <p class="fieldset__hint">Data ini yang tercetak pada dokumen.</p>
+                    </div>
+                </div>
 
                 <div class="row g-3">
                     <div class="col-md-4">
-                        <label>Nama</label>
+                        <label class="form-label" asp-for="NamaPenanggungJawab">Nama</label>
                         <input asp-for="NamaPenanggungJawab" class="form-control" />
                     </div>
-
                     <div class="col-md-4">
-                        <label>Jabatan</label>
+                        <label class="form-label" asp-for="Jabatan">Jabatan</label>
                         <input asp-for="Jabatan" class="form-control" />
                     </div>
-
                     <div class="col-md-4">
-                        <label>Fungsi/Direktorat</label>
+                        <label class="form-label" asp-for="FungsiDirektorat">Fungsi / direktorat</label>
                         <input asp-for="FungsiDirektorat" class="form-control" />
                     </div>
-
                     <div class="col-md-4">
-                        <label>No Pekerja</label>
+                        <label class="form-label" asp-for="NoPekerja">Nomor pekerja</label>
                         <input asp-for="NoPekerja" class="form-control" />
                     </div>
-
                     <div class="col-md-8">
-                        <label>Alamat</label>
-                        <textarea asp-for="Alamat" class="form-control"></textarea>
+                        <label class="form-label" asp-for="Alamat">Alamat</label>
+                        <textarea asp-for="Alamat" class="form-control" rows="2"></textarea>
                     </div>
                 </div>
             </div>
 
-            <!-- DEVICE -->
-            <div class="section-box">
-                <div class="section-title">Jenis Perangkat</div>
+            @* ================= POIN LAPORAN — jenis berkode BA ================= *@
+            <div class="fieldset" id="bagianPoin" hidden>
+                <div class="fieldset__head">
+                    <span class="fieldset__no">03</span>
+                    <div>
+                        <h3>Poin laporan</h3>
+                        <p class="fieldset__hint">
+                            Tiap poin punya judul, keterangan, dan gambar. Tombol panah
+                            menggeser tingkatnya menjadi sub-poin.
+                        </p>
+                    </div>
+                </div>
 
-                <select id="deviceType" class="form-control">
-                    <option value="">-- Pilih --</option>
-                    <option value="PC">PC</option>
-                    <option value="Laptop">Laptop</option>
-                    <option value="HT">HT</option>
-                    <option value="Lainnya">Lainnya</option>
-                </select>
+                <div id="daftarPoin"></div>
+
+                <button type="button" id="tambahPoin" class="btn btn-outline-secondary mt-2">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                        <path d="M12 5v14M5 12h14"/>
+                    </svg>
+                    Tambah poin
+                </button>
             </div>
 
-            <!-- TABEL -->
-            <div class="section-box">
-                <div class="section-title">Daftar Barang</div>
+            @* ================= DAFTAR BARANG — jenis berkode BAST ================= *@
+            <div class="fieldset" id="bagianBarang">
+                <div class="fieldset__head">
+                    <span class="fieldset__no">03</span>
+                    <div>
+                        <h3>Daftar barang</h3>
+                        <p class="fieldset__hint">Pilih jenis perangkat untuk mengisi barisnya sekaligus, lalu sunting seperlunya.</p>
+                    </div>
+                </div>
 
-                <div class="table-responsive table-custom">
-                    <table class="table table-bordered" id="barangTable">
+                <div class="row g-3 mb-3">
+                    <div class="col-md-4">
+                        <label class="form-label" for="deviceType">Isi cepat</label>
+                        <select id="deviceType" class="form-select">
+                            <option value="">Pilih jenis perangkat</option>
+                            <option value="PC">PC</option>
+                            <option value="Laptop">Laptop</option>
+                            <option value="HT">HT</option>
+                            <option value="Lainnya">Lainnya</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="ledger--wrap">
+                    <table class="ledger" id="barangTable">
                         <thead>
                             <tr>
-                                <th>No</th>
-                                <th>Nama Barang</th>
-                                <th>Serial Number</th>
-                                <th>Merk</th>
+                                <th style="width:40px;">#</th>
+                                <th>Nama barang</th>
+                                <th>Serial number</th>
+                                <th>Merk / tipe</th>
                                 <th>Pengguna</th>
-                                <th>Aksi</th>
+                                <th style="width:40px;"><span class="visually-hidden">Hapus baris</span></th>
                             </tr>
                         </thead>
                         <tbody></tbody>
                     </table>
                 </div>
 
-                <button type="button" id="addRow" class="btn btn-primary btn-add mt-3">
-                    + Tambah Manual
+                <button type="button" id="addRow" class="btn btn-outline-secondary mt-3">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                        <path d="M12 5v14M5 12h14"/>
+                    </svg>
+                    Tambah baris
                 </button>
             </div>
 
-            <!-- CATATAN -->
-            <div class="section-box">
-                <div class="section-title">Catatan</div>
-
-                <div class="d-flex gap-2 align-items-center flex-wrap">
-                    <span>Pemenuhan Berdasarkan</span>
-
-                    <select asp-for="JenisTiket" class="form-control" style="width:150px;">
-                        <option value="Tiket MySSC">Tiket MySSC</option>
-                        <option value="Tiket BAST">Tiket BAST</option>
-                    </select>
-
-                    <span>No</span>
-                    <input asp-for="NoTiket" class="form-control" style="width:200px;" />
+            <div class="fieldset">
+                <div class="fieldset__head">
+                    <span class="fieldset__no">04</span>
+                    <div><h3>Dasar pemenuhan</h3></div>
                 </div>
-            </div>
-
-            <!-- TTD -->
-            <div class="section-box">
-                <div class="section-title">Tanda Tangan</div>
 
                 <div class="row g-3">
                     <div class="col-md-4">
-                        <select asp-for="StaffId" class="form-control">
-                            <option value="">Staff</option>
-                            @foreach (var user in ViewBag.Users)
-                            {
-                                if (user.Role == "Staff")
-                                {
-                                    <option value="@user.Id">@user.Nama</option>
-                                }
-                            }
+                        <label class="form-label" asp-for="JenisTiket">Jenis tiket</label>
+                        <select asp-for="JenisTiket" class="form-select">
+                            <option value="Tiket MySSC">Tiket MySSC</option>
+                            <option value="Tiket BAST">Tiket BAST</option>
                         </select>
                     </div>
-
                     <div class="col-md-4">
-                        <select asp-for="ManagerId" class="form-control">
-                            <option value="">Manager</option>
-                            @foreach (var user in ViewBag.Users)
-                            {
-                                if (user.Role == "Manager")
-                                {
-                                    <option value="@user.Id">@user.Nama</option>
-                                }
-                            }
-                        </select>
-                    </div>
-
-                    <div class="col-md-4">
-                        <input asp-for="YangMenerima" class="form-control" placeholder="Yang Menerima" />
+                        <label class="form-label" asp-for="NoTiket">Nomor tiket</label>
+                        <input asp-for="NoTiket" class="form-control" />
                     </div>
                 </div>
             </div>
 
-        </form>
-    </div>
+            <div class="fieldset">
+                <div class="fieldset__head">
+                    <span class="fieldset__no">05</span>
+                    <div><h3>Penanda tangan</h3></div>
+                </div>
+
+                <div class="row g-3">
+                    @* Disaring lewat PosisiTtd, bukan Role. Role sekarang hanya
+                       menentukan hak akses, sehingga seorang Admin tetap bisa
+                       terdaftar sebagai penanda tangan Staff atau Manager. *@
+                    <div class="col-md-4">
+                        <label class="form-label" asp-for="StaffId">Staff</label>
+                        <select asp-for="StaffId" class="form-select">
+                            <option value="">Pilih staff</option>
+                            @foreach (var user in ViewBag.Users)
+                            {
+                                if (user.PosisiTtd == "Staff")
+                                {
+                                    <option value="@user.Id">@user.Nama</option>
+                                }
+                            }
+                        </select>
+                    </div>
+
+                    <div class="col-md-4">
+                        <label class="form-label" asp-for="ManagerId">Mengetahui</label>
+                        <select asp-for="ManagerId" class="form-select">
+                            <option value="">Pilih manager</option>
+                            @foreach (var user in ViewBag.Users)
+                            {
+                                if (user.PosisiTtd == "Manager")
+                                {
+                                    <option value="@user.Id">@user.Nama</option>
+                                }
+                            }
+                        </select>
+                    </div>
+
+                    <div class="col-md-4">
+                        <label class="form-label" asp-for="YangMenerima">Yang menerima</label>
+                        <input asp-for="YangMenerima" class="form-control" />
+                    </div>
+                </div>
+            </div>
+
+            <div class="fieldset">
+                <div class="fieldset__head">
+                    <span class="fieldset__no">06</span>
+                    <div>
+                        <h3>Lampiran</h3>
+                        <p class="fieldset__hint">Opsional. Berkas asli tersimpan dan bisa diunduh lagi dari halaman detail.</p>
+                    </div>
+                </div>
+
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <label class="form-label" for="file">Berkas</label>
+                        <input type="file" id="file" name="file" class="form-control" />
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+        <div class="panel__head" style="border-top:1px solid var(--rule); border-bottom:0;">
+            <a class="btn btn-outline-secondary" asp-action="Index">Batal</a>
+            <button type="submit" class="btn btn-primary">Simpan berita acara</button>
+        </div>
+
+    </form>
 </div>
 
-<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-
+@section Scripts {
 <script>
-    let rowNumber = 0;
+    // JS biasa, tanpa jQuery. Halaman ini sebelumnya menarik jQuery dari
+    // code.jquery.com — satu-satunya dependensi internet saat runtime, dan
+    // tabel ini mati kalau VM tidak bisa keluar jaringan.
+    (function () {
+        var tbody   = document.querySelector("#barangTable tbody");
+        var device  = document.getElementById("deviceType");
+        var tambah  = document.getElementById("addRow");
 
-    const templates = {
-    "PC": ["PC", "Monitor", "VGA", "Keyboard", "Mouse", "Hostname"],
-    "Laptop": ["Notebook", "Adaptor", "Backpack", "Mouse", "Ethernet", "Chainlock", "Hostname"],
-    "HT": ["HT", "Charger", "Battery", "Antenna"]
-    };
+        var templat = {
+            "PC":     ["PC", "Monitor", "VGA", "Keyboard", "Mouse", "Hostname"],
+            "Laptop": ["Notebook", "Adaptor", "Backpack", "Mouse", "Ethernet", "Chainlock", "Hostname"],
+            "HT":     ["HT", "Charger", "Battery", "Antenna"]
+        };
 
-    function addRow(nama = "") {
-    rowNumber++;
+        // Nomor dihitung ulang dari posisi baris, bukan dari penghitung yang
+        // hanya naik — versi lama membuat kolom "No" melompat setelah hapus.
+        function nomoriUlang() {
+            Array.prototype.forEach.call(tbody.rows, function (tr, i) {
+                tr.cells[0].textContent = i + 1;
+            });
+        }
 
-    $("#barangTable tbody").append(`
-    <tr>
-    <td>${rowNumber}</td>
-    <td><input name="NamaBarang[]" class="form-control" value="${nama}" /></td>
-    <td><input name="SerialNumber[]" class="form-control" /></td>
-    <td><input name="MerkType[]" class="form-control" /></td>
-    <td><input name="Pengguna[]" class="form-control" /></td>
-    <td><button type="button" class="btn btn-danger removeRow">X</button></td>
-    </tr>
-    `);
-    }
+        function sel(nama) {
+            var td = document.createElement("td");
+            var input = document.createElement("input");
+            input.name = nama;
+            input.className = "form-control";
+            td.appendChild(input);
+            return td;
+        }
 
-    $("#deviceType").change(function () {
-    let val = $(this).val();
-    $("#barangTable tbody").empty();
-    rowNumber = 0;
+        function tambahBaris(nama) {
+            var tr = document.createElement("tr");
 
-    if (templates[val]) {
-    templates[val].forEach(x => addRow(x));
-    } else {
-    addRow("");
-    }
-    });
+            var no = document.createElement("td");
+            no.className = "num";
+            tr.appendChild(no);
 
-    $("#addRow").click(() => addRow(""));
+            var tdNama = sel("NamaBarang[]");
+            tdNama.firstChild.value = nama || "";
+            tr.appendChild(tdNama);
 
-    $(document).on("click", ".removeRow", function () {
-    $(this).closest("tr").remove();
+            tr.appendChild(sel("SerialNumber[]"));
+            tr.appendChild(sel("MerkType[]"));
+            tr.appendChild(sel("Pengguna[]"));
 
-    rowNumber = 0;
-    $("#barangTable tbody tr").each(function () {
-    rowNumber++;
-    $(this).find("td:first").text(rowNumber);
-    });
-    });
+            var tdAksi = document.createElement("td");
+            var hapus = document.createElement("button");
+            hapus.type = "button";
+            hapus.className = "btn btn-outline-secondary btn-sm text-danger";
+            hapus.textContent = "×";
+            hapus.setAttribute("aria-label", "Hapus baris");
+            hapus.addEventListener("click", function () {
+                tr.remove();
+                nomoriUlang();
+            });
+            tdAksi.appendChild(hapus);
+            tr.appendChild(tdAksi);
+
+            tbody.appendChild(tr);
+            nomoriUlang();
+        }
+
+        device.addEventListener("change", function () {
+            tbody.innerHTML = "";
+            var daftar = templat[this.value];
+            if (daftar) {
+                daftar.forEach(tambahBaris);
+            } else {
+                tambahBaris("");
+            }
+        });
+
+        tambah.addEventListener("click", function () { tambahBaris(""); });
+
+        tambahBaris("");
+    })();
+
+    // ==================================================================
+    // Poin laporan (jenis surat berkode BA)
+    // ==================================================================
+    (function () {
+        var daftar  = document.getElementById("daftarPoin");
+        var tambah  = document.getElementById("tambahPoin");
+        var jenis   = document.getElementById("JenisSuratId");
+        var secPoin = document.getElementById("bagianPoin");
+        var secBrg  = document.getElementById("bagianBarang");
+
+        var MAKS_LEVEL = 2;
+        var urutKunci = 0;
+
+        // Nomor 1 / 1.1 / 1.1.1 dihitung ulang dari seluruh daftar setiap kali
+        // ada perubahan — tidak pernah disimpan, jadi tidak bisa basi.
+        function nomoriUlang() {
+            var hitung = [0, 0, 0];
+
+            Array.prototype.forEach.call(daftar.children, function (row) {
+                var lv = parseInt(row.dataset.level, 10) || 0;
+
+                hitung[lv]++;
+                for (var d = lv + 1; d < hitung.length; d++) hitung[d] = 0;
+
+                row.querySelector(".poin__no").textContent = hitung.slice(0, lv + 1).join(".");
+                row.querySelector("input[name='PoinLevel[]']").value = lv;
+                row.style.marginLeft = (lv * 32) + "px";
+            });
+        }
+
+        // Sebuah poin paling dalam hanya boleh satu tingkat di bawah poin
+        // sebelumnya. Tanpa aturan ini bisa muncul sub-poin tanpa induk.
+        function levelMaksimum(row) {
+            var sebelum = row.previousElementSibling;
+            if (!sebelum) return 0;
+            return Math.min(MAKS_LEVEL, (parseInt(sebelum.dataset.level, 10) || 0) + 1);
+        }
+
+        function geser(row, arah) {
+            var lv = parseInt(row.dataset.level, 10) || 0;
+            var baru = Math.max(0, Math.min(levelMaksimum(row), lv + arah));
+            row.dataset.level = baru;
+            nomoriUlang();
+        }
+
+        function tambahPoin() {
+            var kunci = "p" + (++urutKunci);
+
+            var row = document.createElement("div");
+            row.className = "poin";
+            row.dataset.level = "0";
+
+            var head = document.createElement("div");
+            head.className = "poin__head";
+
+            var no = document.createElement("span");
+            no.className = "poin__no";
+            head.appendChild(no);
+
+            var judul = document.createElement("input");
+            judul.name = "PoinJudul[]";
+            judul.className = "form-control";
+            judul.placeholder = "Judul poin";
+            head.appendChild(judul);
+
+            var aksi = document.createElement("div");
+            aksi.className = "poin__aksi";
+
+            [["←", "Naikkan tingkat", -1], ["→", "Turunkan tingkat", 1]].forEach(function (a) {
+                var b = document.createElement("button");
+                b.type = "button";
+                b.className = "btn btn-outline-secondary btn-sm";
+                b.textContent = a[0];
+                b.setAttribute("aria-label", a[1]);
+                b.addEventListener("click", function () { geser(row, a[2]); });
+                aksi.appendChild(b);
+            });
+
+            var hapus = document.createElement("button");
+            hapus.type = "button";
+            hapus.className = "btn btn-outline-secondary btn-sm text-danger";
+            hapus.textContent = "×";
+            hapus.setAttribute("aria-label", "Hapus poin");
+            hapus.addEventListener("click", function () { row.remove(); nomoriUlang(); });
+            aksi.appendChild(hapus);
+
+            head.appendChild(aksi);
+            row.appendChild(head);
+
+            var kunciInput = document.createElement("input");
+            kunciInput.type = "hidden";
+            kunciInput.name = "PoinKey[]";
+            kunciInput.value = kunci;
+            row.appendChild(kunciInput);
+
+            var levelInput = document.createElement("input");
+            levelInput.type = "hidden";
+            levelInput.name = "PoinLevel[]";
+            levelInput.value = "0";
+            row.appendChild(levelInput);
+
+            var ket = document.createElement("textarea");
+            ket.name = "PoinKeterangan[]";
+            ket.className = "form-control";
+            ket.rows = 2;
+            ket.placeholder = "Keterangan poin";
+            row.appendChild(ket);
+
+            var bungkus = document.createElement("div");
+            bungkus.className = "poin__berkas";
+            var gambar = document.createElement("input");
+            gambar.type = "file";
+            // Dinamai per kunci, bukan per indeks: menghapus satu baris tidak
+            // boleh memindahkan gambar milik baris lain.
+            gambar.name = "Gambar_" + kunci;
+            gambar.className = "form-control";
+            gambar.multiple = true;
+            gambar.accept = "image/*";
+            bungkus.appendChild(gambar);
+            row.appendChild(bungkus);
+
+            daftar.appendChild(row);
+            nomoriUlang();
+        }
+
+        function pilihBagian() {
+            var opsi = jenis.options[jenis.selectedIndex];
+            var kode = opsi ? (opsi.getAttribute("data-kode") || "") : "";
+            var laporan = kode.trim().toUpperCase() === "BA";
+
+            secPoin.hidden = !laporan;
+            secBrg.hidden = laporan;
+
+            if (laporan && daftar.children.length === 0) tambahPoin();
+        }
+
+        tambah.addEventListener("click", tambahPoin);
+        jenis.addEventListener("change", pilihBagian);
+        pilihBagian();
+    })();
 </script>
+}

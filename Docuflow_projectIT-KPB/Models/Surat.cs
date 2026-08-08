@@ -98,8 +98,17 @@ namespace Docuflow_projectIT_KPB.Models
 
 
         // ======================
-        // BARANG LIST
+        // BARANG LIST — dipakai jenis surat berkode BAST
         // ======================
         public List<BarangSurat>? BarangList { get; set; } = new List<BarangSurat>();
+
+        // ======================
+        // POIN LAPORAN — dipakai jenis surat berkode BA
+        //
+        // BAST mencatat daftar barang, BA mencatat poin laporan berjenjang.
+        // Keduanya menempel pada Surat yang sama; yang terisi ditentukan
+        // oleh kode jenis suratnya.
+        // ======================
+        public List<PoinSurat>? PoinList { get; set; } = new List<PoinSurat>();
     }
 }

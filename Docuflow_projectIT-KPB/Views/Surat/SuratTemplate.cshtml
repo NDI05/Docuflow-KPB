@@ -15,11 +15,16 @@
                 margin: 20mm 18mm 20mm 18mm;
             }
 
+            /* Arial, gaya formal, spacing normal.
+               line-height diseragamkan 1.5 di sini; sebelumnya tiap blok
+               memakai angka sendiri (1.2 / 1.4 / 1.5 / 1.55) sehingga jarak
+               baris antar bagian tidak konsisten di satu halaman. */
             body {
                 margin: 0;
                 padding: 0;
                 font-family: Arial, Helvetica, sans-serif;
                 font-size: 12px;
+                line-height: 1.5;
                 color: #000;
                 background: #f2f2f2;
             }
@@ -43,24 +48,30 @@
                 page-break-after: always;
             }
 
+            /* min-height harus menampung kotak nomor yang diposisikan absolut —
+               kotak itu tidak ikut mendorong tinggi header, jadi kalau kurang,
+               judul di bawahnya tertimpa. */
             .header {
                 position: relative;
-                min-height: 95px;
+                min-height: 112px;
                 margin-bottom: 15px;
             }
 
+            /* 105px, bukan 90px seperti logo lama: berkas ini punya ruang
+               kosong bawaan di kiri-kanan, jadi tanda logonya perlu sedikit
+               lebih lebar supaya tercetak sebesar sebelumnya. */
             .logo {
                 position: absolute;
                 top: 0;
                 left: 0;
-                width: 90px;
+                width: 115px;
             }
 
             .header-center {
                 text-align: center;
                 padding-top: 5px;
-                margin-left: 95px;
-                margin-right: 260px;
+                margin-left: 120px;
+                margin-right: 288px;
             }
 
             .company {
@@ -81,11 +92,15 @@
                 line-height: 1.4;
             }
 
+            /* 278px, bukan 245px: nomor format baru
+               ("BAST No.002/KPB3240/2026-S0") lebih panjang dari format lama
+               dan membungkus ke baris kedua, membuat kotak ini memanjang ke
+               bawah sampai menabrak judul. */
             .box-info {
                 position: absolute;
                 top: 0;
                 right: 0;
-                width: 245px;
+                width: 278px;
                 border: 1px solid #000;
                 border-collapse: collapse;
                 font-size: 11px;
@@ -102,7 +117,7 @@
                 }
 
                 .box-info .label {
-                    width: 60px;
+                    width: 52px;
                     white-space: nowrap;
                 }
 
@@ -260,7 +275,10 @@
 
             <div class="header">
 
-                <img src="/images/Logo_pertamina.png" class="logo" />
+                @* Logo resmi Kilang Pertamina Balikpapan. Berkas lama
+                   (Logo_pertamina.png) memakai merah/biru/hijau RGB murni,
+                   bukan warna merek — jangan dipakai lagi. *@
+                <img src="@Url.Content("~/images/kpb-logo.png")" class="logo" alt="Kilang Pertamina Balikpapan" />
 
                 <div class="header-center">
                     <div class="company">PT KILANG PERTAMINA</div>

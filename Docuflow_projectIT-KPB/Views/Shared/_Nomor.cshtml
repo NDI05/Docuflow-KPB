@@ -1,0 +1,34 @@
+@model string
+@*
+    Nomor surat sebagai satu objek, bukan string polos.
+
+    Bentuk masukan: "BAST 007/KPB2340/2026/S0"
+      -> chip kode miring | nomor urut tebal | sisanya diredam
+
+    Kalau formatnya tidak dikenali (data lama, atau jenis surat tanpa kode),
+    seluruh teks dicetak apa adanya — jangan sampai penomoran yang aneh
+    malah menghilangkan informasinya dari layar.
+*@
+@{
+    var raw = (Model ?? string.Empty).Trim();
+    var spasi = raw.IndexOf(' ');
+    var garis = raw.IndexOf('/');
+
+    var terurai = spasi > 0 && garis > spasi;
+
+    string kode = terurai ? raw.Substring(0, spasi) : null;
+    string urut = terurai ? raw.Substring(spasi + 1, garis - spasi - 1) : null;
+    string sisa = terurai ? raw.Substring(garis) : null;
+}
+
+@if (terurai)
+{
+    <span class="nomor" title="@raw">
+        <span class="nomor__kode"><span>@kode</span></span>
+        <span class="nomor__body"><span class="nomor__urut">@urut</span><span class="nomor__rest">@sisa</span></span>
+    </span>
+}
+else
+{
+    <span class="nomor" title="@raw"><span class="nomor__body nomor__urut">@raw</span></span>
+}

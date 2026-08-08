@@ -1,230 +1,138 @@
-﻿<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>@ViewData["Title"] - Docuflow</title>
-
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet" />
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
-
-    <style>
-        body {
-            background: #eef1f7;
-            font-family: 'Segoe UI', sans-serif;
-        }
-
-        .dashboard-wrapper {
-            display: flex;
-            min-height: 100vh;
-        }
-
-        .sidebar {
-            width: 240px;
-            background: linear-gradient(180deg, #1d2bff, #0d1a8a);
-            color: white;
-            padding: 20px 15px;
-            position: fixed;
-            height: 100vh;
-            border-top-right-radius: 18px;
-            border-bottom-right-radius: 18px;
-            box-shadow: 4px 0px 20px rgba(0,0,0,0.15);
-        }
-
-        .sidebar .brand {
-            font-size: 22px;
-            font-weight: 800;
-            margin-bottom: 30px;
-            padding-left: 10px;
-        }
-
-        .sidebar a {
-            text-decoration: none;
-            color: white;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            padding: 12px 14px;
-            border-radius: 12px;
-            margin-bottom: 10px;
-            font-weight: 600;
-            transition: 0.2s ease-in-out;
-        }
-
-        .sidebar a:hover {
-            background: rgba(255,255,255,0.18);
-        }
-
-        .sidebar i {
-            font-size: 18px;
-        }
-
-        .main-content {
-            margin-left: 240px;
-            width: 100%;
-            padding: 20px 30px;
-        }
-
-        .topbar {
-            background: #d9dbe7;
-            border-radius: 18px;
-            padding: 14px 18px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 25px;
-            box-shadow: 0px 6px 18px rgba(0,0,0,0.08);
-        }
-
-        .search-box {
-            width: 350px;
-            max-width: 100%;
-            background: #eceef7;
-            border-radius: 12px;
-            padding: 8px 14px;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-
-        .search-box input {
-            border: none;
-            outline: none;
-            background: transparent;
-            width: 100%;
-            font-size: 14px;
-        }
-
-        .profile-box {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-        }
-
-        .profile-icon {
-            width: 42px;
-            height: 42px;
-            border-radius: 50%;
-            background: white;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 22px;
-            box-shadow: 0px 4px 12px rgba(0,0,0,0.12);
-        }
-
-        .profile-box small {
-            display: block;
-            font-size: 12px;
-            color: #333;
-            margin-top: -3px;
-        }
-
-        .btn-mini {
-            border-radius: 10px;
-            font-size: 13px;
-            font-weight: 600;
-            padding: 7px 12px;
-        }
-
-        .footer {
-            text-align: center;
-            padding: 20px;
-            font-size: 13px;
-            color: #777;
-            margin-top: 40px;
-        }
-
-        @@media(max-width: 768px) {
-            .sidebar { width: 200px; }
-            .main-content { margin-left: 200px; padding: 15px; }
-            .search-box { width: 200px; }
-        }
-
-        @@media(max-width: 576px) {
-            .sidebar { position: relative; width: 100%; height: auto; border-radius: 0; }
-            .main-content { margin-left: 0; }
-            .topbar { flex-direction: column; gap: 15px; align-items: flex-start; }
-            .search-box { width: 100%; }
-        }
-    </style>
-</head>
-
-<body>
 @{
     var nama = Context.Session.GetString("Nama");
     var role = Context.Session.GetString("Role");
+
+    var ctrl = ViewContext.RouteData.Values["controller"]?.ToString();
+    string aktif(string c) => ctrl == c ? "rail__link is-active" : "rail__link";
+
+    var judul   = ViewData["Title"]?.ToString();
+    var eyebrow = ViewData["Eyebrow"]?.ToString();
+    var sub     = ViewData["Sub"]?.ToString();
 }
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@judul · IT KPB</title>
 
-<div class="dashboard-wrapper">
+    @* Aset lokal, bukan CDN: aplikasi ini jalan di jaringan internal kilang
+       dan tidak boleh bergantung pada akses internet keluar. *@
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="~/css/docuflow.css" asp-append-version="true" />
+</head>
+<body>
 
-    <!-- Sidebar -->
-    <div class="sidebar">
-        <div class="brand">
-            Docuflow
+<div class="app">
+
+    <nav class="rail" aria-label="Menu utama">
+
+        @* Hanya logo. Teks pendamping dihapus — logonya sendiri sudah memuat
+           "KILANG PERTAMINA BALIKPAPAN", dan menu di bawahnya sudah menyebut
+           isi sistemnya. *@
+        @* kpb-logo-mark.png: sudah dipotong sampai batas isi dan latar putihnya
+           transparan. Berkas kpb-logo.png yang lama membawa ~1550px ruang
+           kosong di kiri-kanan, sehingga logonya tampak kecil berapa pun
+           tingginya disetel. *@
+        <div class="rail__brand">
+            <img src="~/images/kpb-logo-mark.png" alt="Kilang Pertamina Balikpapan" />
         </div>
 
-        <a asp-controller="Home" asp-action="Index">
-            <i class="bi bi-grid-fill"></i>
-            Beranda
-        </a>
+        @* Menu mengikuti pemisahan peran: Admin mengurus berita acara,
+           Super Admin mengurus akun dan jejak audit. Yang disembunyikan di
+           sini juga ditolak di route lewat [SessionAuthorize] — menu yang
+           hilang saja bukan pengamanan. *@
+        <div class="rail__nav">
+            <div class="rail__label">Kerja harian</div>
 
-        <a asp-controller="Surat" asp-action="Index">
-            <i class="bi bi-envelope-paper-fill"></i>
-            Daftar Surat
-        </a>
-
-        @if (role == "Admin")
-        {
-            <a asp-controller="Users" asp-action="Index">
-                <i class="bi bi-people-fill"></i>
-                Data Users
+            <a class="@aktif("Home")" asp-controller="Home" asp-action="Index">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
+                    <path d="M3 10.5 12 3l9 7.5V20a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"/>
+                </svg>
+                Beranda
             </a>
-        }
 
-        <hr style="border-color: rgba(255,255,255,0.3);" />
+            @if (role == "Admin")
+            {
+                <a class="@aktif("Surat")" asp-controller="Surat" asp-action="Index">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
+                        <path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/>
+                        <path d="M14 3v5h5M9 13h6M9 17h4"/>
+                    </svg>
+                    Berita Acara
+                </a>
+            }
 
-        <a asp-controller="Account" asp-action="Logout">
-            <i class="bi bi-box-arrow-right"></i>
-            Logout
-        </a>
-    </div>
-
-    <!-- Main Content -->
-    <div class="main-content">
-
-        <!-- Topbar -->
-        <div class="topbar">
-
-            <div class="search-box">
-                <i class="bi bi-search text-secondary"></i>
-                <input type="text" placeholder="Search" />
-            </div>
-
-            <div class="profile-box">
-                <div>
-                    <div style="font-weight:700; font-size:14px;">
-                        @(nama ?? "User")
-                    </div>
-                    <small>@(role ?? "-")</small>
-                </div>
-
-                <div class="profile-icon">
-                    <i class="bi bi-person-fill text-primary"></i>
-                </div>
-            </div>
+            @if (role == "SuperAdmin")
+            {
+                <div class="rail__label">Administrasi</div>
+                <a class="@aktif("Users")" asp-controller="Users" asp-action="Index">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
+                        <circle cx="9" cy="8" r="3.2"/>
+                        <path d="M3.5 20a5.5 5.5 0 0 1 11 0M16 11.2a3 3 0 0 0 0-6M17.5 20a5.4 5.4 0 0 0-2-4.2"/>
+                    </svg>
+                    Pengguna
+                </a>
+            }
         </div>
 
-        @RenderBody()
+        @* Identitas yang sedang masuk duduk di kaki rail, tepat di atas
+           Keluar — dua hal itu memang satu urusan: siapa ini, dan cara
+           berhenti jadi dia. *@
+        <div class="rail__foot">
+            <div class="rail__user">
+                <span class="rail__user-nama">@(nama ?? "Pengguna")</span>
+                <span class="rail__user-peran">@(role == "SuperAdmin" ? "Super Admin" : (role ?? "-"))</span>
+            </div>
 
-        <div class="footer">
-            Copy Rights &copy; IT-KPB 2026
+            <a class="rail__link" asp-controller="Account" asp-action="Logout">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
+                    <path d="M15 17l5-5-5-5M20 12H9M12 3H6a1 1 0 0 0-1 1v16a1 1 0 0 0 1 1h6"/>
+                </svg>
+                Keluar
+            </a>
         </div>
+    </nav>
+
+    <div class="canvas">
+
+        @* Tidak ada bar atas. Navigasi sudah seluruhnya di rail kiri, jadi
+           judul halaman ikut mengalir di dalam isi — bukan di dalam chrome
+           terpisah yang hanya mengulang apa yang sudah ditandai menu aktif. *@
+        <main class="main">
+            <div class="pagetitle">
+                @if (!string.IsNullOrEmpty(eyebrow))
+                {
+                    <div class="pagetitle__eyebrow">@eyebrow</div>
+                }
+                <h1>@judul</h1>
+                @if (!string.IsNullOrEmpty(sub))
+                {
+                    <p class="pagetitle__sub">@sub</p>
+                }
+            </div>
+
+            @if (TempData["Message"] != null)
+            {
+                <div class="note note--ok">@TempData["Message"]</div>
+            }
+            @if (TempData["Error"] != null)
+            {
+                <div class="note note--danger">@TempData["Error"]</div>
+            }
+
+            @RenderBody()
+        </main>
+
+        <footer class="foot">
+            Fungsi IT · Kilang Pertamina Balikpapan · @DateTime.Now.Year
+        </footer>
 
     </div>
 </div>
 
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+@await RenderSectionAsync("Scripts", required: false)
 
 </body>
 </html>

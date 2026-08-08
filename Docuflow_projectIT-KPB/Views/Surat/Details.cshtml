@@ -1,550 +1,242 @@
-﻿@model Docuflow_projectIT_KPB.Models.Surat
+@model Docuflow_projectIT_KPB.Models.Surat
+
 @{
-    Layout = null;
+    ViewData["Title"] = "Detail berita acara";
+    ViewData["Eyebrow"] = Model.JenisSurat?.NamaJenis ?? "Berita acara";
+
+    // Baris keterangan hanya muncul kalau ada isinya. Deretan "—" tidak
+    // memberi tahu apa pun selain bahwa formulirnya panjang.
+    var keterangan = new (string Label, string Nilai)[]
+    {
+        ("Tujuan",            Model.Tujuan),
+        ("Deskripsi",         Model.Deskripsi),
+        ("Jenis tiket",       Model.JenisTiket),
+        ("Nomor tiket",       Model.NoTiket),
+        ("Yang menerima",     Model.YangMenerima),
+    };
+
+    var penanggungJawab = new (string Label, string Nilai)[]
+    {
+        ("Nama",              Model.NamaPenanggungJawab),
+        ("Jabatan",           Model.Jabatan),
+        ("Fungsi/direktorat", Model.FungsiDirektorat),
+        ("Nomor pekerja",     Model.NoPekerja),
+        ("Alamat",            Model.Alamat),
+    };
 }
 
-<!DOCTYPE html>
-<html>
-<head>
-    <meta charset="utf-8" />
-    <title>Preview Surat</title>
-
-    <style>
-            @@page {
-                size: A4;
-                margin: 20mm 18mm 20mm 18mm;
-            }
-
-            body {
-                margin: 0;
-                padding: 0;
-                font-family: Arial, Helvetica, sans-serif;
-                font-size: 12px;
-                color: #000;
-                background: #f2f2f2;
-            }
-
-            .paper {
-                width: 210mm;
-                min-height: 297mm;
-                margin: 15px auto;
-                background: #fff;
-                padding: 0;
-                box-shadow: 0 0 10px rgba(0,0,0,0.15);
-                box-sizing: border-box;
-            }
-
-            .page-content {
-                padding: 20mm 18mm 20mm 18mm;
-                box-sizing: border-box;
-            }
-
-            .page-break {
-                page-break-after: always;
-            }
-
-            .header {
-                position: relative;
-                min-height: 95px;
-                margin-bottom: 15px;
-            }
-
-            .logo {
-                position: absolute;
-                top: 0;
-                left: 0;
-                width: 90px;
-            }
-
-            .header-center {
-                text-align: center;
-                padding-top: 5px;
-                margin-left: 95px;
-                margin-right: 260px;
-            }
-
-            .company {
-                font-size: 16px;
-                font-weight: bold;
-                line-height: 1.2;
-            }
-
-            .company-sub {
-                font-size: 16px;
-                font-weight: bold;
-                margin-top: 2px;
-            }
-
-            .alamat {
-                margin-top: 6px;
-                font-size: 11px;
-                line-height: 1.4;
-            }
-
-            .box-info {
-                position: absolute;
-                top: 0;
-                right: 0;
-                width: 245px;
-                border: 1px solid #000;
-                border-collapse: collapse;
-                font-size: 11px;
-            }
-
-                .box-info td {
-                    border-bottom: 1px solid #000;
-                    padding: 4px 6px;
-                    vertical-align: top;
-                }
-
-                .box-info tr:last-child td {
-                    border-bottom: none;
-                }
-
-                .box-info .label {
-                    width: 60px;
-                    white-space: nowrap;
-                }
-
-                .box-info .separator {
-                    width: 10px;
-                    text-align: center;
-                }
-
-                .box-info .value {
-                    font-weight: bold;
-                }
-
-            .title {
-                text-align: center;
-                font-size: 14px;
-                font-weight: bold;
-                text-decoration: underline;
-                margin: 10px 0 15px 0;
-            }
-
-            .info-table {
-                width: 100%;
-                border-collapse: collapse;
-                margin-bottom: 12px;
-                font-size: 12px;
-            }
-
-                .info-table td {
-                    padding: 2px 0;
-                    vertical-align: top;
-                }
-
-                .info-table .label {
-                    width: 190px;
-                }
-
-                .info-table .colon {
-                    width: 12px;
-                    text-align: center;
-                }
-
-                .info-table .value {
-                    width: 260px;
-                }
-
-            /* ================= TABEL BARANG ================= */
-            .barang-table {
-                width: 100%;
-                border-collapse: collapse;
-                margin-top: 8px;
-                font-size: 11px;
-            }
-
-                .barang-table th,
-                .barang-table td {
-                    border: 1px solid #000;
-                    padding: 6px 6px;
-                }
-
-                .barang-table th {
-                    text-align: center;
-                    background: #f3f3f3;
-                    font-weight: bold;
-                }
-
-                .barang-table tfoot td {
-                    font-weight: bold;
-                    text-align: left;
-                    padding: 8px 8px;
-                }
-
-            .text-left {
-                text-align: left;
-            }
-
-            .text-center {
-                text-align: center;
-            }
-
-            .paragraph {
-                margin-top: 8px;
-                text-align: justify;
-                line-height: 1.5;
-                font-size: 11.5px;
-            }
-
-            .signature {
-                width: 100%;
-                border-collapse: collapse;
-                margin-top: 22px;
-                font-size: 11px;
-            }
-
-                .signature td {
-                    text-align: center;
-                    vertical-align: top;
-                    width: 25%;
-                    padding: 0 5px;
-                }
-
-            .sign-space {
-                height: 65px;
-            }
-
-            .signature-name {
-                font-weight: bold;
-                text-decoration: underline;
-            }
-
-            .page2-title {
-                text-align: center;
-                font-size: 14px;
-                font-weight: bold;
-                margin-bottom: 6px;
-            }
-
-            .page2-subtitle {
-                text-align: center;
-                font-size: 11px;
-                font-weight: bold;
-                margin-bottom: 15px;
-            }
-
-            .rules {
-                font-size: 11px;
-                line-height: 1.55;
-                text-align: justify;
-            }
-
-                .rules ol {
-                    padding-left: 18px;
-                    margin: 0;
-                }
-
-                .rules li {
-                    margin-bottom: 8px;
-                }
-
-                .rules .sublist {
-                    margin-top: 6px;
-                    padding-left: 18px;
-                }
-
-                    .rules .sublist li {
-                        margin-bottom: 5px;
-                    }
-    </style>
-</head>
-
-<body>
-
-    <!-- ================= PAGE 1 ================= -->
-    <div class="paper page-break">
-        <div class="page-content">
-
-            <div class="header">
-
-                <img src="/images/Logo_pertamina.png" class="logo" />
-
-                <div class="header-center">
-                    <div class="company">PT KILANG PERTAMINA</div>
-                    <div class="company-sub">BALIKPAPAN</div>
-
-                    <div class="alamat">
-                        Kantor NSO PT Kilang Pertamina Balikpapan<br />
-                        JL. Yos Sudarso No.1 Balikpapan
-                    </div>
-                </div>
-
-                <table class="box-info">
-                    <tr>
-                        <td class="label">Nomor</td>
-                        <td class="separator">:</td>
-                        <td class="value">@Model.NomorSurat</td>
-                    </tr>
-                    <tr>
-                        <td class="label">Tanggal</td>
-                        <td class="separator">:</td>
-                        <td class="value">@Model.Tanggal.ToString("dd MMMM yyyy")</td>
-                    </tr>
-                    <tr>
-                        <td class="label">Dari</td>
-                        <td class="separator">:</td>
-                        <td class="value">Ruang IT KPB</td>
-                    </tr>
-                    <tr>
-                        <td class="label">Tujuan</td>
-                        <td class="separator">:</td>
-                        <td class="value">@Model.Tujuan</td>
-                    </tr>
-                </table>
-
+@* Aksi cetak menempel pada kartu nomor surat — di situlah dokumennya
+   diidentifikasi, jadi di situ pula tombol yang menghasilkannya. *@
+<div class="panel mb-4">
+    <div class="panel__body d-flex flex-wrap justify-content-between align-items-center gap-3">
+        <div>
+            <div class="eyebrow mb-2">Nomor berita acara</div>
+            <div class="nomor--lg">
+                @await Html.PartialAsync("_Nomor", Model.NomorSurat)
             </div>
+        </div>
 
-            <div class="title">
-                @(Model.JenisSurat?.NamaJenis?.ToUpper())
-            </div>
+        <div class="text-end">
+            <div class="tally__l">Tanggal</div>
+            <div style="font-size:17px; font-weight:700;">@Model.Tanggal.ToString("dd MMMM yyyy")</div>
+        </div>
 
-            <table class="info-table">
-                <tr>
-                    <td class="label"><b>Nama Penanggung Jawab</b></td>
-                    <td class="colon">:</td>
-                    <td class="value">@Model.NamaPenanggungJawab</td>
+        <div class="d-flex gap-2 flex-wrap">
+            <a class="btn btn-outline-secondary" asp-action="Preview" asp-route-id="@Model.Id" target="_blank" rel="noopener">Pratinjau</a>
+            <a class="btn btn-primary" asp-action="GeneratePdf" asp-route-id="@Model.Id">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
+                    <path d="M6 9V3h12v6M6 18H5a2 2 0 0 1-2-2v-4a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v4a2 2 0 0 1-2 2h-1M6 14h12v7H6z"/>
+                </svg>
+                Cetak PDF
+            </a>
+        </div>
+    </div>
+</div>
 
-                    <td class="label" style="width:110px;"><b>No. Pekerja</b></td>
-                    <td class="colon">:</td>
-                    <td>@Model.NoPekerja</td>
-                </tr>
+<div class="row g-4">
 
-                <tr>
-                    <td class="label"><b>Jabatan</b></td>
-                    <td class="colon">:</td>
-                    <td class="value">@Model.Jabatan</td>
-                </tr>
+    <div class="col-lg-7">
 
-                <tr>
-                    <td class="label"><b>Fungsi/Direktorat</b></td>
-                    <td class="colon">:</td>
-                    <td class="value">@Model.FungsiDirektorat</td>
-                    <td></td>
-                    <td></td>
-                    <td></td>
-                </tr>
+        <div class="panel mb-4">
+            <div class="panel__head"><h2>Keterangan</h2></div>
+            <div class="panel__body">
+                <dl class="row mb-0">
+                    <dt class="col-sm-4 form-label pt-1">Jenis</dt>
+                    <dd class="col-sm-8">@(Model.JenisSurat?.NamaJenis ?? "—")</dd>
 
-                <tr>
-                    <td class="label"><b>Alamat</b></td>
-                    <td class="colon">:</td>
-                    <td class="value">@Model.Alamat</td>
-                </tr>
-            </table>
-
-            <!-- ================= TABEL BARANG + CATATAN DALAM TABEL ================= -->
-            <table class="barang-table">
-                <thead>
-                    <tr>
-                        <th width="40">No</th>
-                        <th>Nama Barang</th>
-                        <th width="150">Serial Number</th>
-                        <th width="140">Merk Type</th>
-                        <th width="140">Pengguna</th>
-                    </tr>
-                </thead>
-
-                <tbody>
-                    @if (Model.BarangList != null && Model.BarangList.Any())
+                    @foreach (var baris in keterangan)
                     {
-                        int no = 1;
-                        foreach (var barang in Model.BarangList)
+                        if (!string.IsNullOrWhiteSpace(baris.Nilai))
                         {
-                            <tr>
-                                <td class="text-center">@no</td>
-                                <td class="text-left">@barang.NamaBarang</td>
-                                <td class="text-center">@barang.SerialNumber</td>
-                                <td class="text-center">@barang.MerkType</td>
-                                <td class="text-center">@barang.Pengguna</td>
-                            </tr>
-                            no++;
+                            <dt class="col-sm-4 form-label pt-1">@baris.Label</dt>
+                            <dd class="col-sm-8">@baris.Nilai</dd>
                         }
                     }
-                    else
+                </dl>
+            </div>
+        </div>
+
+        @if (Model.PoinList != null && Model.PoinList.Any())
+        {
+            var hitung = new int[3];
+
+            <div class="panel">
+                <div class="panel__head">
+                    <h2>Poin laporan</h2>
+                    <span class="chip">@Model.PoinList.Count poin</span>
+                </div>
+                <div class="panel__body">
+                    @foreach (var poin in Model.PoinList)
                     {
-                        <tr>
-                            <td colspan="5" class="text-center">Tidak ada data barang</td>
-                        </tr>
+                        var lv = Math.Clamp(poin.Level, 0, 2);
+                        hitung[lv]++;
+                        for (var d = lv + 1; d < hitung.Length; d++) { hitung[d] = 0; }
+                        var no = string.Join(".", hitung.Take(lv + 1));
+
+                        <div class="mb-3" style="margin-left:@(lv * 24)px;">
+                            <div style="font-weight:700;">
+                                <span class="dist__n" style="min-width:44px; display:inline-block;">@no</span>@poin.Judul
+                            </div>
+
+                            @if (!string.IsNullOrWhiteSpace(poin.Keterangan))
+                            {
+                                <div class="text-secondary" style="margin-left:44px;">@poin.Keterangan</div>
+                            }
+
+                            @if (poin.Gambar != null && poin.Gambar.Any())
+                            {
+                                <div style="margin-left:44px; margin-top:8px; display:flex; flex-wrap:wrap; gap:8px;">
+                                    @foreach (var g in poin.Gambar)
+                                    {
+                                        <a href="@Url.Content("~" + g.FilePath)" target="_blank" rel="noopener">
+                                            <img src="@Url.Content("~" + g.FilePath)" alt="Lampiran poin @no"
+                                                 style="max-width:160px; max-height:110px; border:1px solid var(--rule); border-radius:var(--r-chip);" />
+                                        </a>
+                                    }
+                                </div>
+                            }
+                        </div>
                     }
-                </tbody>
-
-                <!-- CATATAN MASUK TABEL -->
-                <tfoot>
-                    <tr>
-                        <td colspan="5">
-                            Catatan : Pemenuhan Permintaan Berdasarkan @Model.JenisTiket No @Model.NoTiket
-                        </td>
-                    </tr>
-                </tfoot>
-            </table>
-
-            <div class="paragraph">
-                I. Telah dilakukan uji-coba terhadap barang yang diserahkan sesuai dengan data diatas,
-                yang dilaksanakan oleh petugas dari staff IT KPB dan pihak penerima sebagai pemakai /
-                penanggung jawab, semua sepakat bahwa barang tersebut telah sesuai seperti tercantum
-                di atas dan bekerja dengan baik serta laik pakai.
+                </div>
+            </div>
+        }
+        else
+        {
+        <div class="panel">
+            <div class="panel__head">
+                <h2>Daftar barang</h2>
+                <span class="chip">@(Model.BarangList?.Count ?? 0) baris</span>
             </div>
 
-            <div class="paragraph">
-                II. Pihak penerima bertanggung jawab sepenuhnya atas barang yang digunakan dan telah
-                membaca serta setuju dengan ketentuan tambahan yang tercantum pada halaman belakang
-                dari lembar bukti penerimaan barang ini (wajib dibaca).
-            </div>
-
-            <div class="paragraph">
-                III. Apabila terjadi pencurian / kehilangan barang yang diserahkan kepada pemakai /
-                penanggung jawab, maka pemakai / penanggung jawab harus melaporkan kepada Kepolisian
-                dan Sekuriti Pertamina dimana terjadi kehilangan barang tersebut.
-            </div>
-
-            <div class="paragraph">
-                IV. Perangkat IT yang tidak harus / wajib dikembalikan ke Fungsi IT KPB Direktorat
-                Keuangan apabila pekerja mutasi / keluar.
-            </div>
-
-            <div class="paragraph">
-                V. Kami sebagai Penerima/Penanggung Jawab telah membaca, memahami dan menerima
-                semua ketentuan Perusahaan tersebut.
-            </div>
-
-            <table class="signature">
-                <tr>
-                    <td>Yang Menyerahkan</td>
-                    <td>Mengetahui<br />Ast Manager IT | PT. KPB</td>
-                    <td>Yang Bertanggung Jawab</td>
-                    <td>
-                        Balikpapan, @Model.Tanggal.ToString("dd.MM.yyyy")<br />
-                        Yang Menerima
-                    </td>
-                </tr>
-
-                <tr>
-                    <td class="sign-space"></td>
-                    <td class="sign-space"></td>
-                    <td class="sign-space"></td>
-                    <td class="sign-space"></td>
-                </tr>
-
-                <tr>
-                    <td class="signature-name">@Model.Staff?.Nama</td>
-                    <td class="signature-name">@Model.Manager?.Nama</td>
-                    <td class="signature-name">@Model.NamaPenanggungJawab</td>
-                    <td class="signature-name">@Model.YangMenerima</td>
-                </tr>
-            </table>
-
+            @if (Model.BarangList != null && Model.BarangList.Any())
+            {
+                <div class="ledger--wrap">
+                    <table class="ledger">
+                        <thead>
+                            <tr>
+                                <th style="width:40px;">#</th>
+                                <th>Barang</th>
+                                <th>Serial number</th>
+                                <th>Merk / tipe</th>
+                                <th>Pengguna</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @{ int n = 0; }
+                            @foreach (var b in Model.BarangList)
+                            {
+                                n++;
+                                <tr>
+                                    <td class="num">@n</td>
+                                    <td>@b.NamaBarang</td>
+                                    <td class="serial">@(string.IsNullOrWhiteSpace(b.SerialNumber) ? "—" : b.SerialNumber)</td>
+                                    <td>@(string.IsNullOrWhiteSpace(b.MerkType) ? "—" : b.MerkType)</td>
+                                    <td>@(string.IsNullOrWhiteSpace(b.Pengguna) ? "—" : b.Pengguna)</td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            }
+            else
+            {
+                <div class="empty">
+                    <h3>Tidak ada barang tercatat</h3>
+                    <p>Berita acara ini dibuat tanpa daftar barang.</p>
+                </div>
+            }
         </div>
+        }
+
     </div>
 
-    <!-- ================= PAGE 2 ================= -->
-    <div class="paper">
-        <div class="page-content">
+    <div class="col-lg-5">
 
-            <div class="page2-title">PT. KILANG PERTAMINA BALIKPAPAN</div>
-            <div class="page2-subtitle">
-                PETUNJUK / KETENTUAN PEMAKAIAN<br />
-                PERANGKAT IT
+        <div class="panel mb-4">
+            <div class="panel__head"><h2>Penanggung jawab</h2></div>
+            <div class="panel__body">
+                @if (penanggungJawab.Any(p => !string.IsNullOrWhiteSpace(p.Nilai)))
+                {
+                    <dl class="row mb-0">
+                        @foreach (var baris in penanggungJawab)
+                        {
+                            if (!string.IsNullOrWhiteSpace(baris.Nilai))
+                            {
+                                <dt class="col-5 form-label pt-1">@baris.Label</dt>
+                                <dd class="col-7">@baris.Nilai</dd>
+                            }
+                        }
+                    </dl>
+                }
+                else
+                {
+                    <p class="text-secondary mb-0">Data penanggung jawab tidak diisi.</p>
+                }
             </div>
-
-            <div class="rules">
-                <ol>
-                    <li>
-                        Perangkat IT (PC/Notebook/iPod/Printer/Scanner), dll yang diserahkan/dititipkan adalah perangkat yang
-                        semata-mata digunakan untuk kepentingan dinas / perusahaan, dan karenanya harus dipelihara dan
-                        dipergunakan sebaik-baiknya sesuai petunjuk dan aturan yang berlaku.
-                    </li>
-
-                    <li>
-                        Penerima/Penanggung jawab bertanggung jawab penuh atas pemeliharaan barang yang diserahkan kepada
-                        Penerima/Penanggung Jawab, termasuk namun tidak terbatas untuk bertanggung jawab atas kehilangan
-                        Sebagian atau keseluruhan peralatan yang telah diterima, sampai dengan berakhirnya masa pemakaian.
-                        Kehilangan di luar lokasi kerja dan kerusakan yang diakibatkan kesalahan dan/atau kelalaian Penerima/
-                        Penanggung Jawab, serta hal-hal lainnya menjadi tanggung jawab sepenuhnya Penerima/Penanggung Jawab.
-                    </li>
-
-                    <li>
-                        Kesalahan pemakai / kelalaian penerima/penanggung jawab dalam memelihara barang sebagaimana diwajibkan
-                        menurut angka 2 diatas, merupakan pelanggaran Pasal 289-291-302, sehingga berakibat pemecatan secara
-                        sepihak dan/atau mewajibkan kepada Penerima/Penanggung Jawab untuk melakukan penggantian dan/atau
-                        penggantian kerugian sesuai ketentuan yang berlaku.
-                    </li>
-
-                    <li>
-                        Penerima/Penanggung Jawab untuk mengembalikan / menyerahkan perangkat selengkapnya kepada Deskbook yang
-                        diserahkan baik sebagai pemakai keseluruhan. Khususnya bagi pengembalian barang yang terjadi untuk
-                        memenuhi kebutuhan lain, perangkat tersebut harus kembali lengkap seperti semula. Apabila ditemukan
-                        perangkat lunak ilegal pada perangkat Deskbook menjadi tanggung jawab dari Penerima/Penanggung Jawab,
-                        dan Fungsi Corporate Shared Service berhak melakukan penghapusan terhadap perangkat lunak ilegal tersebut.
-                    </li>
-
-                    <li>
-                        Segala kerusakan yang diakibatkan oleh kesalahan operasi atau pemakaian yang tidak sesuai atau akibat
-                        dari pemasangan perangkat lunak ilegal menjadi tanggung jawab Penerima/Penanggung Jawab.
-                    </li>
-
-                    <li>
-                        Untuk pencegahan kehilangan file/dokumen/data yang dikarenakan:
-                        <ol class="sublist" type="a">
-                            <li>Virus, disarankan tidak melakukan pembacaan eksternal data sebelum dilakukan pemeriksaan dengan antivirus.</li>
-                            <li>Kerusakan perangkat/hardisk, disarankan secara rutin melakukan back-up terhadap file/dokumen/data.</li>
-                        </ol>
-                    </li>
-
-                    <li>
-                        Segala informasi yang tersimpan didalam perangkat desktop sepenuhnya merupakan milik perusahaan dan
-                        kehilangan segala informasi yang terdapat pada perangkat desktop menjadi tanggung jawab dari Penerima/
-                        Penanggung Jawab, untuk menjaga keamanan informasi dalam perangkat tersebut, dianjurkan untuk:
-                        <ol class="sublist" type="a">
-                            <li>Melakukan Enkripsi Data</li>
-                            <li>Menggunakan Folder Sharing Resmi dari Pertamina dalam menyimpan data-data penting perusahaan</li>
-                        </ol>
-                    </li>
-
-                    <li>
-                        Untuk kepentingan Perusahaan, segala informasi yang terdapat pada Perangkat Desktop yang diklasasikan
-                        sebagai rahasia kepada pekerja, sepenuhnya dapat diakses oleh perusahaan.
-                    </li>
-
-                    <li>
-                        Segala kegiatan yang dilakukan Penerima/Penanggung Jawab menggunakan perangkat Desktop harus menggunakan
-                        UID masing-masing pengguna, dan UID tersebut tidak boleh serta dengan Local Administrator, maka Fungsi
-                        Corporate Shared Service berhak melakukan pencabutan otorisasi local Administrator pada UID tersebut.
-                    </li>
-
-                    <li>
-                        Untuk penerima/Penanggung Jawab yang menggunakan e-mail, harap diperhatikan untuk tidak membuka e-mail
-                        dari pengirim yang tidak dikenal (khususnya yang ada attachment-nya), e-mail yang subjectnya tidak jelas,
-                        dan sebagainya. E-mail tersebut sebaiknya segera didelete.
-                    </li>
-
-                    <li>
-                        Perangkat Desktop yang dialokasikan harus/wajib dikembalikan kepada Fungsi Corporate Shared Service
-                        Direktorat Keuangan dalam hal:
-                        <ol class="sublist" type="a">
-                            <li>Telah berakhirnya masa sewanya (Fungsi Corporate Shared Service akan memberitahukan 1 bulan sebelum masa sewa berakhir).</li>
-                            <li>Pemakai tidak memerlukan lagi.</li>
-                            <li>Terjadi mutasi terhadap pemakai/penanggung jawab Perangkat Desktop.</li>
-                            <li>Fungsi Corporate CSS memandang perlu (dengan alasan tertentu) untuk lebih mendayagunakan Perangkat Desktop yang bersangkutan.</li>
-                        </ol>
-                    </li>
-
-                    <li>
-                        Untuk informasi lebih lanjut, bantuan (support), keluhan yang berhubungan dengan kurang optimalnya maupun dugaan terjadinya kerusakan Perangkat Desktop yang dialokasikan, harap menghubungi Service Desk, telp ext 6666, e-mail: it.
-                    </li>
-
-                    <li>
-                        Dengan telah membaca ketentuan ini, Penerima/Penanggung Jawab telah memahami isi petunjuk/ketentuan dan
-                        berjanji akan melaksanakan seluruh kewajiban serta akan menerima segala konsekuensi yang dibebankan sesuai
-                        kesepakatan ini, termasuk namun tidak terbatas pada pemotongan upah untuk penyelesaian ganti kerugian apabila
-                        dibebankan kepada Penerima/Penanggung Jawab.
-                    </li>
-                </ol>
-            </div>
-
         </div>
-    </div>
 
-</body>
-</html>
+        <div class="panel mb-4">
+            <div class="panel__head"><h2>Penanda tangan</h2></div>
+            <div class="panel__body">
+                <dl class="row mb-0">
+                    <dt class="col-5 form-label pt-1">Staff</dt>
+                    <dd class="col-7">@(Model.Staff?.Nama ?? "—")</dd>
+
+                    <dt class="col-5 form-label pt-1">Mengetahui</dt>
+                    <dd class="col-7 mb-0">@(Model.Manager?.Nama ?? "—")</dd>
+                </dl>
+            </div>
+        </div>
+
+        <div class="panel">
+            <div class="panel__head"><h2>Lampiran</h2></div>
+            <div class="panel__body">
+                @if (!string.IsNullOrWhiteSpace(Model.FilePath))
+                {
+                    <a class="btn btn-outline-secondary w-100" asp-action="Download" asp-route-id="@Model.Id">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
+                            <path d="M12 3v12m0 0 4-4m-4 4-4-4M4 19h16"/>
+                        </svg>
+                        Unduh berkas terlampir
+                    </a>
+                }
+                else
+                {
+                    <p class="text-secondary mb-0">Tidak ada berkas terlampir.</p>
+                }
+            </div>
+        </div>
+
+    </div>
+</div>
+
+<div class="d-flex justify-content-between align-items-center mt-4">
+    <a class="btn btn-outline-secondary" asp-action="Index">Kembali ke arsip</a>
+
+    <form asp-action="Delete" method="post"
+          onsubmit="return confirm('Hapus berita acara @Model.NomorSurat? Tindakan ini tidak bisa dibatalkan.');">
+        @Html.AntiForgeryToken()
+        <input type="hidden" name="id" value="@Model.Id" />
+        <button type="submit" class="btn btn-outline-secondary text-danger">Hapus berita acara</button>
+    </form>
+</div>

@@ -20,20 +20,31 @@ namespace Docuflow_projectIT_KPB.Controllers
 
         public IActionResult Index()
         {
-            // =========================
-            // TOTAL USERS
-            // =========================
-            ViewBag.TotalUsers = _context.Users.Count();
+            var role = HttpContext.Session.GetString("Role");
+            var superAdmin = role == "SuperAdmin";
 
-            // =========================
-            // TOTAL SURAT
-            // =========================
+            ViewBag.Role = role;
+
+            ViewBag.TotalUsers = _context.Users.Count();
             ViewBag.TotalSurat = _context.Surat.Count();
 
+            if (superAdmin)
+            {
+                // Beranda Super Admin: siapa melakukan apa, terbaru di atas.
+                ViewBag.AktivitasTerbaru = _context.AuditLogs
+                    .OrderByDescending(a => a.Waktu)
+                    .Take(15)
+                    .ToList();
+
+                ViewBag.TotalAktivitas = _context.AuditLogs.Count();
+
+                return View();
+            }
+
             // =========================
-            // SURAT PER JENIS
+            // BERANDA ADMIN
             // =========================
-            var suratPerJenis = _context.Surat
+            ViewBag.SuratPerJenis = _context.Surat
                 .Include(s => s.JenisSurat)
                 .GroupBy(s => s.JenisSurat.NamaJenis)
                 .Select(g => new
@@ -43,15 +54,39 @@ namespace Docuflow_projectIT_KPB.Controllers
                 })
                 .ToList();
 
-            ViewBag.SuratPerJenis = suratPerJenis;
+            // Sebaran per bulan untuk tahun berjalan: jenis apa yang paling
+            // sering dibuat, dan kapan.
+            var tahun = DateTime.Now.Year;
+            ViewBag.Tahun = tahun;
 
-            // =========================
-            // AUDIT LOG TERBARU
-            // =========================
-            ViewBag.AktivitasTerbaru = _context.AuditLogs
-                .OrderByDescending(a => a.Waktu)
-                .Take(10)
+            var perBulan = _context.Surat
+                .Include(s => s.JenisSurat)
+                .Where(s => s.Tanggal.Year == tahun)
+                .GroupBy(s => new { Bulan = s.Tanggal.Month, Jenis = s.JenisSurat.NamaJenis })
+                .Select(g => new { g.Key.Bulan, g.Key.Jenis, Total = g.Count() })
                 .ToList();
+
+            // Dibentuk jadi matriks jenis x 12 bulan di sini, bukan di view.
+            // View cukup menggambar, tidak perlu mengaduk data.
+            var matriks = new Dictionary<string, int[]>();
+            foreach (var baris in perBulan)
+            {
+                if (!matriks.ContainsKey(baris.Jenis))
+                    matriks[baris.Jenis] = new int[12];
+
+                matriks[baris.Jenis][baris.Bulan - 1] = baris.Total;
+            }
+
+            ViewBag.MatriksBulan = matriks;
+            ViewBag.PuncakBulan = matriks.Count == 0
+                ? 0
+                : Enumerable.Range(0, 12).Max(b => matriks.Values.Sum(v => v[b]));
+
+            ViewBag.JenisTerbanyak = matriks.Count == 0
+                ? null
+                : matriks.OrderByDescending(m => m.Value.Sum()).First().Key;
+
+            ViewBag.TotalTahunIni = perBulan.Sum(p => p.Total);
 
             return View();
         }

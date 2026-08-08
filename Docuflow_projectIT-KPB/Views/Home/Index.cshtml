@@ -1,258 +1,221 @@
-﻿@using Microsoft.AspNetCore.Http
 @using Docuflow_projectIT_KPB.Models
-@using System.Linq
 
 @{
-    ViewData["Title"] = "Dashboard";
+    ViewData["Title"] = "Beranda";
+    // Eyebrow menyebut jenis halaman, sejalan dengan "Arsip" di Berita Acara
+    // dan "Administrasi" di Pengguna.
+    ViewData["Eyebrow"] = "Ringkasan";
+    ViewData["Sub"] = $"Selamat datang, {Context.Session.GetString("Nama")}.";
+
+    var superAdmin = (string)ViewBag.Role == "SuperAdmin";
 }
 
-<style>
-    .dashboard-container {
-        padding: 25px;
-        background: #f4f6fb;
-        border-radius: 18px;
-        min-height: 80vh;
-    }
+@* Beranda sengaja tanpa tombol aksi di kepala halaman.
+   "Buat berita acara" tinggal di halaman Berita Acara, "Tambah pengguna" di
+   halaman Pengguna — aksi berada di tempat kerjanya, bukan diulang di
+   header setiap halaman. Ajakan yang tersisa di beranda hanya muncul saat
+   datanya memang kosong, dan itu memang tugas keadaan kosong. *@
 
-    .dashboard-header {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        margin-bottom: 25px;
-    }
+@if (superAdmin)
+{
+    var logs = ViewBag.AktivitasTerbaru as List<AuditLog>;
 
-        .dashboard-header h3 {
-            font-weight: 700;
-            color: #1f2d3d;
-            margin: 0;
-        }
-
-        .dashboard-header p {
-            margin: 0;
-            font-size: 14px;
-            color: #6c757d;
-        }
-
-    .stat-card {
-        border-radius: 16px;
-        border: none;
-        padding: 18px;
-        background: white;
-        box-shadow: 0px 8px 20px rgba(0,0,0,0.08);
-        transition: 0.2s ease-in-out;
-    }
-
-        .stat-card:hover {
-            transform: translateY(-3px);
-        }
-
-    .stat-title {
-        font-size: 15px;
-        font-weight: 600;
-        color: #6c757d;
-        margin-bottom: 5px;
-    }
-
-    .stat-value {
-        font-size: 44px;
-        font-weight: 800;
-        color: #1f2d3d;
-        margin: 0;
-    }
-
-    .section-title {
-        font-weight: 700;
-        color: #1f2d3d;
-        margin-top: 30px;
-        margin-bottom: 15px;
-    }
-
-    .jenis-card {
-        border-radius: 16px;
-        border: none;
-        padding: 16px;
-        background: #e9ecf5;
-        transition: 0.2s ease-in-out;
-        height: 100%;
-    }
-
-        .jenis-card:hover {
-            background: #dfe4f2;
-            transform: translateY(-2px);
-        }
-
-    .jenis-title {
-        font-size: 13px;
-        font-weight: 600;
-        color: #2c3e50;
-        margin-bottom: 10px;
-    }
-
-    .jenis-value {
-        font-size: 32px;
-        font-weight: 800;
-        color: #111827;
-        margin: 0;
-    }
-
-    .audit-card {
-        border-radius: 16px;
-        background: white;
-        padding: 18px;
-        box-shadow: 0px 8px 20px rgba(0,0,0,0.08);
-    }
-
-    .audit-item {
-        padding: 14px 0;
-        border-bottom: 1px solid #eceff5;
-    }
-
-        .audit-item:last-child {
-            border-bottom: none;
-        }
-
-    .audit-activity {
-        font-size: 16px;
-        font-weight: 700;
-        color: #1f2d3d;
-        margin-bottom: 8px;
-    }
-
-    .audit-user {
-        font-size: 13px;
-        color: #6c757d;
-        margin-bottom: 4px;
-        padding-left: 10px;
-    }
-
-    .audit-count {
-        color: #2563eb;
-        font-weight: 600;
-    }
-</style>
-
-<div class="dashboard-container">
-
-    <div class="dashboard-header">
-        <div>
-            <h3>Beranda</h3>
-            <p>
-                Selamat Datang,
-                <b>@Context.Session.GetString("Nama")</b>
-            </p>
+    <div class="panel mb-4">
+        <div class="panel__body">
+            <div class="tally">
+                <div class="tally__item">
+                    <div class="tally__n">@ViewBag.TotalUsers</div>
+                    <div class="tally__l">Pengguna</div>
+                </div>
+                <div class="tally__item">
+                    <div class="tally__n">@ViewBag.TotalAktivitas</div>
+                    <div class="tally__l">Aktivitas tercatat</div>
+                </div>
+                <div class="tally__item">
+                    <div class="tally__n">@ViewBag.TotalSurat</div>
+                    <div class="tally__l">Berita acara</div>
+                </div>
+            </div>
         </div>
     </div>
 
-    <div class="row g-4">
-
-        <div class="col-md-6">
-            <div class="stat-card">
-                <div class="stat-title">
-                    Total Surat
-                </div>
-
-                <h2 class="stat-value">
-                    @ViewBag.TotalSurat
-                </h2>
+    <div class="panel">
+        <div class="panel__head">
+            <div>
+                <div class="eyebrow">Jejak</div>
+                <h2 class="mt-1">Aktivitas terbaru</h2>
             </div>
+            <span class="chip">15 terakhir</span>
         </div>
-
-        <div class="col-md-6">
-            <div class="stat-card">
-                <div class="stat-title">
-                    Total Users
-                </div>
-
-                <h2 class="stat-value">
-                    @ViewBag.TotalUsers
-                </h2>
-            </div>
-        </div>
-
-    </div>
-
-    <h5 class="section-title">
-        Total Surat per Jenis
-    </h5>
-
-    <div class="row g-3">
-
-        @foreach (var item in ViewBag.SuratPerJenis)
-        {
-            <div class="col-lg-3 col-md-4 col-sm-6">
-
-                <div class="jenis-card">
-
-                    <div class="jenis-title">
-                        @item.NamaJenis
-                    </div>
-
-                    <h3 class="jenis-value">
-                        @item.Total
-                    </h3>
-
-                </div>
-
-            </div>
-        }
-
-    </div>
-
-    @if (Context.Session.GetString("Role") == "Admin")
-    {
-        <h5 class="section-title">
-            Aktivitas Terbaru
-        </h5>
-
-        <div class="audit-card">
-
-            @{
-                var logs = ViewBag.AktivitasTerbaru as List<AuditLog>;
-            }
-
+        <div class="panel__body">
             @if (logs != null && logs.Any())
             {
-                var groupedLogs = logs
-                    .GroupBy(x => x.Aktivitas)
-                    .OrderByDescending(x => x.Count());
-
-                @foreach (var group in groupedLogs)
-                {
-                    <div class="audit-item">
-
-                        <div class="audit-activity">
-                            @group.Key
-                            <span class="audit-count">
-                                (@group.Count())
-                            </span>
+                <div class="feed">
+                    @foreach (var item in logs)
+                    {
+                        <div class="feed__row">
+                            <div class="feed__time">
+                                @item.Waktu.ToString("dd/MM/yy")<br />@item.Waktu.ToString("HH:mm")
+                            </div>
+                            <div>
+                                <div class="feed__what">@item.Aktivitas</div>
+                                <div class="feed__who">@item.Deskripsi · @item.Username</div>
+                            </div>
                         </div>
-
-                        @foreach (var item in group.Take(5))
-                        {
-                            <div class="audit-user">
-                                • @item.Username
-                                (@item.Waktu.ToString("dd/MM/yyyy HH:mm"))
-                            </div>
-                        }
-
-                        @if (group.Count() > 5)
-                        {
-                            <div class="audit-user">
-                                + @(group.Count() - 5) aktivitas lainnya
-                            </div>
-                        }
-
-                    </div>
-                }
+                    }
+                </div>
             }
             else
             {
-                <div class="text-muted">
-                    Belum ada aktivitas tercatat.
+                <div class="empty">
+                    <h3>Belum ada aktivitas</h3>
+                    <p>Login, pembuatan nomor, dan penghapusan surat tercatat di sini.</p>
                 </div>
             }
-
         </div>
-    }
+    </div>
+}
+else
+{
+    var matriks = ViewBag.MatriksBulan as Dictionary<string, int[]> ?? new Dictionary<string, int[]>();
+    int puncak = ViewBag.PuncakBulan ?? 0;
+    var namaBulan = new[] { "Jan", "Feb", "Mar", "Apr", "Mei", "Jun", "Jul", "Ags", "Sep", "Okt", "Nov", "Des" };
+    var warna = new[] { "var(--kpb-blue)", "var(--kpb-red)", "var(--kpb-green)", "var(--ink-2)", "#7A5AA6", "#C77B25" };
+    int bulanIni = DateTime.Now.Month;
 
-</div>
+    <div class="panel mb-4">
+        <div class="panel__body">
+            <div class="tally">
+                <div class="tally__item">
+                    <div class="tally__n">@ViewBag.TotalSurat</div>
+                    <div class="tally__l">Total berita acara</div>
+                </div>
+                <div class="tally__item">
+                    <div class="tally__n">@ViewBag.TotalTahunIni</div>
+                    <div class="tally__l">Tahun @ViewBag.Tahun</div>
+                </div>
+                @if (ViewBag.JenisTerbanyak != null)
+                {
+                    <div class="tally__item" style="min-width:220px;">
+                        <div style="font-size:20px; font-weight:800; letter-spacing:-0.02em; line-height:1.2;">
+                            @ViewBag.JenisTerbanyak
+                        </div>
+                        <div class="tally__l">Paling sering dibuat</div>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+
+    <div class="panel mb-4">
+        <div class="panel__head">
+            <div>
+                <div class="eyebrow">Per bulan · @ViewBag.Tahun</div>
+                <h2 class="mt-1">Jenis yang dibuat tiap bulan</h2>
+            </div>
+        </div>
+
+        <div class="panel__body">
+            @if (matriks.Count > 0 && puncak > 0)
+            {
+                <div class="chart">
+                    <div class="chart__plot">
+                        @for (int b = 0; b < 12; b++)
+                        {
+                            int totalBulan = matriks.Values.Sum(v => v[b]);
+
+                            <div class="chart__col">
+                                @if (totalBulan > 0)
+                                {
+                                    <div class="chart__total">@totalBulan</div>
+                                }
+
+                                <div class="chart__stack" style="height:@(Math.Round(totalBulan * 100.0 / puncak))%">
+                                    @{ int w = 0; }
+                                    @foreach (var jenis in matriks)
+                                    {
+                                        int nilai = jenis.Value[b];
+                                        if (nilai > 0)
+                                        {
+                                            <span class="chart__seg"
+                                                  style="height:@(Math.Round(nilai * 100.0 / totalBulan))%; background:@warna[w % warna.Length]"
+                                                  title="@namaBulan[b]: @jenis.Key — @nilai"></span>
+                                        }
+                                        w++;
+                                    }
+                                </div>
+
+                                @if (totalBulan == 0)
+                                {
+                                    <div class="chart__kosong" title="@namaBulan[b]: tidak ada"></div>
+                                }
+
+                                <div class="chart__x @(b + 1 == bulanIni ? "is-now" : "")">@namaBulan[b]</div>
+                            </div>
+                        }
+                    </div>
+
+                    <div class="legend">
+                        @{ int wl = 0; }
+                        @foreach (var jenis in matriks)
+                        {
+                            <span class="legend__item">
+                                <span class="legend__dot" style="background:@warna[wl % warna.Length]"></span>
+                                @jenis.Key
+                                <b class="dist__n">@jenis.Value.Sum()</b>
+                            </span>
+                            wl++;
+                        }
+                    </div>
+                </div>
+            }
+            else
+            {
+                <div class="empty">
+                    <h3>Belum ada berita acara tahun @ViewBag.Tahun</h3>
+                    <p>Grafik terisi setelah dokumen pertama tahun ini dibuat.</p>
+                    <a class="btn btn-primary" asp-controller="Surat" asp-action="Create">Buat berita acara</a>
+                </div>
+            }
+        </div>
+    </div>
+
+    <div class="panel">
+        <div class="panel__head">
+            <div>
+                <div class="eyebrow">Sebaran</div>
+                <h2 class="mt-1">Per jenis, seluruh tahun</h2>
+            </div>
+        </div>
+        <div class="panel__body">
+            @{
+                int puncakJenis = 1;
+                foreach (var j in ViewBag.SuratPerJenis)
+                {
+                    int t = (int)j.Total;
+                    if (t > puncakJenis) puncakJenis = t;
+                }
+            }
+
+            @if (((IEnumerable<dynamic>)ViewBag.SuratPerJenis).Any())
+            {
+                <div class="dist">
+                    @foreach (var item in ViewBag.SuratPerJenis)
+                    {
+                        <div class="dist__row">
+                            <span class="dist__name">@item.NamaJenis</span>
+                            <span class="dist__n">@item.Total</span>
+                            <span class="dist__track">
+                                <span class="dist__bar" style="width:@(Math.Round((int)item.Total * 100.0 / puncakJenis))%"></span>
+                            </span>
+                        </div>
+                    }
+                </div>
+            }
+            else
+            {
+                <p class="text-secondary mb-0">Belum ada data.</p>
+            }
+        </div>
+    </div>
+}
