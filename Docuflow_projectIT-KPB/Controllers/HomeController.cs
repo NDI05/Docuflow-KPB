@@ -82,12 +82,6 @@ namespace Docuflow_projectIT_KPB.Controllers
                 ? 0
                 : Enumerable.Range(0, 12).Max(b => matriks.Values.Sum(v => v[b]));
 
-            ViewBag.JenisTerbanyak = matriks.Count == 0
-                ? null
-                : matriks.OrderByDescending(m => m.Value.Sum()).First().Key;
-
-            ViewBag.TotalTahunIni = perBulan.Sum(p => p.Total);
-
             return View();
         }
 

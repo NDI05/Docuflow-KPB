@@ -84,30 +84,6 @@ else
     int bulanIni = DateTime.Now.Month;
 
     <div class="panel mb-4">
-        <div class="panel__body">
-            <div class="tally">
-                <div class="tally__item">
-                    <div class="tally__n">@ViewBag.TotalSurat</div>
-                    <div class="tally__l">Total berita acara</div>
-                </div>
-                <div class="tally__item">
-                    <div class="tally__n">@ViewBag.TotalTahunIni</div>
-                    <div class="tally__l">Tahun @ViewBag.Tahun</div>
-                </div>
-                @if (ViewBag.JenisTerbanyak != null)
-                {
-                    <div class="tally__item" style="min-width:220px;">
-                        <div style="font-size:20px; font-weight:800; letter-spacing:-0.02em; line-height:1.2;">
-                            @ViewBag.JenisTerbanyak
-                        </div>
-                        <div class="tally__l">Paling sering dibuat</div>
-                    </div>
-                }
-            </div>
-        </div>
-    </div>
-
-    <div class="panel mb-4">
         <div class="panel__head">
             <div>
                 <div class="eyebrow">Per bulan · @ViewBag.Tahun</div>
