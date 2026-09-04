@@ -1,0 +1,141 @@
+@using Docuflow_projectIT_KPB.Services
+@model Docuflow_projectIT_KPB.Models.User
+
+@{
+    ViewData["Title"] = "Sunting pengguna";
+    ViewData["Eyebrow"] = "Administrasi";
+    ViewData["Sub"] = $"Mengubah data {Model.Nama}. Kata sandi tidak ikut berubah di sini.";
+}
+
+<div class="row">
+    <div class="col-lg-8 col-xl-7">
+        <div class="panel">
+            <form asp-action="Edit" asp-route-id="@Model.Id" method="post">
+                @Html.AntiForgeryToken()
+
+                @* Id juga dikirim sebagai hidden, bukan hanya lewat rute: kalau
+                   validasi gagal dan form dirender ulang, tombol simpan harus
+                   tetap menunjuk baris yang sama. *@
+                <input type="hidden" asp-for="Id" />
+
+                <div class="panel__body">
+
+                    <div class="fieldset">
+                        <div class="fieldset__head">
+                            <span class="fieldset__no">01</span>
+                            <div>
+                                <h3>Identitas</h3>
+                                <p class="fieldset__hint">Nama yang muncul sebagai penanda tangan pada berita acara.</p>
+                            </div>
+                        </div>
+
+                        <div class="row g-3">
+                            <div class="col-md-7">
+                                <label class="form-label" asp-for="Nama">Nama lengkap</label>
+                                <input asp-for="Nama" class="form-control" required autofocus />
+                            </div>
+
+                            <div class="col-md-6">
+                                <label class="form-label" asp-for="NomorPegawai">Nomor pegawai</label>
+                                <input asp-for="NomorPegawai" class="form-control" />
+                            </div>
+
+                            <div class="col-md-6">
+                                <label class="form-label" asp-for="Npk">NPK</label>
+                                <input asp-for="Npk" class="form-control" />
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="fieldset">
+                        <div class="fieldset__head">
+                            <span class="fieldset__no">02</span>
+                            <div>
+                                <h3>Hak akses</h3>
+                                <p class="fieldset__hint">Menentukan menu apa yang terbuka. Tidak ada kaitannya dengan tanda tangan.</p>
+                            </div>
+                        </div>
+
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label class="form-label" asp-for="Role">Peran</label>
+                                <select asp-for="Role" class="form-select" required>
+                                    <option value="">Pilih peran</option>
+                                    <option value="Admin">Admin — membuat berita acara</option>
+                                    <option value="SuperAdmin">Super Admin — mengelola pengguna dan jejak audit</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="fieldset">
+                        <div class="fieldset__head">
+                            <span class="fieldset__no">03</span>
+                            <div>
+                                <h3>Jabatan</h3>
+                                <p class="fieldset__hint">
+                                    Ikut tercetak di dokumen, dan menentukan di kolom mana nama
+                                    orang ini muncul. Kosongkan kalau ia tidak pernah menandatangani.
+                                </p>
+                            </div>
+                        </div>
+
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label class="form-label" asp-for="Jabatan">Jabatan</label>
+                                @* Peran tanda tangan dihitung dari jabatan, tidak disimpan:
+                                   satu jabatan berperan manajer, sisanya staf. Daftarnya
+                                   ada di JabatanUser supaya form dan hasil cetak tidak
+                                   pernah memakai daftar yang berbeda. *@
+                                <select asp-for="Jabatan" class="form-select">
+                                    <option value="">Tidak menandatangani</option>
+                                    @foreach (var pilihan in JabatanUser.Pilihan)
+                                    {
+                                        <option value="@pilihan">
+                                            @pilihan@(JabatanUser.Manajer(pilihan) ? " — kolom “Mengetahui”" : "")
+                                        </option>
+                                    }
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="fieldset">
+                        <div class="fieldset__head">
+                            <span class="fieldset__no">04</span>
+                            <div>
+                                <h3>Akses masuk</h3>
+                                <p class="fieldset__hint">
+                                    Mengubah username membuat sandi lama tetap berlaku — yang berganti
+                                    hanya nama yang diketik saat masuk.
+                                </p>
+                            </div>
+                        </div>
+
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label class="form-label" asp-for="Username">Username</label>
+                                <input asp-for="Username" class="form-control" autocomplete="off" required />
+                            </div>
+
+                            <div class="col-md-6 d-flex align-items-end">
+                                @* Ganti sandi punya halamannya sendiri; ditautkan dari sini
+                                   supaya orang tidak mencarinya kembali ke daftar. *@
+                                <a class="btn btn-outline-secondary" asp-action="ResetPassword" asp-route-id="@Model.Id">
+                                    Atur ulang sandi
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+
+                <div class="panel__head" style="border-top:1px solid var(--rule); border-bottom:0;">
+                    <a class="btn btn-outline-secondary" asp-action="Index">Batal</a>
+                    <button type="submit" class="btn btn-primary">Simpan perubahan</button>
+                </div>
+
+            </form>
+        </div>
+    </div>
+</div>

@@ -4,6 +4,7 @@ using Docuflow_projectIT_KPB.Data;
 using Docuflow_projectIT_KPB.Models;
 using Docuflow_projectIT_KPB.Filters;
 using BCrypt.Net;
+using Docuflow_projectIT_KPB.Services;
 
 namespace Docuflow_projectIT_KPB.Controllers
 {
@@ -93,17 +94,19 @@ namespace Docuflow_projectIT_KPB.Controllers
                 return View(user);
             }
 
-            if (!string.IsNullOrWhiteSpace(user.PosisiTtd) &&
-                user.PosisiTtd != "Staff" &&
-                user.PosisiTtd != "Manager" &&
-                user.PosisiTtd != "PenanggungJawab")
+            // "PenanggungJawab" dihapus 2026-09-03. Penanggung jawab pada
+            // berita acara adalah penerima perangkat — pekerja kilang yang
+            // umumnya bukan pengguna aplikasi — dan datanya diketik sebagai
+            // teks di Surat/Create, bukan diambil dari tabel ini.
+            // Jabatan ikut tercetak di dokumen resmi, jadi nilainya diperiksa
+            // terhadap daftar putih di server. Isi <select> hanya petunjuk.
+            if (!string.IsNullOrWhiteSpace(user.Jabatan) && !JabatanUser.Dikenal(user.Jabatan))
             {
-                TempData["Error"] = "Posisi tanda tangan tidak dikenali.";
+                TempData["Error"] = "Jabatan tidak dikenali.";
                 return View(user);
             }
 
-            if (string.IsNullOrWhiteSpace(user.PosisiTtd))
-                user.PosisiTtd = null;
+            Rapikan(user);
 
             // cek username duplicate
             bool usernameExist = await _context.Users.AnyAsync(x => x.Username == user.Username);
@@ -120,6 +123,134 @@ namespace Docuflow_projectIT_KPB.Controllers
             await _context.SaveChangesAsync();
 
             TempData["Message"] = "User berhasil ditambahkan.";
+            return RedirectToAction(nameof(Index));
+        }
+
+        /// <summary>
+        /// Merapikan isian sebelum disimpan.
+        ///
+        /// Model binding MVC mengubah isian kosong menjadi <c>null</c> untuk
+        /// properti string (ConvertEmptyStringToNull, bawaan framework), padahal
+        /// NomorPegawai non-nullable di model sehingga kolomnya NOT NULL di
+        /// database. Membiarkan pengguna mengosongkan "Nomor pegawai" karena itu
+        /// melempar SqlException "Cannot insert the value NULL" dan berakhir
+        /// sebagai halaman error — bukan pesan validasi.
+        ///
+        /// Dikosongkan menjadi string kosong, bukan dijadikan wajib diisi: sepuluh
+        /// akun yang sudah ada memang tidak punya nomor pegawai, dan memaksakan
+        /// syarat baru akan membuat data lama tidak bisa disunting.
+        /// </summary>
+        private static void Rapikan(User user)
+        {
+            user.Nama = user.Nama?.Trim() ?? string.Empty;
+            user.Username = user.Username?.Trim() ?? string.Empty;
+            user.NomorPegawai = user.NomorPegawai?.Trim() ?? string.Empty;
+
+            // Npk dan Jabatan memang nullable — kosong disimpan sebagai NULL,
+            // bukan string kosong, supaya "tidak diisi" dan "diisi kosong" tidak
+            // jadi dua keadaan berbeda di database.
+            user.Npk = string.IsNullOrWhiteSpace(user.Npk) ? null : user.Npk.Trim();
+            user.Jabatan = string.IsNullOrWhiteSpace(user.Jabatan) ? null : user.Jabatan.Trim();
+        }
+
+        /// <summary>
+        /// Benar kalau menurunkan atau menghapus user ini akan menyisakan NOL
+        /// Super Admin.
+        ///
+        /// Aplikasi tidak punya halaman pendaftaran mandiri. Kehilangan Super
+        /// Admin terakhir berarti menu kelola pengguna tidak bisa dimasuki siapa
+        /// pun lagi, dan pemulihannya hanya lewat INSERT/UPDATE SQL langsung ke
+        /// database. Dipakai Edit maupun Delete — dua jalan menuju lubang yang
+        /// sama, jadi penjaganya satu.
+        /// </summary>
+        private async Task<bool> SuperAdminTerakhir(User user) =>
+            user.Role == "SuperAdmin" &&
+            await _context.Users.CountAsync(u => u.Role == "SuperAdmin") <= 1;
+
+        // =========================
+        // EDIT USER FORM
+        // =========================
+        public async Task<IActionResult> Edit(int id)
+        {
+            var user = await _context.Users.FindAsync(id);
+            if (user == null)
+                return NotFound();
+
+            return View(user);
+        }
+
+        // =========================
+        // EDIT USER POST
+        //
+        // Kata sandi TIDAK disentuh di sini — ada halaman Atur ulang sandi
+        // tersendiri. Menggabungkannya berarti setiap penyuntingan nama ikut
+        // meminta sandi, dan sandi kosong jadi ambigu: dibiarkan atau dikosongkan?
+        // =========================
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Edit(int id, User form)
+        {
+            var user = await _context.Users.FindAsync(id);
+            if (user == null)
+                return NotFound();
+
+            form.Id = id;
+
+            if (string.IsNullOrWhiteSpace(form.Nama) ||
+                string.IsNullOrWhiteSpace(form.Username) ||
+                string.IsNullOrWhiteSpace(form.Role))
+            {
+                TempData["Error"] = "Nama, username, dan peran wajib diisi.";
+                return View(form);
+            }
+
+            // Sama seperti Create: nilainya datang dari form dan menentukan hak
+            // akses, jadi diperiksa di server. Isi <select> hanya petunjuk.
+            if (form.Role != "SuperAdmin" && form.Role != "Admin")
+            {
+                TempData["Error"] = "Peran tidak dikenali.";
+                return View(form);
+            }
+
+            // Jabatan ikut tercetak di dokumen resmi, jadi nilainya diperiksa
+            // terhadap daftar putih di server. Isi <select> hanya petunjuk.
+            if (!string.IsNullOrWhiteSpace(form.Jabatan) && !JabatanUser.Dikenal(form.Jabatan))
+            {
+                TempData["Error"] = "Jabatan tidak dikenali.";
+                return View(form);
+            }
+
+            // Username tetap harus unik, tapi baris ini sendiri dikecualikan —
+            // tanpa itu menyimpan tanpa mengubah username akan ditolak.
+            bool bentrok = await _context.Users
+                .AnyAsync(x => x.Id != id && x.Username == form.Username);
+
+            if (bentrok)
+            {
+                TempData["Error"] = "Username sudah digunakan.";
+                return View(form);
+            }
+
+            // Diperiksa SEBELUM nilai lama ditimpa, selagi Role di memori masih
+            // sama dengan yang tersimpan.
+            if (form.Role != "SuperAdmin" && await SuperAdminTerakhir(user))
+            {
+                TempData["Error"] = "Ini Super Admin terakhir. Angkat Super Admin lain dulu sebelum menurunkan perannya, kalau tidak menu pengguna tidak bisa dimasuki siapa pun.";
+                return View(form);
+            }
+
+            Rapikan(form);
+
+            user.Nama = form.Nama;
+            user.Username = form.Username;
+            user.NomorPegawai = form.NomorPegawai;
+            user.Npk = form.Npk;
+            user.Role = form.Role;
+            user.Jabatan = form.Jabatan;
+
+            await _context.SaveChangesAsync();
+
+            TempData["Message"] = $"Data {user.Nama} berhasil diperbarui.";
             return RedirectToAction(nameof(Index));
         }
 
@@ -183,6 +314,12 @@ namespace Docuflow_projectIT_KPB.Controllers
             var user = await _context.Users.FindAsync(id);
             if (user == null)
                 return NotFound();
+
+            if (await SuperAdminTerakhir(user))
+            {
+                TempData["Error"] = "Ini Super Admin terakhir dan tidak bisa dihapus. Angkat Super Admin lain dulu.";
+                return RedirectToAction(nameof(Index));
+            }
 
             try
             {

@@ -16,17 +16,20 @@ namespace Docuflow_projectIT_KPB.Models
         public string Role { get; set; } = string.Empty;
 
         /// <summary>
-        /// Posisi orang ini saat menandatangani berita acara:
-        /// "Staff", "Manager", "PenanggungJawab", atau kosong kalau tidak
-        /// pernah menandatangani.
+        /// Jabatan orang ini, mis. "AST. Manager ICS | PT. KPB". Kosong berarti
+        /// ia tidak pernah menandatangani berita acara.
         ///
         /// Dipisahkan dari <see cref="Role"/> karena keduanya menjawab
         /// pertanyaan berbeda: Role menentukan apa yang boleh dibuka di
-        /// aplikasi, PosisiTtd menentukan di kolom mana namanya tercetak.
-        /// Sebelumnya keduanya menumpang satu kolom, sehingga seorang Manager
-        /// tidak bisa sekaligus diberi hak mengelola pengguna.
+        /// aplikasi, Jabatan menentukan di kolom mana namanya tercetak dan
+        /// jabatan apa yang tercetak di bawahnya.
+        ///
+        /// Peran tanda tangannya TIDAK disimpan — dihitung dari jabatan lewat
+        /// <see cref="Services.JabatanUser"/>. Menyimpan keduanya membuka
+        /// peluang jabatan dan peran saling bertentangan.
         /// </summary>
-        public string? PosisiTtd { get; set; }
+        [MaxLength(120)]
+        public string? Jabatan { get; set; }
 
         public string? TtdImagePath { get; set; }
 

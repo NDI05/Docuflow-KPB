@@ -1,6 +1,14 @@
-﻿@model Docuflow_projectIT_KPB.Models.Surat
+﻿@using Docuflow_projectIT_KPB.Services
+@model Docuflow_projectIT_KPB.Models.Surat
 @{
     Layout = null;
+
+    // Dua jenis berbagi kode BAST. Serah terima rekaman CCTV memakai kolom
+    // dan kotak tanda tangan sendiri; aturannya dijawab Bast, sumber yang
+    // sama dengan yang dipakai formulir Create supaya kolom di layar tidak
+    // pernah berbeda dengan kolom di kertas.
+    var cctv = Bast.Cctv(Model.JenisSurat?.NamaJenis);
+    var jumlahKolom = cctv ? 6 : 5;
 }
 
 <!DOCTYPE html>
@@ -218,6 +226,12 @@
                     padding: 0 5px;
                 }
 
+                /* Tiga kotak harus tetap memenuhi lebar halaman; 25% akan
+                   menyisakan seperempat kosong di kanan. */
+                .signature--tiga td {
+                    width: 33.33%;
+                }
+
             .sign-space {
                 height: 65px;
             }
@@ -358,9 +372,19 @@
                     <tr>
                         <th width="40">No</th>
                         <th>Nama Barang</th>
-                        <th width="150">Serial Number</th>
-                        <th width="140">Merk Type</th>
-                        <th width="140">Pengguna</th>
+                        @if (cctv)
+                        {
+                            <th width="120">Tanggal</th>
+                            <th width="105">Jam</th>
+                            <th width="145">Rekaman</th>
+                            <th width="110">Area</th>
+                        }
+                        else
+                        {
+                            <th width="150">Serial Number</th>
+                            <th width="140">Merk Type</th>
+                            <th width="140">Pengguna</th>
+                        }
                     </tr>
                 </thead>
 
@@ -373,9 +397,19 @@
                             <tr>
                                 <td class="text-center">@no</td>
                                 <td class="text-left">@barang.NamaBarang</td>
-                                <td class="text-center">@barang.SerialNumber</td>
-                                <td class="text-center">@barang.MerkType</td>
-                                <td class="text-center">@barang.Pengguna</td>
+                                @if (cctv)
+                                {
+                                    <td class="text-center">@barang.Tanggal</td>
+                                    <td class="text-center">@barang.Jam</td>
+                                    <td class="text-center">@barang.Rekaman</td>
+                                    <td class="text-center">@barang.Area</td>
+                                }
+                                else
+                                {
+                                    <td class="text-center">@barang.SerialNumber</td>
+                                    <td class="text-center">@barang.MerkType</td>
+                                    <td class="text-center">@barang.Pengguna</td>
+                                }
                             </tr>
                             no++;
                         }
@@ -383,7 +417,7 @@
                     else
                     {
                         <tr>
-                            <td colspan="5" class="text-center">Tidak ada data barang</td>
+                            <td colspan="@jumlahKolom" class="text-center">Tidak ada data barang</td>
                         </tr>
                     }
                 </tbody>
@@ -391,8 +425,15 @@
                 <!-- CATATAN MASUK TABEL -->
                 <tfoot>
                     <tr>
-                        <td colspan="5">
-                            Catatan : Pemenuhan Permintaan Berdasarkan @Model.JenisTiket No @Model.NoTiket
+                        <td colspan="@jumlahKolom">
+                            @* "No" hanya ditambahkan kalau dasarnya belum menyebut
+                               nomor sendiri. Tanpa ini pilihan "Nomor Memo" tercetak
+                               sebagai "Nomor Memo No 123", yang menyebut nomor dua kali. *@
+                            @{
+                                var dasar = (Model.JenisTiket ?? string.Empty).Trim();
+                                var sebutNomor = dasar.StartsWith("Nomor", StringComparison.OrdinalIgnoreCase);
+                            }
+                            Catatan : Pemenuhan Permintaan Berdasarkan @dasar @(sebutNomor ? "" : "No") @Model.NoTiket
                         </td>
                     </tr>
                 </tfoot>
@@ -427,28 +468,62 @@
                 semua ketentuan Perusahaan tersebut.
             </div>
 
-            <table class="signature">
+            @* Serah terima rekaman CCTV tidak punya penanggung jawab perangkat,
+               jadi kotaknya tiga: penyerah, yang mengetahui, penerima.        *@
+            <table class="signature @(cctv ? "signature--tiga" : "")">
+                @* Setiap kotak menyebut jabatan tepat di bawah perannya.
+                   Sumbernya berbeda-beda dan itu disengaja:
+                     Staff dan Manager  -> kolom Jabatan miliknya di tabel Users
+                     Penanggung jawab   -> Surat.Jabatan, diketik di formulir
+                                           karena ia umumnya bukan pengguna aplikasi
+                     Yang menerima      -> tidak ada sumbernya, jadi dikosongkan
+                   Jabatan yang belum diisi tidak mencetak baris kosong. *@
                 <tr>
-                    <td>Yang Menyerahkan</td>
-                    <td>Mengetahui<br />Ast Manager IT | PT. KPB</td>
-                    <td>Yang Bertanggung Jawab</td>
+                    <td>
+                        Yang Menyerahkan
+                        @if (!string.IsNullOrWhiteSpace(Model.Staff?.Jabatan))
+                        {
+                            <br />@Model.Staff.Jabatan
+                        }
+                    </td>
+                    <td>Mengetahui<br />@(string.IsNullOrWhiteSpace(Model.Manager?.Jabatan) ? "Ast Manager IT | PT. KPB" : Model.Manager.Jabatan)</td>
+                    @if (!cctv)
+                    {
+                        <td>
+                            Yang Bertanggung Jawab
+                            @if (!string.IsNullOrWhiteSpace(Model.Jabatan))
+                            {
+                                <br />@Model.Jabatan
+                            }
+                        </td>
+                    }
                     <td>
                         Balikpapan, @Model.Tanggal.ToString("dd.MM.yyyy")<br />
                         Yang Menerima
+                        @if (!string.IsNullOrWhiteSpace(Model.JabatanYangMenerima))
+                        {
+                            <br />@Model.JabatanYangMenerima
+                        }
                     </td>
                 </tr>
 
                 <tr>
                     <td class="sign-space"></td>
                     <td class="sign-space"></td>
-                    <td class="sign-space"></td>
+                    @if (!cctv)
+                    {
+                        <td class="sign-space"></td>
+                    }
                     <td class="sign-space"></td>
                 </tr>
 
                 <tr>
                     <td class="signature-name">@Model.Staff?.Nama</td>
                     <td class="signature-name">@Model.Manager?.Nama</td>
-                    <td class="signature-name">@Model.NamaPenanggungJawab</td>
+                    @if (!cctv)
+                    {
+                        <td class="signature-name">@Model.NamaPenanggungJawab</td>
+                    }
                     <td class="signature-name">@Model.YangMenerima</td>
                 </tr>
             </table>

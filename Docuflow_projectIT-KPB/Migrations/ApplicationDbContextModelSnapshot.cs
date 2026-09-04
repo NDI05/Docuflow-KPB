@@ -58,8 +58,20 @@ namespace Docuflow_projectIT_KPB.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
+                    b.Property<string>("Area")
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<string>("Jam")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
                     b.Property<int?>("Jumlah")
                         .HasColumnType("int");
+
+                    b.Property<string>("Keterangan")
+                        .HasMaxLength(300)
+                        .HasColumnType("nvarchar(300)");
 
                     b.Property<string>("MerkType")
                         .IsRequired()
@@ -73,12 +85,24 @@ namespace Docuflow_projectIT_KPB.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<string>("Rekaman")
+                        .HasMaxLength(300)
+                        .HasColumnType("nvarchar(300)");
+
+                    b.Property<string>("Satuan")
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)");
+
                     b.Property<string>("SerialNumber")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<int>("SuratId")
                         .HasColumnType("int");
+
+                    b.Property<string>("Tanggal")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
 
                     b.HasKey("Id");
 
@@ -222,6 +246,10 @@ namespace Docuflow_projectIT_KPB.Migrations
                     b.Property<string>("Jabatan")
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<string>("JabatanYangMenerima")
+                        .HasMaxLength(120)
+                        .HasColumnType("nvarchar(120)");
+
                     b.Property<int>("JenisSuratId")
                         .HasColumnType("int");
 
@@ -253,6 +281,13 @@ namespace Docuflow_projectIT_KPB.Migrations
                     b.Property<DateTime>("Tanggal")
                         .HasColumnType("datetime2");
 
+                    b.Property<DateTime?>("TanggalBalp")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Tentang")
+                        .HasMaxLength(300)
+                        .HasColumnType("nvarchar(300)");
+
                     b.Property<string>("Tujuan")
                         .HasColumnType("nvarchar(max)");
 
@@ -280,6 +315,10 @@ namespace Docuflow_projectIT_KPB.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
+                    b.Property<string>("Jabatan")
+                        .HasMaxLength(120)
+                        .HasColumnType("nvarchar(120)");
+
                     b.Property<string>("Nama")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
@@ -293,9 +332,6 @@ namespace Docuflow_projectIT_KPB.Migrations
 
                     b.Property<string>("Password")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("PosisiTtd")
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("Role")

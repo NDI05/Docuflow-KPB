@@ -1,3 +1,4 @@
+@using Docuflow_projectIT_KPB.Services
 @model Docuflow_projectIT_KPB.Models.Surat
 
 @{
@@ -27,26 +28,119 @@
                     <div class="col-md-6">
                         <label class="form-label" asp-for="JenisSuratId">Jenis berita acara</label>
                         @* data-kode dipakai JS untuk menentukan bagian mana yang
-                           ditampilkan: BAST butuh tabel barang, BA butuh poin laporan. *@
+                           ditampilkan: BAST butuh tabel barang, BA butuh poin
+                           laporan, BAPB butuh tabel barang berkolom lain.
+
+                           data-lawan membawa label kolom di sebelahnya. Pada
+                           BAPB pihak lawan bisa jadi pengirim ATAU penerima
+                           tergantung jenisnya, dan labelnya dihitung Bapb
+                           supaya tidak berbeda dengan hasil cetaknya. *@
                         <select asp-for="JenisSuratId" class="form-select" required>
                             <option value="">Pilih jenis</option>
                             @foreach (var j in ViewBag.JenisSurat)
                             {
-                                <option value="@j.Id" data-kode="@j.Kode">@j.NamaJenis</option>
+                                var kodeJenis = ((string)(j.Kode ?? "")).Trim().ToUpperInvariant();
+
+                                // Hanya BAPB yang arahnya bisa terbalik. Jenis
+                                // lain tetap memakai label "Tujuan" seperti
+                                // sebelumnya.
+                                var labelLawan = kodeJenis == Bapb.Kode
+                                    ? Bapb.LabelLawan((string)j.NamaJenis)
+                                    : "Tujuan";
+
+                                // BAPB Barang Rusak satu-satunya dokumen yang
+                                // tidak mencetak baris Mengetahui. Menanyakan
+                                // penanda tangan yang tidak akan muncul di
+                                // kertas hanya membuat operator mengisi data
+                                // yang lalu hilang tanpa penjelasan.
+                                var pakaiMengetahui = !(kodeJenis == Bapb.Kode && Bapb.Rusak((string)j.NamaJenis));
+
+                                // Pada BAPB arah masuk, pilihan staff bukan
+                                // sekadar penanda tangan — ia yang tercetak di
+                                // baris "Kepada" — dan isian bebas di sebelahnya
+                                // berpindah arti jadi pihak yang menyerahkan.
+                                var labelStaff = kodeJenis == Bapb.Kode
+                                    ? Bapb.LabelStaff((string)j.NamaJenis)
+                                    : "Staff";
+
+                                var labelTerima = kodeJenis == Bapb.Kode
+                                    ? Bapb.LabelYangMenerima((string)j.NamaJenis)
+                                    : "Yang menerima";
+
+                                // Jabatan pihak lawan dicetak BAPB dan BAST. Pada BAPB
+                                // labelnya ikut berbalik arah; pada BAST penerimanya
+                                // selalu penerima, jadi labelnya tetap. BA tidak punya
+                                // kotak "Yang Menerima" sama sekali, jadi isiannya
+                                // disembunyikan di sana.
+                                var labelJabatanTerima =
+                                    kodeJenis == Bapb.Kode ? Bapb.LabelJabatanYangMenerima((string)j.NamaJenis)
+                                    : kodeJenis == Bast.Kode ? "Jabatan penerima"
+                                    : null;
+
+                                // BAPB arah IT ke vendor tidak memakai dasar
+                                // pemenuhan, jadi bagiannya disembunyikan.
+                                var pakaiDasar = kodeJenis != Bapb.Kode
+                                    || Bapb.PakaiDasarPemenuhan((string)j.NamaJenis);
+
+                                // BAST punya dua bentuk tabel: perangkat dan rekaman CCTV.
+                                var cctv = kodeJenis == Bast.Kode && Bast.Cctv((string)j.NamaJenis);
+
+                                // Hanya BA Survey yang mencetak baris TENTANG.
+                                var pakaiTentang = kodeJenis == Ba.Kode && Ba.Survey((string)j.NamaJenis);
+
+                                // BA Survey tidak mencetak Tujuan maupun data
+                                // penanggung jawab, jadi keduanya tidak ditanyakan.
+                                var pakaiTujuanPj = !pakaiTentang;
+
+                                // BALP hanya minta nama perusahaan dan keterangan.
+                                // Berkas dan tanggalnya menyusul lewat halaman unggah,
+                                // dan dokumennya dibuat vendor sehingga tidak ada
+                                // barang, poin, dasar pemenuhan, maupun penanda tangan.
+                                var balp = kodeJenis == Balp.Kode;
+
+                                <option value="@j.Id"
+                                        data-kode="@j.Kode"
+                                        data-cctv="@(cctv ? "1" : "0")"
+                                        data-tentang="@(pakaiTentang ? "1" : "0")"
+                                        data-tujuanpj="@(pakaiTujuanPj ? "1" : "0")"
+                                        data-balp="@(balp ? "1" : "0")"
+                                        data-lawan="@labelLawan"
+                                        data-mengetahui="@(pakaiMengetahui ? "1" : "0")"
+                                        data-dasar="@(pakaiDasar ? "1" : "0")"
+                                        data-labelstaff="@labelStaff"
+                                        data-labelterima="@labelTerima"
+                                        data-labeljabterima="@labelJabatanTerima">@j.NamaJenis</option>
                             }
                         </select>
                         <span asp-validation-for="JenisSuratId" class="text-danger"></span>
                     </div>
 
-                    <div class="col-md-6">
-                        <label class="form-label" asp-for="Tujuan">Tujuan</label>
+                    <div class="col-md-6" id="kolomTujuan">
+                        <label class="form-label" asp-for="Tujuan" id="labelTujuan">Tujuan</label>
                         <input asp-for="Tujuan" class="form-control" placeholder="Ditujukan kepada" required />
                         <span asp-validation-for="Tujuan" class="text-danger"></span>
+                    </div>
+
+                    @* Perihal dokumen — judul satu baris yang tercetak di bawah
+                       label TENTANG. Terpisah dari Catatan, yang berupa paragraf. *@
+                    <div class="col-12" id="kolomTentang" hidden>
+                        <label class="form-label" asp-for="Tentang">Tentang</label>
+                        <input asp-for="Tentang" class="form-control"
+                               placeholder="Perihal berita acara, mis. Survey Ruang Server Lantai 2" />
+                    </div>
+
+                    <div class="col-12">
+                        @* Deskripsi sebelumnya tidak punya isian sama sekali,
+                           padahal template BA mencetaknya dan BAPB memakainya
+                           sebagai baris Catatan. *@
+                        <label class="form-label" asp-for="Deskripsi" id="labelCatatan">Catatan</label>
+                        <textarea asp-for="Deskripsi" class="form-control" rows="2"
+                                  placeholder="Opsional. Tercetak pada baris Catatan."></textarea>
                     </div>
                 </div>
             </div>
 
-            <div class="fieldset">
+            <div class="fieldset" id="bagianPj">
                 <div class="fieldset__head">
                     <span class="fieldset__no">02</span>
                     <div>
@@ -102,38 +196,48 @@
                 </button>
             </div>
 
-            @* ================= DAFTAR BARANG — jenis berkode BAST ================= *@
+            @* ============ DAFTAR BARANG — jenis berkode BAST dan BAPB ============
+
+               Satu tabel, dua susunan kolom. BAST memakai nama barang dan
+               pengguna; BAPB memakai jumlah, satuan, dan keterangan. Kolom
+               yang tidak dipakai disembunyikan lewat kelas pada tabelnya,
+               bukan dibuatkan tabel kedua — pembangun baris, penomoran ulang,
+               dan tombol hapusnya sama persis.                              *@
             <div class="fieldset" id="bagianBarang">
                 <div class="fieldset__head">
                     <span class="fieldset__no">03</span>
                     <div>
                         <h3>Daftar barang</h3>
-                        <p class="fieldset__hint">Pilih jenis perangkat untuk mengisi barisnya sekaligus, lalu sunting seperlunya.</p>
-                    </div>
-                </div>
-
-                <div class="row g-3 mb-3">
-                    <div class="col-md-4">
-                        <label class="form-label" for="deviceType">Isi cepat</label>
-                        <select id="deviceType" class="form-select">
-                            <option value="">Pilih jenis perangkat</option>
-                            <option value="PC">PC</option>
-                            <option value="Laptop">Laptop</option>
-                            <option value="HT">HT</option>
-                            <option value="Lainnya">Lainnya</option>
-                        </select>
+                        <p class="fieldset__hint" id="hintBarang">Satu baris per barang. Tambah baris seperlunya.</p>
                     </div>
                 </div>
 
                 <div class="ledger--wrap">
-                    <table class="ledger" id="barangTable">
+                    <table class="ledger barang--bast" id="barangTable">
                         <thead>
+                            @* Urutan kolom di DOM dipilih supaya SATU urutan menghasilkan
+                               urutan yang benar untuk ketiga varian setelah kolom yang tidak
+                               dipakai disembunyikan:
+                                 BAST : No, Nama, Serial, Merk, Pengguna
+                                 CCTV : No, Nama, Tanggal, Jam, Rekaman, Area
+                                 BAPB : No, Jumlah, Satuan, Serial, Merk, Keterangan
+                               Kelas menamai ISI kolom, bukan variannya, karena beberapa kolom
+                               dipakai lebih dari satu varian. Kelas di <th> WAJIB sama dengan
+                               di <td>; kalau berbeda, judulnya tetap tampil sementara isinya
+                               tersembunyi.                                                  *@
                             <tr>
                                 <th style="width:40px;">#</th>
-                                <th>Nama barang</th>
-                                <th>Serial number</th>
-                                <th>Merk / tipe</th>
-                                <th>Pengguna</th>
+                                <th class="k-nama">Nama barang</th>
+                                <th class="k-jumlah" style="width:90px;">Jumlah</th>
+                                <th class="k-jumlah" style="width:90px;">Satuan</th>
+                                <th class="k-waktu" style="width:150px;">Tanggal</th>
+                                <th class="k-waktu" style="width:130px;">Jam</th>
+                                <th class="k-alat">Serial number</th>
+                                <th class="k-alat">Merk / tipe</th>
+                                <th class="k-rekaman">Rekaman</th>
+                                <th class="k-rekaman">Area</th>
+                                <th class="k-pengguna">Pengguna</th>
+                                <th class="k-ket">Keterangan</th>
                                 <th style="width:40px;"><span class="visually-hidden">Hapus baris</span></th>
                             </tr>
                         </thead>
@@ -149,7 +253,7 @@
                 </button>
             </div>
 
-            <div class="fieldset">
+            <div class="fieldset" id="bagianDasar">
                 <div class="fieldset__head">
                     <span class="fieldset__no">04</span>
                     <div><h3>Dasar pemenuhan</h3></div>
@@ -157,65 +261,78 @@
 
                 <div class="row g-3">
                     <div class="col-md-4">
-                        <label class="form-label" asp-for="JenisTiket">Jenis tiket</label>
+                        @* Nilainya ikut tercetak di baris Catatan pada BAST,
+                           jadi teks opsi ini yang muncul apa adanya di dokumen. *@
+                        <label class="form-label" asp-for="JenisTiket">Dasar</label>
                         <select asp-for="JenisTiket" class="form-select">
                             <option value="Tiket MySSC">Tiket MySSC</option>
-                            <option value="Tiket BAST">Tiket BAST</option>
+                            <option value="Nomor Memo">Nomor Memo</option>
                         </select>
                     </div>
                     <div class="col-md-4">
-                        <label class="form-label" asp-for="NoTiket">Nomor tiket</label>
+                        <label class="form-label" asp-for="NoTiket">Nomor</label>
                         <input asp-for="NoTiket" class="form-control" />
                     </div>
                 </div>
             </div>
 
-            <div class="fieldset">
+            <div class="fieldset" id="bagianTtd">
                 <div class="fieldset__head">
                     <span class="fieldset__no">05</span>
                     <div><h3>Penanda tangan</h3></div>
                 </div>
 
                 <div class="row g-3">
-                    @* Disaring lewat PosisiTtd, bukan Role. Role sekarang hanya
-                       menentukan hak akses, sehingga seorang Admin tetap bisa
-                       terdaftar sebagai penanda tangan Staff atau Manager. *@
+                    @* Disaring lewat Jabatan, bukan Role. Role hanya menentukan hak
+                       akses, sehingga seorang Admin tetap bisa terdaftar sebagai
+                       penanda tangan. Peran manajer/staf dihitung dari jabatannya
+                       lewat JabatanUser, tidak disimpan sebagai kolom tersendiri. *@
                     <div class="col-md-4">
-                        <label class="form-label" asp-for="StaffId">Staff</label>
+                        <label class="form-label" asp-for="StaffId" id="labelStaff">Staff</label>
                         <select asp-for="StaffId" class="form-select">
                             <option value="">Pilih staff</option>
                             @foreach (var user in ViewBag.Users)
                             {
-                                if (user.PosisiTtd == "Staff")
+                                if (JabatanUser.Staf((string)user.Jabatan))
                                 {
-                                    <option value="@user.Id">@user.Nama</option>
+                                    <option value="@user.Id">@user.Nama — @user.Jabatan</option>
                                 }
                             }
                         </select>
                     </div>
 
-                    <div class="col-md-4">
+                    <div class="col-md-4" id="kolomMengetahui">
                         <label class="form-label" asp-for="ManagerId">Mengetahui</label>
                         <select asp-for="ManagerId" class="form-select">
                             <option value="">Pilih manager</option>
                             @foreach (var user in ViewBag.Users)
                             {
-                                if (user.PosisiTtd == "Manager")
+                                if (JabatanUser.Manajer((string)user.Jabatan))
                                 {
-                                    <option value="@user.Id">@user.Nama</option>
+                                    <option value="@user.Id">@user.Nama — @user.Jabatan</option>
                                 }
                             }
                         </select>
                     </div>
 
                     <div class="col-md-4">
-                        <label class="form-label" asp-for="YangMenerima">Yang menerima</label>
+                        <label class="form-label" asp-for="YangMenerima" id="labelYangMenerima">Yang menerima</label>
                         <input asp-for="YangMenerima" class="form-control" />
+                    </div>
+
+                    @* Jabatan pihak lawan. Boleh kosong — vendor sering hanya
+                       diwakili nama, dan barisnya memang tidak dicetak kalau
+                       kosong. Tidak diambil dari tabel Users karena orang ini
+                       bukan pengguna aplikasi. *@
+                    <div class="col-md-4" id="kolomJabatanTerima" hidden>
+                        <label class="form-label" asp-for="JabatanYangMenerima" id="labelJabatanTerima">Jabatan penerima</label>
+                        <input asp-for="JabatanYangMenerima" class="form-control"
+                               placeholder="Opsional, mis. Officer Procurement" />
                     </div>
                 </div>
             </div>
 
-            <div class="fieldset">
+            <div class="fieldset" id="bagianLampiran">
                 <div class="fieldset__head">
                     <span class="fieldset__no">06</span>
                     <div>
@@ -248,15 +365,8 @@
     // code.jquery.com — satu-satunya dependensi internet saat runtime, dan
     // tabel ini mati kalau VM tidak bisa keluar jaringan.
     (function () {
-        var tbody   = document.querySelector("#barangTable tbody");
-        var device  = document.getElementById("deviceType");
-        var tambah  = document.getElementById("addRow");
-
-        var templat = {
-            "PC":     ["PC", "Monitor", "VGA", "Keyboard", "Mouse", "Hostname"],
-            "Laptop": ["Notebook", "Adaptor", "Backpack", "Mouse", "Ethernet", "Chainlock", "Hostname"],
-            "HT":     ["HT", "Charger", "Battery", "Antenna"]
-        };
+        var tbody  = document.querySelector("#barangTable tbody");
+        var tambah = document.getElementById("addRow");
 
         // Nomor dihitung ulang dari posisi baris, bukan dari penghitung yang
         // hanya naik — versi lama membuat kolom "No" melompat setelah hapus.
@@ -266,29 +376,59 @@
             });
         }
 
-        function sel(nama) {
+        // Kelas kolom harus sama dengan yang ada di <thead>, kalau tidak
+        // kolom yang disembunyikan pada judul tetap muncul pada isinya.
+        function sel(nama, kelas, tipe) {
             var td = document.createElement("td");
+            if (kelas) td.className = kelas;
+
             var input = document.createElement("input");
             input.name = nama;
             input.className = "form-control";
+            if (tipe) input.type = tipe;
+            if (tipe === "number") input.min = "1";
+
             td.appendChild(input);
             return td;
         }
 
-        function tambahBaris(nama) {
+        // Setiap baris selalu mengirim SELURUH kolom, termasuk yang sedang
+        // disembunyikan. Controller memasangkan ketujuh array berdasarkan
+        // indeks, jadi array yang panjangnya berbeda akan menggeser data satu
+        // baris ke baris lain.
+        function tambahBaris() {
             var tr = document.createElement("tr");
 
             var no = document.createElement("td");
             no.className = "num";
             tr.appendChild(no);
 
-            var tdNama = sel("NamaBarang[]");
-            tdNama.firstChild.value = nama || "";
-            tr.appendChild(tdNama);
+            tr.appendChild(sel("NamaBarang[]", "k-nama"));
 
-            tr.appendChild(sel("SerialNumber[]"));
-            tr.appendChild(sel("MerkType[]"));
-            tr.appendChild(sel("Pengguna[]"));
+            var tdJumlah = sel("Jumlah[]", "k-jumlah", "number");
+            tdJumlah.firstChild.value = "1";
+            tr.appendChild(tdJumlah);
+
+            var tdSatuan = sel("Satuan[]", "k-jumlah");
+            tdSatuan.firstChild.placeholder = "pcs";
+            tr.appendChild(tdSatuan);
+
+            // Nama field TanggalBarang/JamBarang, bukan Tanggal/Jam: parameter
+            // aksi Create adalah Surat, yang punya properti Tanggal sendiri.
+            var tdTanggal = sel("TanggalBarang[]", "k-waktu");
+            tdTanggal.firstChild.placeholder = "1 - 15 Agustus 2026";
+            tr.appendChild(tdTanggal);
+
+            var tdJam = sel("JamBarang[]", "k-waktu");
+            tdJam.firstChild.placeholder = "08:00 - 17:00 WITA";
+            tr.appendChild(tdJam);
+
+            tr.appendChild(sel("SerialNumber[]", "k-alat"));
+            tr.appendChild(sel("MerkType[]", "k-alat"));
+            tr.appendChild(sel("Rekaman[]", "k-rekaman"));
+            tr.appendChild(sel("Area[]", "k-rekaman"));
+            tr.appendChild(sel("Pengguna[]", "k-pengguna"));
+            tr.appendChild(sel("Keterangan[]", "k-ket"));
 
             var tdAksi = document.createElement("td");
             var hapus = document.createElement("button");
@@ -307,19 +447,9 @@
             nomoriUlang();
         }
 
-        device.addEventListener("change", function () {
-            tbody.innerHTML = "";
-            var daftar = templat[this.value];
-            if (daftar) {
-                daftar.forEach(tambahBaris);
-            } else {
-                tambahBaris("");
-            }
-        });
+        tambah.addEventListener("click", tambahBaris);
 
-        tambah.addEventListener("click", function () { tambahBaris(""); });
-
-        tambahBaris("");
+        tambahBaris();
     })();
 
     // ==================================================================
@@ -447,15 +577,148 @@
             nomoriUlang();
         }
 
+        var tabelBrg  = document.getElementById("barangTable");
+        var hintBrg   = document.getElementById("hintBarang");
+        var labelTuju = document.getElementById("labelTujuan");
+        var inputTuju = document.getElementById("Tujuan");
+        var kolomTahu = document.getElementById("kolomMengetahui");
+        var kolomJabTerima = document.getElementById("kolomJabatanTerima");
+        var inputJabTerima = document.getElementById("JabatanYangMenerima");
+        var labelJabTerima = document.getElementById("labelJabatanTerima");
+        var selectTahu = document.getElementById("ManagerId");
+        var labelStaff = document.getElementById("labelStaff");
+        var labelTerima = document.getElementById("labelYangMenerima");
+        var secDasar = document.getElementById("bagianDasar");
+        var secTtd = document.getElementById("bagianTtd");
+        var secLampiran = document.getElementById("bagianLampiran");
+        var labelCatatan = document.getElementById("labelCatatan");
+        var kolomTentang = document.getElementById("kolomTentang");
+        var inputTentang = document.getElementById("Tentang");
+        var kolomTujuan = document.getElementById("kolomTujuan");
+        var secPj = document.getElementById("bagianPj");
+        var selJenisTiket = document.getElementById("JenisTiket");
+        var inputNoTiket = document.getElementById("NoTiket");
+
+        var HINT_BAST = "Satu baris per barang. Tambah baris seperlunya.";
+        var HINT_BAPB = "Jumlah dalam huruf ditulis otomatis saat dicetak. Satuan kosong dicetak \u201cpcs\u201d.";
+        var HINT_CCTV = "Satu baris per rekaman. Tanggal dan jam boleh berupa rentang.";
+
+        // Nomor bagian dihitung ulang dari bagian yang TERLIHAT. Beberapa
+        // bagian muncul-hilang menurut jenis, dan penomoran statis menyisakan
+        // lompatan (01, 03, 04, 06) yang terbaca seperti form yang rusak.
+        function nomoriBagian() {
+            var n = 0;
+            Array.prototype.forEach.call(
+                document.querySelectorAll("#formSurat .fieldset"),
+                function (fs) {
+                    if (fs.hidden) return;
+                    n++;
+                    var label = fs.querySelector(".fieldset__no");
+                    if (label) label.textContent = ("0" + n).slice(-2);
+                });
+        }
+
         function pilihBagian() {
             var opsi = jenis.options[jenis.selectedIndex];
-            var kode = opsi ? (opsi.getAttribute("data-kode") || "") : "";
-            var laporan = kode.trim().toUpperCase() === "BA";
+            var kode = opsi ? (opsi.getAttribute("data-kode") || "").trim().toUpperCase() : "";
 
-            secPoin.hidden = !laporan;
-            secBrg.hidden = laporan;
+            var laporan = kode === "BA";
+            var pengembalian = kode === "BAPB";
+            var cctv = !!opsi && opsi.getAttribute("data-cctv") === "1";
+
+            // BALP tidak dicetak Docuflow, jadi hampir seluruh formulir tidak
+            // berlaku: yang tersisa hanya nama perusahaan dan keterangan.
+            var balp = !!opsi && opsi.getAttribute("data-balp") === "1";
+
+            secPoin.hidden = !laporan || balp;
+            secBrg.hidden = laporan || balp;
+            secTtd.hidden = balp;
+            secLampiran.hidden = balp;
+
+            // Satu tabel, tiga susunan kolom. Varian dipilih di sini, bukan
+            // dengan membuat tabel kedua dan ketiga: pembangun baris,
+            // penomoran ulang, dan tombol hapusnya sama persis.
+            tabelBrg.classList.toggle("barang--bapb", pengembalian);
+            tabelBrg.classList.toggle("barang--cctv", cctv);
+            tabelBrg.classList.toggle("barang--bast", !pengembalian && !cctv);
+
+            hintBrg.textContent = pengembalian ? HINT_BAPB : (cctv ? HINT_CCTV : HINT_BAST);
+
+            // Dikosongkan saat disembunyikan: perihal yang terlanjur diketik
+            // pada jenis yang tidak mencetaknya akan tersimpan tanpa pernah
+            // muncul di kertas.
+            labelCatatan.textContent = balp ? "Keterangan BALP" : "Catatan";
+
+            var pakaiTentang = !!opsi && opsi.getAttribute("data-tentang") === "1";
+            kolomTentang.hidden = !pakaiTentang;
+            if (!pakaiTentang) inputTentang.value = "";
+
+            // Tujuan dan data penanggung jawab.
+            //
+            // required WAJIB dilepas saat disembunyikan. Peramban menolak
+            // mengirim form yang punya kendali required tak terlihat, dan
+            // pesannya ("not focusable") hanya muncul di konsol — tombol
+            // Simpan tampak tidak melakukan apa-apa.
+            var pakaiTujuanPj = !opsi || opsi.getAttribute("data-tujuanpj") !== "0";
+
+            // BALP tetap memakai kolom Tujuan, tapi isinya nama perusahaan
+            // vendor; bagian penanggung jawabnya yang tidak berlaku.
+            kolomTujuan.hidden = !pakaiTujuanPj && !balp;
+            inputTuju.required = pakaiTujuanPj || balp;
+            if (!pakaiTujuanPj && !balp) inputTuju.value = "";
+
+            secPj.hidden = !pakaiTujuanPj || balp;
+            if (!pakaiTujuanPj) {
+                Array.prototype.forEach.call(
+                    secPj.querySelectorAll("input, textarea"),
+                    function (el) { el.value = ""; });
+            }
+
+            // Label kolom lawan datang dari server: arah BAPB ditentukan di
+            // Bapb.LabelLawan supaya layar dan hasil cetak tidak berbeda.
+            var lawan = balp ? "Nama perusahaan"
+                             : ((opsi && opsi.getAttribute("data-lawan")) || "Tujuan");
+            labelTuju.textContent = lawan;
+
+            // Placeholder bawaan berbunyi "Ditujukan kepada" — menyesatkan
+            // pada BAPB yang arahnya masuk. Labelnya sudah menjelaskan, jadi
+            // di situ placeholder dikosongkan saja.
+            inputTuju.placeholder = lawan === "Tujuan" ? "Ditujukan kepada" : "";
+
+            // Dikosongkan, bukan sekadar disembunyikan: kalau operator sempat
+            // memilih manager lalu berpindah ke jenis yang tidak mencetaknya,
+            // nilainya tetap ikut terkirim dan halaman detail akan menampilkan
+            // penanda tangan yang tidak ada di dokumennya.
+            var pakaiTahu = !opsi || opsi.getAttribute("data-mengetahui") !== "0";
+            kolomTahu.hidden = !pakaiTahu;
+            if (!pakaiTahu) selectTahu.value = "";
+
+            labelStaff.textContent = (opsi && opsi.getAttribute("data-labelstaff")) || "Staff";
+            labelTerima.textContent = (opsi && opsi.getAttribute("data-labelterima")) || "Yang menerima";
+
+            var labJab = opsi && opsi.getAttribute("data-labeljabterima");
+            kolomJabTerima.hidden = !labJab;
+            if (labJab) { labelJabTerima.textContent = labJab; }
+            else { inputJabTerima.value = ""; }
+
+            // Dikosongkan saat disembunyikan, bukan sekadar disembunyikan.
+            // <select> jenis tiket tidak punya opsi kosong, jadi tanpa ini
+            // "Tiket MySSC" tetap ikut terkirim dan tersimpan diam-diam pada
+            // surat yang tidak pernah menampilkannya.
+            var pakaiDasar = (!opsi || opsi.getAttribute("data-dasar") !== "0") && !balp;
+            secDasar.hidden = !pakaiDasar;
+            if (!pakaiDasar) {
+                selJenisTiket.selectedIndex = -1;
+                inputNoTiket.value = "";
+            } else if (selJenisTiket.selectedIndex === -1) {
+                selJenisTiket.selectedIndex = 0;
+            }
 
             if (laporan && daftar.children.length === 0) tambahPoin();
+
+            // Paling akhir: seluruh keputusan hidden di atas harus sudah
+            // selesai sebelum bagian yang terlihat dihitung ulang.
+            nomoriBagian();
         }
 
         tambah.addEventListener("click", tambahPoin);

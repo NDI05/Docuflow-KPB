@@ -1,6 +1,13 @@
+@using Docuflow_projectIT_KPB.Services
 @model Docuflow_projectIT_KPB.Models.Surat
 @{
     Layout = null;
+
+    // Survey memakai tata letak judul terpusat: kop di kanan atas, lalu
+    // "BERITA ACARA", nomor, dan perihal di bawah label TENTANG. Kerusakan
+    // tetap memakai kop lama. Aturannya dijawab Ba, sumber yang sama dengan
+    // yang dipakai formulir Create untuk memunculkan isian Tentang.
+    var survey = Ba.Survey(Model.JenisSurat?.NamaJenis);
 
     // Penomoran 1 / 1.1 / 1.1.1 dihitung dari urutan dan level, sama seperti
     // di penyunting. Tidak disimpan di database supaya tidak pernah basi.
@@ -50,6 +57,16 @@
         .title { text-align: center; font-size: 14px; font-weight: bold; text-decoration: underline; margin: 18px 0 4px; }
         .subtitle { text-align: center; font-size: 11px; margin-bottom: 18px; }
 
+        /* Tata letak judul terpusat (Survey). Kop hanya logo di kanan atas,
+           tanpa blok nama perusahaan — mengikuti bentuk dokumen yang diminta. */
+        .kop { text-align: right; margin-bottom: 10px; }
+        .kop img { width: 130px; }
+
+        .judul-pusat { text-align: center; font-size: 15px; font-weight: bold; text-decoration: underline; margin: 4px 0 3px; }
+        .nomor-pusat { text-align: center; font-size: 12px; margin-bottom: 14px; }
+        .tentang-label { text-align: center; font-size: 12px; letter-spacing: 0.08em; margin-bottom: 4px; }
+        .tentang-isi { text-align: center; font-size: 13px; font-weight: bold; margin-bottom: 20px; }
+
         .deskripsi { text-align: justify; margin-bottom: 18px; }
 
         /* Poin laporan. Lekukan kiri menandai kedalaman, sama seperti di form. */
@@ -72,6 +89,9 @@
 
         .signature { width: 100%; margin-top: 28px; border-collapse: collapse; }
         .signature td { width: 33.33%; text-align: center; vertical-align: top; font-size: 11.5px; }
+        /* Dua kotak harus tetap memenuhi lebar halaman; 33% menyisakan
+           sepertiga kosong di kanan. */
+        .signature--dua td { width: 50%; }
         .signature .ruang { height: 62px; }
         .signature-name { font-weight: bold; text-decoration: underline; }
     </style>
@@ -82,6 +102,21 @@
 <div class="paper">
     <div class="page-content">
 
+        @if (survey)
+        {
+            <div class="kop">
+                @* Logo resmi Kilang Pertamina Balikpapan — bukan Logo_pertamina.png,
+                   yang memakai merah/biru/hijau RGB murni dan bukan warna merek. *@
+                <img src="@Url.Content("~/images/kpb-logo.png")" alt="Kilang Pertamina Balikpapan" />
+            </div>
+
+            <div class="judul-pusat">BERITA ACARA</div>
+            <div class="nomor-pusat">Nomor : @Model.NomorSurat</div>
+            <div class="tentang-label">TENTANG</div>
+            <div class="tentang-isi">@Model.Tentang</div>
+        }
+        else
+        {
         <div class="header">
             <img src="@Url.Content("~/images/kpb-logo.png")" class="logo" alt="Kilang Pertamina Balikpapan" />
 
@@ -116,6 +151,7 @@
 
         <div class="title">@(Model.JenisSurat?.NamaJenis?.ToUpper())</div>
         <div class="subtitle">Nomor: @Model.NomorSurat</div>
+        }
 
         @if (!string.IsNullOrWhiteSpace(Model.Deskripsi))
         {
@@ -155,21 +191,46 @@
             dipergunakan sebagaimana mestinya.
         </div>
 
-        <table class="signature">
+        @* Survey tidak mendata penanggung jawab, jadi tidak memintanya
+           bertanda tangan — dua kotak, bukan tiga. *@
+        <table class="signature @(survey ? "signature--dua" : "")">
+            @* Jabatan di bawah tiap peran. Staff dan Manager dari tabel Users,
+               penanggung jawab dari Surat.Jabatan yang diketik di formulir. *@
             <tr>
-                <td>Dibuat oleh</td>
-                <td>Mengetahui<br />Ast Manager IT | PT. KPB</td>
-                <td>Penanggung Jawab</td>
+                <td>
+                    Dibuat oleh
+                    @if (!string.IsNullOrWhiteSpace(Model.Staff?.Jabatan))
+                    {
+                        <br />@Model.Staff.Jabatan
+                    }
+                </td>
+                <td>Mengetahui<br />@(string.IsNullOrWhiteSpace(Model.Manager?.Jabatan) ? "Ast Manager IT | PT. KPB" : Model.Manager.Jabatan)</td>
+                @if (!survey)
+                {
+                    <td>
+                        Penanggung Jawab
+                        @if (!string.IsNullOrWhiteSpace(Model.Jabatan))
+                        {
+                            <br />@Model.Jabatan
+                        }
+                    </td>
+                }
             </tr>
             <tr>
                 <td class="ruang"></td>
                 <td class="ruang"></td>
-                <td class="ruang"></td>
+                @if (!survey)
+                {
+                    <td class="ruang"></td>
+                }
             </tr>
             <tr>
                 <td class="signature-name">@Model.Staff?.Nama</td>
                 <td class="signature-name">@Model.Manager?.Nama</td>
-                <td class="signature-name">@Model.NamaPenanggungJawab</td>
+                @if (!survey)
+                {
+                    <td class="signature-name">@Model.NamaPenanggungJawab</td>
+                }
             </tr>
         </table>
 

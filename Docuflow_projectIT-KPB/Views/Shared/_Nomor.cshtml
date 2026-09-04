@@ -1,16 +1,22 @@
-@model string
+@using Docuflow_projectIT_KPB.Services
+@model Docuflow_projectIT_KPB.Models.Surat
 @*
     Nomor surat sebagai satu objek, bukan string polos.
 
-    Bentuk masukan: "BAST 007/KPB2340/2026/S0"
+    Bentuk masukan: "BAST No.007/KPB3240/2026-S0"
       -> chip kode miring | nomor urut tebal | sisanya diredam
+
+    Warna chip mengikuti JENIS surat, bukan kodenya. Dua jenis bisa berbagi
+    satu kode — "Kerusakan" dan "Survey" sama-sama tercetak BA — jadi warna
+    per kode akan membuat keduanya tetap kembar di layar. Karena itu partial
+    ini menerima Surat, bukan sekadar string nomornya.
 
     Kalau formatnya tidak dikenali (data lama, atau jenis surat tanpa kode),
     seluruh teks dicetak apa adanya — jangan sampai penomoran yang aneh
     malah menghilangkan informasinya dari layar.
 *@
 @{
-    var raw = (Model ?? string.Empty).Trim();
+    var raw = (Model?.NomorSurat ?? string.Empty).Trim();
     var spasi = raw.IndexOf(' ');
     var garis = raw.IndexOf('/');
 
@@ -19,12 +25,14 @@
     string kode = terurai ? raw.Substring(0, spasi) : null;
     string urut = terurai ? raw.Substring(spasi + 1, garis - spasi - 1) : null;
     string sisa = terurai ? raw.Substring(garis) : null;
+
+    var rona = Model == null ? 1 : RonaJenis.Untuk(Model.JenisSuratId);
 }
 
 @if (terurai)
 {
     <span class="nomor" title="@raw">
-        <span class="nomor__kode"><span>@kode</span></span>
+        <span class="nomor__kode" data-tone="@rona"><span>@kode</span></span>
         <span class="nomor__body"><span class="nomor__urut">@urut</span><span class="nomor__rest">@sisa</span></span>
     </span>
 }

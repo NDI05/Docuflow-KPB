@@ -38,10 +38,10 @@
             <img src="~/images/kpb-logo-mark.png" alt="Kilang Pertamina Balikpapan" />
         </div>
 
-        @* Menu mengikuti pemisahan peran: Admin mengurus berita acara,
-           Super Admin mengurus akun dan jejak audit. Yang disembunyikan di
-           sini juga ditolak di route lewat [SessionAuthorize] — menu yang
-           hilang saja bukan pengamanan. *@
+        @* Menu mengikuti peran: berita acara untuk Admin dan Super Admin,
+           kelola akun hanya untuk Super Admin. Yang disembunyikan di sini
+           juga ditolak di route lewat [SessionAuthorize] — menu yang hilang
+           saja bukan pengamanan. *@
         <div class="rail__nav">
             <div class="rail__label">Kerja harian</div>
 
@@ -52,7 +52,7 @@
                 Beranda
             </a>
 
-            @if (role == "Admin")
+            @if (role == "Admin" || role == "SuperAdmin")
             {
                 <a class="@aktif("Surat")" asp-controller="Surat" asp-action="Index">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">

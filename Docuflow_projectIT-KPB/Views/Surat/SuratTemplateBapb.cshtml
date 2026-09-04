@@ -1,0 +1,295 @@
+﻿@using Docuflow_projectIT_KPB.Services
+@model Docuflow_projectIT_KPB.Models.Surat
+@{
+    Layout = null;
+
+    // Arah dan ragam dijawab Bapb, bukan di sini: formulir Create memakai
+    // aturan yang sama untuk melabeli kolom Tujuan, dan dua salinan aturan
+    // akan berbeda arah begitu salah satunya disunting.
+    var namaJenis = Model.JenisSurat?.NamaJenis;
+
+    var ragamRusak = Bapb.Rusak(namaJenis);
+    var dariUser = Bapb.DariUser(namaJenis);
+
+    var namaStaff = Model.Staff?.Nama;
+
+    var dari = Bapb.Dari(namaJenis, Model.Tujuan);
+    var kepada = Bapb.Kepada(namaJenis, Model.Tujuan, namaStaff);
+
+    // Peran orangnya ikut arah dokumen. Pada arah masuk staff IT ada di sisi
+    // PENERIMA, bukan penyerah — memakai urutan tetap membuat dokumen
+    // menyatakan staff IT menyerahkan barang kepada dirinya sendiri.
+    var penyerah = dariUser ? Model.YangMenerima : namaStaff;
+    var penerima = dariUser ? namaStaff : Model.YangMenerima;
+
+    // Jabatan menempel pada ORANGNYA, jadi keduanya ikut berpindah sisi saat
+    // arah dokumen berbalik. Staff mengambil jabatan dari tabel Users; pihak
+    // lawan diketik di formulir karena ia bukan pengguna aplikasi.
+    var jabatanStaff = Model.Staff?.Jabatan;
+    var jabatanLawan = Model.JabatanYangMenerima;
+
+    var jabatanPenyerah = dariUser ? jabatanLawan : jabatanStaff;
+    var jabatanPenerima = dariUser ? jabatanStaff : jabatanLawan;
+
+    // Rusak: NO, ANGKA, HURUF, SATUAN, SERIAL, MERK, KETERANGAN.
+    // Sewa/user: sama tanpa kolom MERK tersendiri.
+    var jumlahKolom = ragamRusak ? 7 : 6;
+}
+
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="utf-8" />
+    <title>@Model.NomorSurat</title>
+
+    <style>
+        @@page { size: A4; margin: 20mm 18mm 20mm 18mm; }
+
+        body {
+            margin: 0; padding: 0;
+            font-family: Arial, Helvetica, sans-serif;
+            font-size: 12px; line-height: 1.5; color: #000; background: #f2f2f2;
+        }
+
+        .paper { width: 210mm; min-height: 297mm; margin: 15px auto; background: #fff; box-shadow: 0 0 10px rgba(0,0,0,0.15); box-sizing: border-box; }
+        .page-content { padding: 20mm 18mm 20mm 18mm; box-sizing: border-box; }
+
+        /* Logo di kanan atas tanpa blok nama perusahaan — mengikuti kedua
+           dokumen contoh, yang berbeda dari kop BAST dan BA. */
+        .kop { text-align: right; margin-bottom: 6px; }
+        .kop img { width: 130px; }
+
+        .title { text-align: center; font-size: 14px; font-weight: bold; text-decoration: underline; margin: 6px 0 4px; }
+        .subtitle { text-align: center; margin-bottom: 20px; }
+
+        /* Tanggal / Kepada / Dari. Tabel, bukan spasi berjajar: teks nama
+           vendor yang panjang harus menggantung rapi di bawah titik dua. */
+        .alamat-surat { border-collapse: collapse; margin-bottom: 16px; }
+        .alamat-surat td { padding: 2px 0; vertical-align: top; }
+        .alamat-surat .label { width: 90px; }
+        .alamat-surat .sep { width: 12px; }
+
+        .pengantar { margin-bottom: 10px; }
+
+        .barang { width: 100%; border-collapse: collapse; }
+        .barang th, .barang td { border: 1px solid #000; padding: 5px 6px; }
+        .barang th { text-align: center; font-weight: bold; }
+        .barang td { vertical-align: top; }
+        .tengah { text-align: center; }
+
+        /* Nomor serial boleh lebih dari satu dalam satu baris (satu baris
+           barang dengan jumlah empat). Baris baru yang diketik operator
+           harus tetap terlihat sebagai baris baru saat dicetak. */
+        .serial { white-space: pre-line; }
+
+        .catatan { font-weight: bold; }
+        .catatan-tanggal { float: right; font-weight: normal; }
+
+        /* Kotak tanda tangan bergaris, sesuai dokumen contoh. Tingginya
+           dipatok supaya ruang tanda tangan basah tetap ada meski namanya
+           kosong. */
+        .ttd { width: 100%; border-collapse: collapse; margin-top: 26px; }
+        .ttd td { border: 1px solid #000; padding: 8px 10px; text-align: center; vertical-align: top; height: 120px; }
+        .ttd .peran { margin-bottom: 6px; }
+        /* Jarak atas dipasang pada pembungkus, bukan pada baris organisasi:
+           baris itu tidak selalu ada, dan tanpa pembungkus nama akan naik
+           menempel ke label begitu organisasinya dilewati. */
+        .ttd .isi { margin-top: 62px; }
+        .ttd .nama { font-weight: bold; text-decoration: underline; margin-top: 4px; }
+    </style>
+</head>
+
+<body>
+
+<div class="paper">
+    <div class="page-content">
+
+        <div class="kop">
+            @* Logo resmi Kilang Pertamina Balikpapan — bukan Logo_pertamina.png,
+               yang memakai merah/biru/hijau RGB murni dan bukan warna merek. *@
+            <img src="@Url.Content("~/images/kpb-logo.png")" alt="Kilang Pertamina Balikpapan" />
+        </div>
+
+        <div class="title">BERITA ACARA PENGEMBALIAN BARANG</div>
+        <div class="subtitle">Nomor : @Model.NomorSurat</div>
+
+        <table class="alamat-surat">
+            <tr>
+                <td class="label">Tanggal</td>
+                <td class="sep">:</td>
+                <td>@Model.Tanggal.ToString("dd MMMM yyyy")</td>
+            </tr>
+            <tr>
+                <td class="label">Kepada</td>
+                <td class="sep">:</td>
+                <td>@kepada</td>
+            </tr>
+            <tr>
+                <td class="label">Dari</td>
+                <td class="sep">:</td>
+                <td>@dari</td>
+            </tr>
+        </table>
+
+        <div class="pengantar">Telah diserahkan Barang-barang tersebut dibawah ini sbb:</div>
+
+        <table class="barang">
+            <thead>
+                <tr>
+                    <th rowspan="2" style="width:34px;">NO.</th>
+                    <th colspan="2">JUMLAH</th>
+                    <th rowspan="2" style="width:60px;">SATUAN</th>
+                    <th rowspan="2" style="width:135px;">
+                        @* Ragam sewa/user memakai satu kolom serial yang juga
+                           memuat hostname; ragam rusak hanya nomor serial. *@
+                        @Html.Raw(ragamRusak ? "NOMOR SERIAL" : "NOMOR SERIAL<br />&amp; HOSTNAME")
+                    </th>
+                    @if (ragamRusak)
+                    {
+                        <th rowspan="2">MERK TYPE</th>
+                    }
+                    <th rowspan="2" style="width:130px;">KETERANGAN</th>
+                </tr>
+                <tr>
+                    <th style="width:52px;">ANGKA</th>
+                    <th style="width:78px;">HURUF</th>
+                </tr>
+            </thead>
+
+            <tbody>
+                @if (Model.BarangList != null && Model.BarangList.Any())
+                {
+                    var no = 0;
+                    foreach (var b in Model.BarangList)
+                    {
+                        no++;
+
+                        // Huruf dihitung dari angkanya, tidak disimpan: dokumen
+                        // resmi tidak boleh menyebut dua jumlah yang berbeda.
+                        var angka = b.Jumlah ?? 0;
+
+                        <tr>
+                            <td class="tengah">@no</td>
+                            <td class="tengah">@(b.Jumlah.HasValue ? b.Jumlah.Value.ToString() : "")</td>
+                            <td class="tengah">@(b.Jumlah.HasValue ? Terbilang.Kapital(angka) : "")</td>
+                            <td class="tengah">@(string.IsNullOrWhiteSpace(b.Satuan) ? "pcs" : b.Satuan)</td>
+                            <td class="tengah serial">@b.SerialNumber</td>
+
+                            @if (ragamRusak)
+                            {
+                                <td class="tengah">@b.MerkType</td>
+                                <td class="tengah">@b.Keterangan</td>
+                            }
+                            else
+                            {
+                                @* Tanpa kolom MERK TYPE tersendiri, merk ikut
+                                   tercetak di kolom keterangan — persis seperti
+                                   dokumen contoh, yang menaruh nama model di
+                                   sana. *@
+                                <td class="tengah">
+                                    @b.MerkType
+                                    @if (!string.IsNullOrWhiteSpace(b.Keterangan))
+                                    {
+                                        <br />@b.Keterangan
+                                    }
+                                </td>
+                            }
+                        </tr>
+                    }
+                }
+                else
+                {
+                    <tr>
+                        <td colspan="@jumlahKolom" class="tengah">Tidak ada data barang</td>
+                    </tr>
+                }
+            </tbody>
+
+            <tfoot>
+                <tr>
+                    <td colspan="@(jumlahKolom - 1)" class="catatan">
+                        @if (!ragamRusak)
+                        {
+                            <span class="catatan-tanggal">Tanggal: @Model.Tanggal.ToString("dd MMMM yyyy")</span>
+                        }
+                        Catatan:
+                        @if (!string.IsNullOrWhiteSpace(Model.Deskripsi))
+                        {
+                            <span style="font-weight:normal;"> @Model.Deskripsi</span>
+                        }
+                    </td>
+                    <td></td>
+                </tr>
+            </tfoot>
+        </table>
+
+        @* Kotak tanda tangan hanya memuat peran, jabatan, lalu nama. Nama
+           organisasi TIDAK diulang di sini — sudah tercetak di baris Kepada
+           dan Dari pada kepala surat, dan mengulangnya membuat satu kotak
+           berisi tiga baris yang menyebut pihak yang sama. *@
+        @if (ragamRusak)
+        {
+            @* Dua kotak: penyerah dan penerima. Dokumen barang rusak tidak
+               melewati persetujuan Ast Manager. *@
+            <table class="ttd">
+                <tr>
+                    <td>
+                        <div class="peran">
+                            Diserahkan oleh,
+                            @if (!string.IsNullOrWhiteSpace(jabatanPenyerah))
+                            {
+                                <br />@jabatanPenyerah
+                            }
+                        </div>
+                        <div class="isi"><div class="nama">@penyerah</div></div>
+                    </td>
+                    <td>
+                        <div class="peran">
+                            Diterima oleh,
+                            @if (!string.IsNullOrWhiteSpace(jabatanPenerima))
+                            {
+                                <br />@jabatanPenerima
+                            }
+                        </div>
+                        <div class="isi"><div class="nama">@penerima</div></div>
+                    </td>
+                </tr>
+            </table>
+        }
+        else
+        {
+            <table class="ttd">
+                <tr>
+                    <td>
+                        <div class="peran">
+                            Diserahkan oleh:
+                            @if (!string.IsNullOrWhiteSpace(jabatanPenyerah))
+                            {
+                                <br />@jabatanPenyerah
+                            }
+                        </div>
+                        <div class="isi"><div class="nama">@penyerah</div></div>
+                    </td>
+                    <td>
+                        <div class="peran">Mengetahui:<br />@(string.IsNullOrWhiteSpace(Model.Manager?.Jabatan) ? "Ast Manager IT | PT. KPB" : Model.Manager.Jabatan)</div>
+                        <div class="isi"><div class="nama">@Model.Manager?.Nama</div></div>
+                    </td>
+                    <td>
+                        <div class="peran">
+                            Diterima oleh:
+                            @if (!string.IsNullOrWhiteSpace(jabatanPenerima))
+                            {
+                                <br />@jabatanPenerima
+                            }
+                        </div>
+                        <div class="isi"><div class="nama">@penerima</div></div>
+                    </td>
+                </tr>
+            </table>
+        }
+
+    </div>
+</div>
+
+</body>
+</html>

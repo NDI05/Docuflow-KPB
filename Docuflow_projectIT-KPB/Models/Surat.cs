@@ -46,6 +46,29 @@ namespace Docuflow_projectIT_KPB.Models
 
         public string? FormatSerahTerima { get; set; }
 
+        /// <summary>
+        /// Perihal dokumen, dicetak di bawah label "TENTANG" pada berita acara
+        /// yang memakai tata letak judul terpusat (BA Survey).
+        ///
+        /// Terpisah dari Deskripsi: Tentang adalah JUDUL perkaranya satu baris
+        /// ("Survey Ruang Server Lantai 2"), sedangkan Deskripsi adalah paragraf
+        /// pembuka. Menggabungkannya membuat judul ikut memanjang jadi paragraf.
+        /// </summary>
+        [MaxLength(300)]
+        public string? Tentang { get; set; }
+
+        /// <summary>
+        /// Tanggal pada surat yang dibuat vendor (BALP). Kosong sampai
+        /// berkasnya diunggah — nomornya diterbitkan lebih dulu, suratnya
+        /// menyusul.
+        ///
+        /// Kolom sendiri, tidak menimpa <see cref="Tanggal"/>: Tanggal adalah
+        /// tanggal PENERBITAN NOMOR, dan tahun pada nomor surat diambil dari
+        /// situ. Menimpanya akan membuat arsip menaruh surat pada tahun yang
+        /// berbeda dengan tahun yang tercetak di nomornya sendiri.
+        /// </summary>
+        public DateTime? TanggalBalp { get; set; }
+
 
         // ======================
         // CATATAN TIKET
@@ -71,6 +94,22 @@ namespace Docuflow_projectIT_KPB.Models
 
         public string? YangMenerima { get; set; }
 
+        /// <summary>
+        /// Jabatan orang yang tercatat di <see cref="YangMenerima"/>, dicetak
+        /// tepat di bawah perannya pada BAPB dan BAST. Opsional — pihak lawan
+        /// sering hanya diwakili nama, dan kosong berarti barisnya tidak
+        /// dicetak sama sekali.
+        ///
+        /// Perlu kolom sendiri karena orang itu bukan pengguna aplikasi, jadi
+        /// jabatannya tidak bisa diambil dari tabel Users seperti Staff dan
+        /// Manager. Pada BAPB arah masuk ia justru pihak yang MENYERAHKAN, dan
+        /// jabatannya ikut berpindah kotak bersama namanya; pada BAST ia selalu
+        /// penerima. BA tidak memakainya — templatnya tidak punya kotak
+        /// "Yang Menerima".
+        /// </summary>
+        [MaxLength(120)]
+        public string? JabatanYangMenerima { get; set; }
+
 
         // ======================
         // RELASI USER SYSTEM
@@ -79,6 +118,13 @@ namespace Docuflow_projectIT_KPB.Models
 
         public int? ManagerId { get; set; }
 
+        // MATI sejak 2026-09-03. Tidak ada lagi yang mengisinya: posisi
+        // "PenanggungJawab" dihapus dari PosisiTtd, dan SuratController tidak
+        // lagi menempelkan user mana pun ke sini. Tidak pernah dibaca view
+        // atau template cetak — semuanya memakai NamaPenanggungJawab yang
+        // berupa teks, karena penanggung jawab biasanya bukan pengguna
+        // aplikasi. Kolomnya ditinggal supaya penghapusan ini tidak butuh
+        // migration; buang lewat migration kalau memang mau bersih.
         public int? PenanggungJawabId { get; set; }
 
         [ForeignKey("StaffId")]
@@ -87,6 +133,8 @@ namespace Docuflow_projectIT_KPB.Models
         [ForeignKey("ManagerId")]
         public User? Manager { get; set; }
 
+        // Ikut mati bersama PenanggungJawabId. Tidak ada Include() yang
+        // memuatnya lagi, jadi nilainya selalu null saat dibaca.
         [ForeignKey("PenanggungJawabId")]
         public User? PenanggungJawab { get; set; }
 

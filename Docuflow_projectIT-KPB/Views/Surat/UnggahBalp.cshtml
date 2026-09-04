@@ -1,0 +1,64 @@
+@model Docuflow_projectIT_KPB.Models.Surat
+
+@{
+    ViewData["Title"] = "Unggah berkas BALP";
+    ViewData["Eyebrow"] = "Arsip";
+    ViewData["Sub"] = "Berkas dan tanggal diambil dari surat yang dibuat vendor.";
+}
+
+<div class="row">
+    <div class="col-lg-8 col-xl-7">
+        <div class="panel">
+
+            <div class="panel__body">
+                <div class="eyebrow mb-2">Nomor berita acara</div>
+                <div class="nomor--lg mb-3">
+                    @await Html.PartialAsync("_Nomor", Model)
+                </div>
+
+                <p class="fieldset__hint mb-0">
+                    Nomor ini yang diserahkan ke @(string.IsNullOrWhiteSpace(Model.Tujuan) ? "vendor" : Model.Tujuan).
+                    Setelah suratnya jadi, unggah berkasnya di sini dan isi tanggal yang tertera pada surat tersebut.
+                </p>
+            </div>
+
+            @* enctype wajib: tanpa ini berkas tidak pernah sampai ke server dan
+               FilePath tetap kosong tanpa pesan kesalahan apa pun. *@
+            <form asp-action="UnggahBalp" asp-route-id="@Model.Id" method="post" enctype="multipart/form-data">
+                @Html.AntiForgeryToken()
+
+                <div class="panel__body" style="border-top:1px solid var(--rule);">
+                    <div class="row g-3">
+                        <div class="col-md-7">
+                            <label class="form-label" for="berkas">Berkas surat dari vendor</label>
+                            <input type="file" id="berkas" name="berkas" class="form-control"
+                                   accept=".pdf,.doc,.docx" />
+                            @if (!string.IsNullOrEmpty(Model.FilePath))
+                            {
+                                <p class="fieldset__hint mt-2">
+                                    Sudah ada berkas tersimpan. Memilih berkas baru akan menggantikannya —
+                                    berkas lama dihapus dari server.
+                                </p>
+                            }
+                        </div>
+
+                        <div class="col-md-5">
+                            @* Tanggal dari surat vendor, bukan tanggal penerbitan nomor.
+                               Keduanya disimpan terpisah supaya tahun pada nomor surat
+                               tidak pernah berbeda dengan tahun arsipnya. *@
+                            <label class="form-label" for="tanggalBalp">Tanggal pada surat</label>
+                            <input type="date" id="tanggalBalp" name="tanggalBalp" class="form-control"
+                                   value="@(Model.TanggalBalp?.ToString("yyyy-MM-dd"))" />
+                        </div>
+                    </div>
+                </div>
+
+                <div class="panel__head" style="border-top:1px solid var(--rule); border-bottom:0;">
+                    <a class="btn btn-outline-secondary" asp-action="Details" asp-route-id="@Model.Id">Batal</a>
+                    <button type="submit" class="btn btn-primary">Simpan berkas</button>
+                </div>
+            </form>
+
+        </div>
+    </div>
+</div>

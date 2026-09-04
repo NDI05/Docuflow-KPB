@@ -1,3 +1,4 @@
+@using Docuflow_projectIT_KPB.Services
 @model Docuflow_projectIT_KPB.Models.User
 
 @{
@@ -66,22 +67,29 @@
                         <div class="fieldset__head">
                             <span class="fieldset__no">03</span>
                             <div>
-                                <h3>Posisi tanda tangan</h3>
+                                <h3>Jabatan</h3>
                                 <p class="fieldset__hint">
-                                    Menentukan di kolom mana nama orang ini muncul pada dokumen.
-                                    Kosongkan kalau ia tidak pernah menandatangani.
+                                    Ikut tercetak di dokumen, dan menentukan di kolom mana nama
+                                    orang ini muncul. Kosongkan kalau ia tidak pernah menandatangani.
                                 </p>
                             </div>
                         </div>
 
                         <div class="row g-3">
                             <div class="col-md-6">
-                                <label class="form-label" asp-for="PosisiTtd">Posisi</label>
-                                <select asp-for="PosisiTtd" class="form-select">
+                                <label class="form-label" asp-for="Jabatan">Jabatan</label>
+                                @* Peran tanda tangan dihitung dari jabatan, tidak disimpan:
+                                   satu jabatan berperan manajer, sisanya staf. Daftarnya
+                                   ada di JabatanUser supaya form dan hasil cetak tidak
+                                   pernah memakai daftar yang berbeda. *@
+                                <select asp-for="Jabatan" class="form-select">
                                     <option value="">Tidak menandatangani</option>
-                                    <option value="Staff">Staff — penyusun dokumen</option>
-                                    <option value="Manager">Manager — kolom “Mengetahui”</option>
-                                    <option value="PenanggungJawab">Penanggung Jawab</option>
+                                    @foreach (var pilihan in JabatanUser.Pilihan)
+                                    {
+                                        <option value="@pilihan">
+                                            @pilihan@(JabatanUser.Manajer(pilihan) ? " — kolom “Mengetahui”" : "")
+                                        </option>
+                                    }
                                 </select>
                             </div>
                         </div>

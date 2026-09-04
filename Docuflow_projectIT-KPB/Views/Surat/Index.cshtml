@@ -1,3 +1,4 @@
+@using Docuflow_projectIT_KPB.Services
 @model List<Docuflow_projectIT_KPB.Models.Surat>
 
 @{
@@ -7,10 +8,67 @@
     int halaman = ViewBag.CurrentPage ?? 1;
     int totalHalaman = ViewBag.TotalPages ?? 1;
     string cari = ViewBag.Search ?? "";
+    int? jenisId = ViewBag.JenisId;
+    int? tahunAktif = ViewBag.Tahun;
+    string sortAktif = ViewBag.Sort ?? "tanggal";
+    string arah = ViewBag.Dir ?? "desc";
 
-    ViewData["Sub"] = string.IsNullOrEmpty(cari)
-        ? "Semua dokumen yang pernah diterbitkan."
-        : $"Hasil pencarian untuk “{cari}”.";
+    var daftarJenis = ViewBag.DaftarJenis as List<Docuflow_projectIT_KPB.Models.JenisSurat>
+                      ?? new List<Docuflow_projectIT_KPB.Models.JenisSurat>();
+
+    var daftarTahun = ViewBag.DaftarTahun as List<int> ?? new List<int>();
+
+    var jenisAktif = jenisId.HasValue ? daftarJenis.FirstOrDefault(j => j.Id == jenisId.Value) : null;
+
+    // Halaman ini sudah berjudul "Berita Acara"; mengulanginya di setiap baris
+    // hanya menambah lebar kolom tanpa menambah keterangan.
+    string Ringkas(string nama)
+    {
+        const string awalan = "Berita Acara ";
+        if (string.IsNullOrWhiteSpace(nama)) return "—";
+        return nama.StartsWith(awalan, StringComparison.OrdinalIgnoreCase)
+            ? nama.Substring(awalan.Length)
+            : nama;
+    }
+
+    // Setiap tautan di halaman ini harus membawa keadaan yang sedang berlaku.
+    // Kalau tidak, mengurutkan akan menghapus saringan dan pindah halaman akan
+    // menghapus urutan — kesalahan yang paling sering ditemui di tabel begini.
+    Dictionary<string, string> Rute(int? halamanBaru = null, string sortBaru = null, string dirBaru = null, bool bawaJenis = true, bool bawaCari = true, bool bawaTahun = true)
+    {
+        var d = new Dictionary<string, string>();
+        if (bawaCari && !string.IsNullOrEmpty(cari)) d["search"] = cari;
+        if (bawaJenis && jenisId.HasValue && jenisId.Value > 0) d["jenis"] = jenisId.Value.ToString();
+        if (bawaTahun && tahunAktif.HasValue && tahunAktif.Value > 0) d["tahun"] = tahunAktif.Value.ToString();
+        d["sort"] = sortBaru ?? sortAktif;
+        d["dir"] = dirBaru ?? arah;
+        if (halamanBaru.HasValue && halamanBaru.Value > 1) d["page"] = halamanBaru.Value.ToString();
+        return d;
+    }
+
+    // Klik pertama pada kolom teks mengurutkan A→Z; pada tanggal mengurutkan
+    // yang terbaru dulu. Klik berikutnya membalik.
+    string ArahBerikut(string kolom) =>
+        sortAktif == kolom
+            ? (arah == "asc" ? "desc" : "asc")
+            : (kolom == "tanggal" ? "desc" : "asc");
+
+    string AriaUrut(string kolom) =>
+        sortAktif != kolom ? "none" : (arah == "asc" ? "ascending" : "descending");
+
+    var kolom = new[]
+    {
+        new { Kunci = "nomor",   Label = "Nomor"   },
+        new { Kunci = "jenis",   Label = "Jenis"   },
+        new { Kunci = "tanggal", Label = "Tanggal" },
+        new { Kunci = "staff",   Label = "Staff"   },
+    };
+
+    bool adaSaringan = !string.IsNullOrEmpty(cari) || jenisAktif != null || tahunAktif.HasValue;
+
+    ViewData["Sub"] = adaSaringan
+        ? "Hasil yang cocok dengan saringan di bawah."
+        : "Semua dokumen yang pernah diterbitkan.";
 
     // Jendela pagination: pertama, terakhir, dan sekitar halaman aktif.
     // Merender seluruh nomor halaman jadi tembok angka begitu arsip membesar.
@@ -33,11 +91,39 @@
             <input type="search" name="search" value="@cari" class="form-control"
                    placeholder="Cari nomor, jenis, atau nama staff"
                    aria-label="Cari berita acara" />
+
+            @* Dikelompokkan menurut kode karena kode itu pembagian yang nyata:
+               BAST dan BA memakai templat cetak dan isi dokumen yang berbeda. *@
+            <select name="jenis" class="form-select" aria-label="Saring menurut jenis surat">
+                <option value="">Semua jenis</option>
+                @foreach (var grup in daftarJenis.GroupBy(j => j.Kode))
+                {
+                    <optgroup label="@grup.Key">
+                        @foreach (var j in grup)
+                        {
+                            <option value="@j.Id" selected="@(jenisId == j.Id)">@Ringkas(j.NamaJenis)</option>
+                        }
+                    </optgroup>
+                }
+            </select>
+
+            @* Arsip dipisah per tahun. Daftarnya dibangun dari tahun yang
+               benar-benar ada isinya, bukan rentang tetap, supaya tidak ada
+               tahun kosong yang bisa dipilih. *@
+            <select name="tahun" class="form-select" aria-label="Saring menurut tahun">
+                <option value="">Semua tahun</option>
+                @foreach (var t in daftarTahun)
+                {
+                    <option value="@t" selected="@(tahunAktif == t)">@t</option>
+                }
+            </select>
+
+            @* Urutan ikut terbawa saat menyaring; menyaring tidak boleh
+               diam-diam mengembalikan tabel ke urutan bawaan. *@
+            <input type="hidden" name="sort" value="@sortAktif" />
+            <input type="hidden" name="dir" value="@arah" />
+
             <button type="submit" class="btn btn-outline-secondary">Cari</button>
-            @if (!string.IsNullOrEmpty(cari))
-            {
-                <a class="btn btn-outline-secondary" asp-action="Index">Bersihkan</a>
-            }
         </form>
 
         <a class="btn btn-primary" asp-action="Create">
@@ -48,16 +134,71 @@
         </a>
     </div>
 
+    @if (adaSaringan)
+    {
+        <div class="sift">
+            <span>Menyaring:</span>
+
+            @if (!string.IsNullOrEmpty(cari))
+            {
+                <a class="sift__x" asp-action="Index" asp-all-route-data="@Rute(bawaCari: false)">
+                    “@cari”
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" aria-hidden="true">
+                        <path d="M18 6L6 18M6 6l12 12"/>
+                    </svg>
+                    <span class="visually-hidden">Hapus kata pencarian</span>
+                </a>
+            }
+
+            @if (jenisAktif != null)
+            {
+                <a class="sift__x" asp-action="Index" asp-all-route-data="@Rute(bawaJenis: false)">
+                    @Ringkas(jenisAktif.NamaJenis)
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" aria-hidden="true">
+                        <path d="M18 6L6 18M6 6l12 12"/>
+                    </svg>
+                    <span class="visually-hidden">Hapus saringan jenis</span>
+                </a>
+            }
+
+            @if (tahunAktif.HasValue)
+            {
+                <a class="sift__x" asp-action="Index" asp-all-route-data="@Rute(bawaTahun: false)">
+                    Tahun @tahunAktif
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" aria-hidden="true">
+                        <path d="M18 6L6 18M6 6l12 12"/>
+                    </svg>
+                    <span class="visually-hidden">Hapus saringan tahun</span>
+                </a>
+            }
+
+            <a asp-action="Index">Tampilkan semua</a>
+        </div>
+    }
+
     @if (Model != null && Model.Any())
     {
         <div class="ledger--wrap">
             <table class="ledger">
                 <thead>
                     <tr>
-                        <th>Nomor</th>
-                        <th>Jenis</th>
-                        <th>Tanggal</th>
-                        <th>Staff</th>
+                        @foreach (var k in kolom)
+                        {
+                            <th aria-sort="@AriaUrut(k.Kunci)">
+                                <a class="sorter @(sortAktif == k.Kunci ? "is-sorted" : "")"
+                                   data-dir="@arah"
+                                   asp-action="Index"
+                                   asp-all-route-data="@Rute(sortBaru: k.Kunci, dirBaru: ArahBerikut(k.Kunci))">
+                                    @k.Label
+                                    @if (sortAktif == k.Kunci)
+                                    {
+                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" aria-hidden="true">
+                                            <path d="M6 9l6 6 6-6"/>
+                                        </svg>
+                                    }
+                                </a>
+                            </th>
+                        }
                         <th><span class="visually-hidden">Aksi</span></th>
                     </tr>
                 </thead>
@@ -67,11 +208,20 @@
                         <tr>
                             <td>
                                 <a asp-action="Details" asp-route-id="@item.Id">
-                                    @await Html.PartialAsync("_Nomor", item.NomorSurat)
+                                    @await Html.PartialAsync("_Nomor", item)
                                 </a>
                             </td>
 
-                            <td>@(item.JenisSurat?.NamaJenis ?? "—")</td>
+                            <td>
+                                @if (item.JenisSurat != null)
+                                {
+                                    <span class="jenis" data-tone="@RonaJenis.Untuk(item.JenisSuratId)">@Ringkas(item.JenisSurat.NamaJenis)</span>
+                                }
+                                else
+                                {
+                                    <text>—</text>
+                                }
+                            </td>
 
                             <td>
                                 @item.Tanggal.ToString("dd/MM/yyyy")
@@ -108,7 +258,7 @@
 
                 <nav class="pager__links" aria-label="Navigasi halaman">
                     <a class="@(halaman == 1 ? "is-disabled" : "")"
-                       asp-action="Index" asp-route-page="@(halaman - 1)" asp-route-search="@cari"
+                       asp-action="Index" asp-all-route-data="@Rute(halamanBaru: halaman - 1)"
                        aria-label="Halaman sebelumnya">‹</a>
 
                     @{ int sebelumnya = 0; }
@@ -125,14 +275,14 @@
                         }
                         else
                         {
-                            <a asp-action="Index" asp-route-page="@n" asp-route-search="@cari">@n</a>
+                            <a asp-action="Index" asp-all-route-data="@Rute(halamanBaru: n)">@n</a>
                         }
 
                         sebelumnya = n;
                     }
 
                     <a class="@(halaman == totalHalaman ? "is-disabled" : "")"
-                       asp-action="Index" asp-route-page="@(halaman + 1)" asp-route-search="@cari"
+                       asp-action="Index" asp-all-route-data="@Rute(halamanBaru: halaman + 1)"
                        aria-label="Halaman berikutnya">›</a>
                 </nav>
             </div>
@@ -141,10 +291,23 @@
     else
     {
         <div class="empty">
-            @if (!string.IsNullOrEmpty(cari))
+            @if (adaSaringan)
             {
                 <h3>Tidak ada yang cocok</h3>
-                <p>Tidak ada berita acara dengan nomor, jenis, atau staff yang mengandung “@cari”.</p>
+                <p>
+                    @if (jenisAktif != null && !string.IsNullOrEmpty(cari))
+                    {
+                        <text>Tidak ada berita acara jenis “@Ringkas(jenisAktif.NamaJenis)” yang mengandung “@cari”.</text>
+                    }
+                    else if (jenisAktif != null)
+                    {
+                        <text>Belum ada berita acara jenis “@Ringkas(jenisAktif.NamaJenis)”.</text>
+                    }
+                    else
+                    {
+                        <text>Tidak ada berita acara dengan nomor, jenis, atau staff yang mengandung “@cari”.</text>
+                    }
+                </p>
                 <a class="btn btn-outline-secondary" asp-action="Index">Tampilkan semua</a>
             }
             else

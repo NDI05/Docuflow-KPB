@@ -62,7 +62,7 @@
                         <th>Nama</th>
                         <th>Username</th>
                         <th>Peran</th>
-                        <th>Posisi tanda tangan</th>
+                        <th>Jabatan</th>
                         <th>Nomor pegawai</th>
                         <th>NPK</th>
                         <th><span class="visually-hidden">Aksi</span></th>
@@ -76,19 +76,22 @@
                             <td class="serial">@u.Username</td>
                             <td><span class="@kelasPeran(u.Role)">@labelPeran(u.Role)</span></td>
                             <td>
-                                @if (string.IsNullOrWhiteSpace(u.PosisiTtd))
+                                @if (string.IsNullOrWhiteSpace(u.Jabatan))
                                 {
                                     <span class="text-secondary">—</span>
                                 }
                                 else
                                 {
-                                    <span class="chip">@u.PosisiTtd</span>
+                                    <span class="chip">@u.Jabatan</span>
                                 }
                             </td>
                             <td class="serial">@(string.IsNullOrWhiteSpace(u.NomorPegawai) ? "—" : u.NomorPegawai)</td>
                             <td class="serial">@(string.IsNullOrWhiteSpace(u.Npk) ? "—" : u.Npk)</td>
                             <td>
                                 <div class="d-flex gap-2 justify-content-end">
+                                    <a class="btn btn-outline-secondary btn-sm"
+                                       asp-action="Edit" asp-route-id="@u.Id">Sunting</a>
+
                                     <a class="btn btn-outline-secondary btn-sm"
                                        asp-action="ResetPassword" asp-route-id="@u.Id">Atur ulang sandi</a>
 

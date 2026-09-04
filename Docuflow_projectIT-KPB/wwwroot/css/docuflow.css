@@ -24,6 +24,31 @@
     --kpb-green:    #A6C210;
     --kpb-ink:      #161B22;
 
+    /* Rona jenis surat.
+
+       Arsip yang semua chip-nya merah tidak bisa dipindai dengan mata; satu
+       jenis harus bisa dikenali sebelum teksnya dibaca. Enam rona, diputar
+       lewat sisa bagi JenisSuratId, jadi baris jenis baru langsung dapat
+       warna tanpa perlu kolom baru di basis data.
+
+       Semua rona di bawah ini sudah >=4.9:1 terhadap teks putih, sehingga
+       chip kode lolos WCAG AA. Merah merek (#ED1A2F) hanya 4.38:1 dan
+       karena itu TIDAK dipakai sebagai latar chip — dipakai versi tuanya.
+
+       ponytail: warna berulang setelah jenis kesembilan. Jumlahnya harus
+       sama dengan RonaJenis.Jumlah di Services/RonaJenis.cs — kalau salah
+       satu ditambah sendirian, jenis baru akan memakai kelas yang tidak
+       punya warna dan chip-nya kembali merah bawaan. */
+    --tone-0:       #7B3E8F;  /* plum     7.17:1 */
+    --tone-1:       #C4142A;  /* merah    6.03:1 */
+    --tone-2:       #00589A;  /* biru     7.34:1 */
+    --tone-3:       #8A5209;  /* oker     6.38:1 */
+    --tone-4:       #5F7A0A;  /* zaitun   4.91:1 */
+    --tone-5:       #0B6670;  /* tosca    6.67:1 */
+    --tone-6:       #B01A5E;  /* rose     6.66:1 */
+    --tone-7:       #3B3FA0;  /* indigo   8.73:1 */
+    --tone-8:       #44515E;  /* batu     8.13:1 */
+
     /* Permukaan — sejuk, bukan krem hangat */
     --paper:        #FFFFFF;
     --ground:       #F2F5F7;
@@ -271,7 +296,7 @@ table, .tabular { font-variant-numeric: tabular-nums; }
 .nomor { display: inline-flex; align-items: stretch; gap: var(--s2); }
 
 .nomor__kode {
-    background: var(--kpb-red);
+    background: var(--tone-1);
     color: #fff;
     font-size: 11px; font-weight: 800; letter-spacing: 0.06em;
     padding: 3px 9px;
@@ -279,6 +304,19 @@ table, .tabular { font-variant-numeric: tabular-nums; }
     border-radius: var(--r-chip);
 }
 .nomor__kode > span { display: block; transform: skewX(14deg); }
+
+/* Rona diikat ke jenis, bukan ke kode. Dua jenis bisa berbagi satu kode
+   ("Kerusakan" dan "Survey" sama-sama BA), jadi kalau warnanya mengikuti
+   kode keduanya tetap kembar di layar — persis masalah yang mau dibereskan. */
+.nomor__kode[data-tone="0"] { background: var(--tone-0); }
+.nomor__kode[data-tone="1"] { background: var(--tone-1); }
+.nomor__kode[data-tone="2"] { background: var(--tone-2); }
+.nomor__kode[data-tone="3"] { background: var(--tone-3); }
+.nomor__kode[data-tone="4"] { background: var(--tone-4); }
+.nomor__kode[data-tone="5"] { background: var(--tone-5); }
+.nomor__kode[data-tone="6"] { background: var(--tone-6); }
+.nomor__kode[data-tone="7"] { background: var(--tone-7); }
+.nomor__kode[data-tone="8"] { background: var(--tone-8); }
 
 .nomor__body { font-family: var(--mono); font-size: 13px; line-height: 1.55; }
 .nomor__urut { font-weight: 700; color: var(--ink); }
@@ -300,7 +338,11 @@ table, .tabular { font-variant-numeric: tabular-nums; }
     padding: var(--s4) var(--s5);
     border-bottom: 1px solid var(--rule);
     display: flex; align-items: center; justify-content: space-between; gap: var(--s3);
+    /* Di layar sempit tombol aksi turun ke baris sendiri, bukan diperas
+       sampai teksnya patah tiga baris. */
+    flex-wrap: wrap;
 }
+.panel__head > .btn { flex: none; }
 .panel__head h2, .panel__head h3 { margin: 0; }
 .panel__body { padding: var(--s5); }
 
@@ -335,6 +377,72 @@ table, .tabular { font-variant-numeric: tabular-nums; }
 .ledger .serial { font-family: var(--mono); font-size: 12px; color: var(--ink-2); }
 
 .ledger--wrap { overflow-x: auto; }
+
+/* Tabel barang melayani tiga bentuk dokumen dengan susunan kolom berbeda.
+   Kolom yang tidak dipakai disembunyikan, bukan dihapus dari DOM: setiap
+   baris harus tetap mengirim SELURUH kolom supaya semua array di form sama
+   panjang dan controller tidak menggeser data antar baris.
+
+   Kelas menamai isi kolom, bukan variannya, karena beberapa kolom dipakai
+   lebih dari satu varian (Nama barang di BAST dan CCTV; Serial dan Merk di
+   BAST dan BAPB). Aturannya ditulis sebagai "apa yang disembunyikan tiap
+   varian" — eksplisit, dan tidak ada sel yang tertabrak dua aturan. */
+.barang--bast .k-jumlah,
+.barang--bast .k-waktu,
+.barang--bast .k-rekaman,
+.barang--bast .k-ket { display: none; }
+
+.barang--cctv .k-jumlah,
+.barang--cctv .k-alat,
+.barang--cctv .k-pengguna,
+.barang--cctv .k-ket { display: none; }
+
+.barang--bapb .k-nama,
+.barang--bapb .k-waktu,
+.barang--bapb .k-rekaman,
+.barang--bapb .k-pengguna { display: none; }
+
+/* Judul kolom yang bisa diurutkan.
+
+   Seluruh sel jadi target klik, bukan cuma tulisannya — target 10px susah
+   dikenai. Anak panah hanya muncul di kolom yang sedang mengurutkan;
+   menampilkan panah redup di semua kolom membuat tabel terlihat sibuk dan
+   tidak memberi tahu apa pun. */
+.sorter {
+    display: inline-flex; align-items: center; gap: var(--s1);
+    color: inherit; font: inherit; letter-spacing: inherit;
+    text-transform: inherit; white-space: nowrap;
+}
+.sorter:hover { color: var(--ink); text-decoration: none; }
+.sorter svg { width: 11px; height: 11px; flex: none; }
+.ledger thead th:has(.is-sorted) { color: var(--ink); }
+.is-sorted svg { color: var(--kpb-blue); }
+.is-sorted[data-dir="asc"] svg { transform: rotate(180deg); }
+
+/* Label jenis.
+
+   Warnanya di garis tepi, bukan di latar: satu baris sudah punya chip kode
+   berwarna penuh: dua blok warna sebaris saling berebut. Garis 3px cukup
+   untuk memasangkan baris ini dengan chip-nya, dan teksnya tetap tinta
+   biasa sehingga kontrasnya aman.
+
+   Awalan "Berita Acara" dibuang di view — halamannya memang berjudul itu,
+   jadi mengulangnya 15 kali ke bawah hanya menambah lebar kolom. */
+.jenis {
+    display: inline-block;
+    padding-left: var(--s2);
+    border-left: 3px solid var(--tone-1);
+    line-height: 1.35;
+}
+.jenis[data-tone="0"] { border-left-color: var(--tone-0); }
+.jenis[data-tone="1"] { border-left-color: var(--tone-1); }
+.jenis[data-tone="2"] { border-left-color: var(--tone-2); }
+.jenis[data-tone="3"] { border-left-color: var(--tone-3); }
+.jenis[data-tone="4"] { border-left-color: var(--tone-4); }
+.jenis[data-tone="5"] { border-left-color: var(--tone-5); }
+.jenis[data-tone="6"] { border-left-color: var(--tone-6); }
+.jenis[data-tone="7"] { border-left-color: var(--tone-7); }
+.jenis[data-tone="8"] { border-left-color: var(--tone-8); }
 
 /* ---------------------------------------------------------------------
    9. Chip & lencana
@@ -560,8 +668,34 @@ table, .tabular { font-variant-numeric: tabular-nums; }
 .pager__links .is-disabled { opacity: .4; pointer-events: none; }
 
 /* Kotak cari yang benar-benar terhubung ke form */
-.finder { display: flex; gap: var(--s2); max-width: 460px; }
-.finder .form-control { flex: 1; }
+.finder {
+    display: flex; flex-wrap: wrap; gap: var(--s2);
+    /* Tumbuh mengisi sisa ruang di panel__head, tapi berhenti di 660px.
+       Tanpa flex-grow lebarnya mengikut isi dan tombol "Cari" terlempar ke
+       baris kedua padahal ruangnya masih ada. */
+    flex: 1 1 auto; max-width: 820px;
+}
+.finder .form-control { flex: 1 1 200px; min-width: 0; }
+.finder .form-select { flex: 0 1 220px; }
+
+/* Ringkasan saringan yang sedang aktif. Tanpa ini, tabel yang tersaring
+   tidak bisa dibedakan dari arsip yang memang cuma berisi sedikit. */
+.sift {
+    display: flex; flex-wrap: wrap; align-items: center; gap: var(--s2);
+    padding: var(--s3) var(--s5);
+    border-bottom: 1px solid var(--rule);
+    background: var(--ground);
+    font-size: 12px; color: var(--ink-2);
+}
+.sift__x {
+    display: inline-flex; align-items: center; gap: var(--s1);
+    font-size: 11px; font-weight: 700;
+    padding: 2px 8px;
+    border: 1px solid var(--rule-strong); border-radius: var(--r-chip);
+    color: var(--ink-2); background: var(--paper);
+}
+.sift__x:hover { color: var(--ink); border-color: var(--ink); text-decoration: none; }
+.sift__x svg { width: 10px; height: 10px; }
 
 /* ---------------------------------------------------------------------
    14. Login
