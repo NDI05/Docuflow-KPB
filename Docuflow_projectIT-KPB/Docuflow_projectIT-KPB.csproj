@@ -5,6 +5,19 @@
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
     <RootNamespace>Docuflow_projectIT_KPB</RootNamespace>
+    <!-- Versi rilis sistem. Satu-satunya tempat angkanya ditulis: badge versi di
+         setiap halaman (Views/Shared/_Version.cshtml) membacanya dari assembly,
+         jadi menaikkan versi = ubah baris ini lalu publish ulang.
+         WAJIB dinaikkan setiap publish. Riwayatnya di documentation/CHANGELOG.md.
+         Konvensi ini mengikuti TrackingSystem, sistem sebelah di kilang yang
+         sama, supaya tim IT membaca versi dengan cara yang sudah mereka kenal. -->
+    <Version>1.0.0</Version>
+    <!-- SDK secara bawaan menempelkan SHA commit ke ProductVersion. Dimatikan:
+         build produksi dijalankan di VM, dan deploy.sh sengaja TIDAK menyalin
+         .git ke sana, jadi SHA yang tercap adalah commit lama sisa kloning
+         pertama — penanda asal-usul yang menyesatkan pada berkas yang
+         diserahkan. Versinya sendiri tetap ada dan itu yang dibaca badge. -->
+    <IncludeSourceRevisionInInformationalVersion>false</IncludeSourceRevisionInInformationalVersion>
   </PropertyGroup>
 
   <ItemGroup>

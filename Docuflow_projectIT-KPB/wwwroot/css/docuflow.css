@@ -838,3 +838,27 @@ table, .tabular { font-variant-numeric: tabular-nums; }
     border-color: var(--danger, #b42318);
     color: #fff;
 }
+
+/* Badge versi. Sengaja tenang: angkanya perlu ada saat dicari, bukan menarik
+   perhatian setiap kali halaman dibuka. */
+.app-version {
+    display: inline-block;
+    margin-left: 10px;
+    padding: 1px 7px;
+    border: 1px solid var(--rule);
+    border-radius: 999px;
+    font-size: 11px;
+    font-variant-numeric: tabular-nums;
+    letter-spacing: .02em;
+    color: var(--muted, #6b7280);
+    white-space: nowrap;
+}
+
+.auth__versi {
+    margin-top: 14px;
+    text-align: center;
+}
+
+.auth__versi .app-version {
+    margin-left: 0;
+}

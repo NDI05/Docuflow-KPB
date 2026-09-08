@@ -1,0 +1,14 @@
+@* Badge versi sistem — dipasang di layout utama DAN di halaman masuk, supaya
+   versinya bisa dibaca sebelum seseorang punya akun sekalipun.
+
+   Angkanya dibaca dari <Version> di csproj lewat assembly, bukan diketik ulang
+   di sini, supaya yang tampil tidak pernah beda dengan yang benar-benar
+   di-publish.
+
+   Sengaja TIDAK dipasang di template cetak: ketiganya memakai Layout = null,
+   dan nomor versi perangkat lunak bukan bagian dari dokumen resmi. *@
+@{
+    var versi = typeof(Docuflow_projectIT_KPB.Models.Surat).Assembly.GetName().Version?.ToString(3);
+}
+@* Kurungnya wajib: "v@versi" terbaca Razor sebagai alamat email dan tercetak mentah. *@
+<span class="app-version" title="Versi sistem Docuflow">v@(versi)</span>
