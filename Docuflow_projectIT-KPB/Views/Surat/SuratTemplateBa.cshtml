@@ -3,6 +3,9 @@
 @{
     Layout = null;
 
+    // Ditandai GeneratePdf. Lihat blok hiasan layar di bawah.
+    var cetak = ViewData["Cetak"] as bool? == true;
+
     // Survey memakai tata letak judul terpusat: kop di kanan atas, lalu
     // "BERITA ACARA", nomor, dan perihal di bawah label TENTANG. Kerusakan
     // tetap memakai kop lama. Aturannya dijawab Ba, sumber yang sama dengan
@@ -29,15 +32,20 @@
     <title>@Model.NomorSurat</title>
 
     <style>
-        @@page { size: A4; margin: 20mm 18mm 20mm 18mm; }
+        /* Margin nol: jarak tepi yang sebenarnya adalah padding .page-content.
+           Kalau @@page juga diberi margin, keduanya bertumpuk dan isi halaman
+           menyusut jadi kotak kecil di tengah. */
+        @@page { size: A4; margin: 0; }
 
         body {
             margin: 0; padding: 0;
             font-family: Arial, Helvetica, sans-serif;
-            font-size: 12px; line-height: 1.5; color: #000; background: #f2f2f2;
+            font-size: 12px; line-height: 1.5; color: #000; background: #fff;
         }
 
-        .paper { width: 210mm; min-height: 297mm; margin: 15px auto; background: #fff; box-shadow: 0 0 10px rgba(0,0,0,0.15); box-sizing: border-box; }
+        /* Persis satu lembar A4, tanpa jarak dan tanpa bayangan; keduanya
+           ditambahkan kembali hanya untuk layar. */
+        .paper { width: 210mm; min-height: 297mm; margin: 0 auto; background: #fff; box-sizing: border-box; }
         .page-content { padding: 20mm 18mm 20mm 18mm; box-sizing: border-box; }
 
         .header { position: relative; min-height: 112px; margin-bottom: 15px; }
@@ -95,6 +103,25 @@
         .signature .ruang { height: 62px; }
         .signature-name { font-weight: bold; text-decoration: underline; }
     </style>
+@if (!cetak)
+{
+    @* Hiasan layar — latar abu, bayangan, dan jarak di sekeliling kertas —
+       hanya untuk pratinjau di peramban. Ditulis di sini, bukan di blok CSS
+       utama, karena tiga hal itu ikut TERCETAK kalau tidak dipisahkan:
+       latar abu jadi bidang abu di seluruh halaman, bayangan jadi garis
+       kelabu di tepi, dan margin luar menggeser kertas sehingga isinya
+       mengecil — hasilnya mirip hasil pindai, bukan dokumen.
+
+       Dua penjaga, masing-masing menutup satu jalur cetak yang berbeda:
+       blok ini tidak dirender sama sekali saat wkhtmltopdf yang memanggil,
+       dan @@media screen menjaga Ctrl+P dari halaman pratinjau. *@
+    <style>
+        @@media screen {
+            body { background: #f2f2f2; }
+            .paper { margin: 15px auto; box-shadow: 0 0 10px rgba(0,0,0,0.15); }
+        }
+    </style>
+}
 </head>
 
 <body>
@@ -204,7 +231,7 @@
                         <br />@Model.Staff.Jabatan
                     }
                 </td>
-                <td>Mengetahui<br />@(string.IsNullOrWhiteSpace(Model.Manager?.Jabatan) ? "Ast Manager IT | PT. KPB" : Model.Manager.Jabatan)</td>
+                <td>Mengetahui<br />@(string.IsNullOrWhiteSpace(Model.Manager?.Jabatan) ? "Ast. Manajer IT | KPB" : Model.Manager.Jabatan)</td>
                 @if (!survey)
                 {
                     <td>

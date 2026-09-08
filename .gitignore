@@ -390,3 +390,6 @@ skills-lock.json
 # macOS
 .DS_Store
 **/.DS_Store
+
+# Paket rilis untuk tim IT — besar dan bisa dibangun ulang dari sumbernya.
+dist/

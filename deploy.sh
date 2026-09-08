@@ -116,16 +116,27 @@ SID=$(ssh -i "$KEY" "$VM" 'sqlcmd -S "localhost\SQLEXPRESS" -E -d DocuflowDB -h-
 
 if [ -z "$SID" ] || [ "$SID" = "0" ]; then
     echo "    /Surat/GeneratePdf   DILEWATI (belum ada surat di DB)"
-    rm -f "$JAR"
 else
     pdf=$(curl -sS -b "$JAR" -o /dev/null -w '%{http_code} %{content_type}' "$BASE/Surat/GeneratePdf/$SID")
     echo "    /Surat/GeneratePdf/$SID $pdf"
-    rm -f "$JAR"
 
     case "$pdf" in
         "200 application/pdf") ;;
-        *) echo "GAGAL: generate PDF rusak (wkhtmltopdf / working directory)"; exit 1 ;;
+        *) rm -f "$JAR"; echo "GAGAL: generate PDF rusak (wkhtmltopdf / working directory)"; exit 1 ;;
     esac
+fi
+
+# SPD memakai tabelnya sendiri. Deploy tidak pernah menjalankan migration
+# (Program.cs tidak punya Database.Migrate), jadi menerbitkan SpdController
+# sebelum migration-nya diterapkan menghasilkan deploy hijau di atas halaman
+# yang 500. Probe ini yang menangkapnya.
+spd=$(curl -sS -b "$JAR" -o /dev/null -w '%{http_code}' "$BASE/Spd/Index")
+echo "    /Spd/Index           $spd"
+rm -f "$JAR"
+
+if [ "$spd" != "200" ]; then
+    echo "GAGAL: /Spd/Index tidak 200 — migration Spd/Kota kemungkinan belum diterapkan di VM"
+    exit 1
 fi
 
 # ---------------------------------------------------------------------

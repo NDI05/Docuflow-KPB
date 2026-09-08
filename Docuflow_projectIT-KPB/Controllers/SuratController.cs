@@ -171,14 +171,7 @@ namespace Docuflow_projectIT_KPB.Controllers
 
         public async Task<IActionResult> Create()
         {
-            ViewBag.JenisSurat = await _context.JenisSurat
-                .OrderBy(j => j.NamaJenis)
-                .ToListAsync();
-
-            ViewBag.Users = await _context.Users
-                .OrderBy(u => u.Nama)
-                .ToListAsync();
-
+            await IsiPilihanForm();
             return View();
         }
 
@@ -191,9 +184,51 @@ namespace Docuflow_projectIT_KPB.Controllers
             surat.Tanggal = now;
             surat.CreatedAt = now;
 
-            // Satu tabel barang melayani dua jenis dokumen. BAST mengisi nama
-            // barang dan pengguna; BAPB mengisi jumlah, satuan, dan keterangan.
-            // Kolom milik jenis yang lain dikirim kosong oleh form.
+            surat.BarangList = BacaBarang();
+
+            surat.FilePath = await SimpanBerkas(file);
+
+            surat.PoinList = await BacaPoin();
+
+            // Satu transaksi untuk generate nomor + insert surat. Dua alasan:
+            // 1. Kunci baris counter di NomorSuratService baru bertahan sampai
+            //    commit kalau ada transaksi — tanpa ini dua submit bersamaan
+            //    bisa dapat nomor sama.
+            // 2. Kalau insert surat gagal, counter ikut di-rollback dan nomor
+            //    tidak hangus.
+            await using (var tx = await _context.Database.BeginTransactionAsync())
+            {
+                surat.NomorSurat = await _nomorService.GenerateNomorSurat(surat.JenisSuratId);
+
+                _context.Surat.Add(surat);
+                await _context.SaveChangesAsync();
+
+                await tx.CommitAsync();
+            }
+
+            // AUDIT LOG — sengaja di luar transaksi supaya gagalnya pencatatan
+            // audit tidak ikut membatalkan surat yang sudah tersimpan.
+            _auditLog.Log(
+                HttpContext.Session.GetString("Username") ?? "-",
+                "Generate Nomor Surat",
+                $"Membuat surat nomor {surat.NomorSurat}"
+            );
+
+            return RedirectToAction(nameof(Details), new { id = surat.Id });
+        }
+
+        /// <summary>
+        /// Membaca tabel barang dari form. Dipakai Create DAN Edit — kalau
+        /// disalin jadi dua, satu kolom baru cukup ditambahkan di satu tempat
+        /// saja dan diam-diam hilang di tempat yang lain.
+        ///
+        /// Satu tabel barang melayani tiga bentuk dokumen. BAST mengisi nama
+        /// barang dan pengguna; BAST CCTV mengisi tanggal, jam, rekaman, area;
+        /// BAPB mengisi jumlah, satuan, dan keterangan. Kolom milik bentuk yang
+        /// lain dikirim kosong oleh form.
+        /// </summary>
+        private List<BarangSurat> BacaBarang()
+        {
             var namaBarang = Request.Form["NamaBarang[]"];
             var jumlah = Request.Form["Jumlah[]"];
             var satuan = Request.Form["Satuan[]"];
@@ -206,7 +241,7 @@ namespace Docuflow_projectIT_KPB.Controllers
             var rekaman = Request.Form["Rekaman[]"];
             var area = Request.Form["Area[]"];
 
-            surat.BarangList = new List<BarangSurat>();
+            var hasil = new List<BarangSurat>();
 
             // Max, bukan Min: array yang tidak dikirim sama sekali panjangnya
             // nol, dan Min akan membuat SELURUH baris barang hilang tanpa
@@ -263,7 +298,7 @@ namespace Docuflow_projectIT_KPB.Controllers
 
                 if (kosong) continue;
 
-                surat.BarangList.Add(new BarangSurat
+                hasil.Add(new BarangSurat
                 {
                     NamaBarang = vNama,
                     Jumlah = int.TryParse(vJumlah, out var n) ? n : null,
@@ -279,21 +314,30 @@ namespace Docuflow_projectIT_KPB.Controllers
                 });
             }
 
-            surat.FilePath = await SimpanBerkas(file);
+            return hasil;
+        }
 
-            // ---------------------------------------------------------------
-            // POIN LAPORAN (jenis surat berkode BA)
-            //
-            // Tiap baris membawa kunci acak buatan sisi klien. Gambar dinamai
-            // "Gambar_<kunci>", bukan "Gambar_<indeks>", supaya menghapus satu
-            // baris tidak menggeser berkas milik baris lain.
-            // ---------------------------------------------------------------
+        /// <summary>
+        /// Membaca poin laporan (jenis surat berkode BA) dari form.
+        ///
+        /// Tiap baris membawa kunci acak buatan sisi klien. Gambar dinamai
+        /// "Gambar_&lt;kunci&gt;", bukan "Gambar_&lt;indeks&gt;", supaya menghapus satu
+        /// baris tidak menggeser berkas milik baris lain.
+        ///
+        /// Pada Edit, gambar yang sudah ada dikirim kembali sebagai
+        /// "GambarLama_&lt;kunci&gt;[]" berisi path-nya. Yang tidak dikirim berarti
+        /// dihapus operator; Edit yang membuang berkas fisiknya, bukan di sini,
+        /// karena baru setelah SaveChanges kita tahu simpanannya berhasil.
+        /// Pada Create field itu tidak pernah ada, jadi jalurnya sama.
+        /// </summary>
+        private async Task<List<PoinSurat>> BacaPoin()
+        {
             var poinKey = Request.Form["PoinKey[]"];
             var poinLevel = Request.Form["PoinLevel[]"];
             var poinJudul = Request.Form["PoinJudul[]"];
             var poinKeterangan = Request.Form["PoinKeterangan[]"];
 
-            surat.PoinList = new List<PoinSurat>();
+            var hasil = new List<PoinSurat>();
 
             int jumlahPoin = new[]
             {
@@ -308,14 +352,25 @@ namespace Docuflow_projectIT_KPB.Controllers
                 var poin = new PoinSurat
                 {
                     Level = int.TryParse(poinLevel[i], out var lv) ? Math.Clamp(lv, 0, 2) : 0,
-                    Urutan = surat.PoinList.Count,
+                    Urutan = hasil.Count,
                     Judul = poinJudul[i]!.Trim(),
                     Keterangan = poinKeterangan[i]
                 };
 
-                var berkasGambar = Request.Form.Files.GetFiles($"Gambar_{poinKey[i]}");
+                // Gambar lama yang dipertahankan lebih dulu, supaya urutan yang
+                // tampil di layar sama dengan urutan yang tercetak.
+                foreach (var lama in Request.Form[$"GambarLama_{poinKey[i]}[]"])
+                {
+                    if (!PathUnggahanSah(lama)) continue;
 
-                foreach (var g in berkasGambar)
+                    poin.Gambar.Add(new GambarPoin
+                    {
+                        FilePath = lama!,
+                        Urutan = poin.Gambar.Count
+                    });
+                }
+
+                foreach (var g in Request.Form.Files.GetFiles($"Gambar_{poinKey[i]}"))
                 {
                     var path = await SimpanBerkas(g);
                     if (path != null)
@@ -328,34 +383,161 @@ namespace Docuflow_projectIT_KPB.Controllers
                     }
                 }
 
-                surat.PoinList.Add(poin);
+                hasil.Add(poin);
             }
 
-            // Satu transaksi untuk generate nomor + insert surat. Dua alasan:
-            // 1. Kunci baris counter di NomorSuratService baru bertahan sampai
-            //    commit kalau ada transaksi — tanpa ini dua submit bersamaan
-            //    bisa dapat nomor sama.
-            // 2. Kalau insert surat gagal, counter ikut di-rollback dan nomor
-            //    tidak hangus.
+            return hasil;
+        }
+
+        // =========================
+        // EDIT SURAT
+        // =========================
+
+        /// <summary>
+        /// Memakai kembali Views/Surat/Create.cshtml. Formulirnya 700 baris
+        /// dengan aturan per jenis surat yang tersebar di JS-nya; menyalinnya
+        /// menjadi Edit.cshtml berarti setiap aturan baru harus ditulis dua
+        /// kali, dan yang terlupa hanya ketahuan dari dokumen yang salah cetak.
+        /// </summary>
+        public async Task<IActionResult> Edit(int id)
+        {
+            var surat = await _context.Surat
+                .Include(s => s.JenisSurat)
+                .Include(s => s.BarangList)
+                .Include(s => s.PoinList!.OrderBy(p => p.Urutan))
+                    .ThenInclude(p => p.Gambar.OrderBy(g => g.Urutan))
+                .FirstOrDefaultAsync(s => s.Id == id);
+
+            if (surat == null)
+                return NotFound();
+
+            await IsiPilihanForm();
+            return View("Create", surat);
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Edit(int id, Surat form, IFormFile file)
+        {
+            var surat = await _context.Surat
+                .Include(s => s.BarangList)
+                .Include(s => s.PoinList!)
+                    .ThenInclude(p => p.Gambar)
+                .FirstOrDefaultAsync(s => s.Id == id);
+
+            if (surat == null)
+                return NotFound();
+
+            // Dicatat SEBELUM diganti: setelah poin lama dihapus, path berkasnya
+            // tidak bisa ditemukan lagi dan gambarnya jadi sampah di disk.
+            var gambarSebelum = surat.PoinList?
+                .SelectMany(p => p.Gambar)
+                .Select(g => g.FilePath)
+                .ToList() ?? new List<string>();
+
+            // NomorSurat, JenisSuratId, Tanggal, dan CreatedAt SENGAJA tidak
+            // ikut disalin dari form:
+            //   - NomorSurat sudah terbit dan tercetak di kertas;
+            //   - JenisSuratId menentukan kode pada nomor itu, jadi menggantinya
+            //     membuat nomor menyebut jenis yang bukan isinya;
+            //   - Tanggal menentukan tahun pada nomor DAN tahun arsipnya, jadi
+            //     menggesernya membuat arsip dan kertas berbeda tahun.
+            // Formulirnya pun mengunci ketiganya, tapi form bisa dipalsukan —
+            // penjagaannya di sini.
+            surat.Tujuan = form.Tujuan;
+            surat.Deskripsi = form.Deskripsi;
+            surat.Tentang = form.Tentang;
+            surat.NamaPenanggungJawab = form.NamaPenanggungJawab;
+            surat.Jabatan = form.Jabatan;
+            surat.FungsiDirektorat = form.FungsiDirektorat;
+            surat.NoPekerja = form.NoPekerja;
+            surat.Alamat = form.Alamat;
+            surat.YangMenerima = form.YangMenerima;
+            surat.JabatanYangMenerima = form.JabatanYangMenerima;
+            surat.StaffId = form.StaffId;
+            surat.ManagerId = form.ManagerId;
+            surat.JenisTiket = form.JenisTiket;
+            surat.NoTiket = form.NoTiket;
+
+            var lampiranBaru = await SimpanBerkas(file);
+            var lampiranLama = surat.FilePath;
+
             await using (var tx = await _context.Database.BeginTransactionAsync())
             {
-                surat.NomorSurat = await _nomorService.GenerateNomorSurat(surat.JenisSuratId);
-
-                _context.Surat.Add(surat);
+                // Ganti seluruhnya, bukan cocokkan baris per baris: form
+                // mengirim baris tanpa Id, jadi tidak ada yang bisa dicocokkan.
+                // Dihapus dan disimpan lebih dulu supaya baris baru tidak
+                // bertabrakan dengan yang lama saat EF menyusun perintahnya.
+                if (surat.BarangList != null) _context.BarangSurat.RemoveRange(surat.BarangList);
+                if (surat.PoinList != null) _context.PoinSurat.RemoveRange(surat.PoinList);
                 await _context.SaveChangesAsync();
 
+                surat.BarangList = BacaBarang();
+                surat.PoinList = await BacaPoin();
+
+                if (lampiranBaru != null)
+                    surat.FilePath = lampiranBaru;
+
+                await _context.SaveChangesAsync();
                 await tx.CommitAsync();
             }
 
-            // AUDIT LOG — sengaja di luar transaksi supaya gagalnya pencatatan
-            // audit tidak ikut membatalkan surat yang sudah tersimpan.
+            // Berkas fisik dibuang SETELAH commit: kalau simpanannya gagal,
+            // barisnya masih menunjuk berkas yang harus tetap ada.
+            var masihDipakai = surat.PoinList
+                .SelectMany(p => p.Gambar)
+                .Select(g => g.FilePath)
+                .ToHashSet();
+
+            foreach (var path in gambarSebelum)
+                if (!masihDipakai.Contains(path))
+                    HapusBerkas(path);
+
+            if (lampiranBaru != null && !string.IsNullOrEmpty(lampiranLama))
+                HapusBerkas(lampiranLama);
+
             _auditLog.Log(
                 HttpContext.Session.GetString("Username") ?? "-",
-                "Generate Nomor Surat",
-                $"Membuat surat nomor {surat.NomorSurat}"
+                "Ubah Surat",
+                $"Mengubah surat nomor {surat.NomorSurat}"
             );
 
+            TempData["Message"] = $"Perubahan pada {surat.NomorSurat} tersimpan.";
             return RedirectToAction(nameof(Details), new { id = surat.Id });
+        }
+
+        /// <summary>
+        /// Apakah path ini benar-benar menunjuk satu berkas di wwwroot/uploads?
+        ///
+        /// Nilainya datang dari form, jadi tidak boleh dipercaya: ia berakhir
+        /// di GambarPoin.FilePath, dan Edit memakai daftar itu untuk memutuskan
+        /// berkas mana yang DIHAPUS dari disk. PathFisik hanya membuang garis
+        /// miring depan, jadi "/uploads/../../appsettings.json" akan keluar dari
+        /// folder unggahan. Karena itu bentuknya dipagari, bukan dibersihkan.
+        /// </summary>
+        private static bool PathUnggahanSah(string? path) =>
+            !string.IsNullOrWhiteSpace(path) &&
+            System.Text.RegularExpressions.Regex.IsMatch(path, @"^/uploads/[A-Za-z0-9._ ()+-]+$");
+
+        /// <summary>Menghapus satu berkas unggahan kalau masih ada.</summary>
+        private void HapusBerkas(string relatif)
+        {
+            if (string.IsNullOrWhiteSpace(relatif)) return;
+
+            var full = PathFisik(relatif);
+            if (System.IO.File.Exists(full)) System.IO.File.Delete(full);
+        }
+
+        /// <summary>Isi kedua dropdown pada formulir surat.</summary>
+        private async Task IsiPilihanForm()
+        {
+            ViewBag.JenisSurat = await _context.JenisSurat
+                .OrderBy(j => j.NamaJenis)
+                .ToListAsync();
+
+            ViewBag.Users = await _context.Users
+                .OrderBy(u => u.Nama)
+                .ToListAsync();
         }
 
         /// <summary>
@@ -486,11 +668,45 @@ namespace Docuflow_projectIT_KPB.Controllers
             var tolak = TolakKalauBalp(surat);
             if (tolak != null) return tolak;
 
-            return new ViewAsPdf(NamaTemplate(surat), surat)
+            // Menandai template supaya hiasan layarnya tidak ikut dirender.
+            // ViewData HARUS diserahkan lewat konstruktor: ViewAsPdf merender
+            // view di konteksnya sendiri dan tidak mewarisi ViewData milik
+            // controller, jadi menyetelnya saja tidak terbaca dan hiasan layar
+            // tetap tercetak.
+            ViewData["Cetak"] = true;
+
+            return new ViewAsPdf(NamaTemplate(surat), surat, ViewData)
             {
                 FileName = $"Surat_{surat.NomorSurat}.pdf",
                 PageSize = Size.A4,
-                PageOrientation = Orientation.Portrait
+                PageOrientation = Orientation.Portrait,
+
+                // Nol, bukan bawaan 10mm. Template menggambar lembar selebar
+                // 210mm penuh dan menaruh jarak tepinya sendiri di
+                // .page-content; margin bawaan wkhtmltopdf membuat lembar itu
+                // lebih lebar dari bidang cetak, dan seluruh halaman ikut
+                // dikecilkan supaya muat — itu yang membuat hasilnya tampak
+                // seperti hasil pindai, bukan dokumen.
+                PageMargins = new Margins(0, 0, 0, 0),
+
+                // --print-media-type: tanpa ini wkhtmltopdf memakai media
+                //   "screen", sehingga blok @media screen berisi hiasan
+                //   pratinjau ikut berlaku di kertas.
+                //
+                // --disable-smart-shrinking: INI yang membuat hasil cetak
+                //   berbeda dengan pratinjau. Bawaannya wkhtmltopdf menata
+                //   halaman pada lebar semunya sendiri (~1024px) lalu
+                //   mengecilkan seluruhnya agar muat di kertas. Semuanya ikut
+                //   mengecil termasuk jarak tepi, jadi padding 18mm tercetak
+                //   jadi ~35mm dan dokumennya tampak melayang di tengah
+                //   halaman. Dimatikan, 1px CSS = 1/96 inci tepat, sehingga
+                //   lembar 210mm pada template mengisi A4 persis seperti di
+                //   pratinjau.
+                //
+                // --dpi 96: dasar perhitungan px ke mm itu. Ditulis tegas,
+                //   bukan dibiarkan pada bawaan, karena --disable-smart-shrinking
+                //   membuat hasilnya bergantung penuh pada angka ini.
+                CustomSwitches = "--print-media-type --disable-smart-shrinking --dpi 96"
             };
         }
 

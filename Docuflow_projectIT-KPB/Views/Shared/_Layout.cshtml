@@ -61,6 +61,19 @@
                     </svg>
                     Berita Acara
                 </a>
+
+                @* SPD tetap DI DALAM blok peran yang sama. Menaruhnya setelah
+                   kurung tutup akan menampilkannya untuk setiap sesi apa pun
+                   perannya — route-nya masih menolak, tapi menu dan
+                   [SessionAuthorize] jadi tidak lagi sepakat, persis yang
+                   dilarang catatan di atas. *@
+                <a class="@aktif("Spd")" asp-controller="Spd" asp-action="Index">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
+                        <path d="M9 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8z"/>
+                        <path d="M9 11v10M9 21l6-4M15 17V7l6-4v10z"/>
+                    </svg>
+                    SPD
+                </a>
             }
 
             @if (role == "SuperAdmin")

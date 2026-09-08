@@ -185,6 +185,35 @@ namespace Docuflow_projectIT_KPB.Migrations
                     b.ToTable("JenisSurat");
                 });
 
+            modelBuilder.Entity("Docuflow_projectIT_KPB.Models.Kota", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Kode")
+                        .HasMaxLength(10)
+                        .HasColumnType("nvarchar(10)");
+
+                    b.Property<string>("Nama")
+                        .IsRequired()
+                        .HasMaxLength(120)
+                        .HasColumnType("nvarchar(120)");
+
+                    b.Property<string>("Provinsi")
+                        .HasMaxLength(120)
+                        .HasColumnType("nvarchar(120)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Nama")
+                        .IsUnique();
+
+                    b.ToTable("Kota");
+                });
+
             modelBuilder.Entity("Docuflow_projectIT_KPB.Models.PoinSurat", b =>
                 {
                     b.Property<int>("Id")
@@ -215,6 +244,49 @@ namespace Docuflow_projectIT_KPB.Migrations
                     b.HasIndex("SuratId");
 
                     b.ToTable("PoinSurat");
+                });
+
+            modelBuilder.Entity("Docuflow_projectIT_KPB.Models.Spd", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Keperluan")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<string>("NamaKota")
+                        .IsRequired()
+                        .HasMaxLength(120)
+                        .HasColumnType("nvarchar(120)");
+
+                    b.Property<string>("NomorSpd")
+                        .IsRequired()
+                        .HasMaxLength(60)
+                        .HasColumnType("nvarchar(60)");
+
+                    b.Property<string>("Provinsi")
+                        .HasMaxLength(120)
+                        .HasColumnType("nvarchar(120)");
+
+                    b.Property<int?>("StaffId")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("TanggalDinas")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("StaffId");
+
+                    b.ToTable("Spd");
                 });
 
             modelBuilder.Entity("Docuflow_projectIT_KPB.Models.Surat", b =>
@@ -381,6 +453,15 @@ namespace Docuflow_projectIT_KPB.Migrations
                         .IsRequired();
 
                     b.Navigation("Surat");
+                });
+
+            modelBuilder.Entity("Docuflow_projectIT_KPB.Models.Spd", b =>
+                {
+                    b.HasOne("Docuflow_projectIT_KPB.Models.User", "Staff")
+                        .WithMany()
+                        .HasForeignKey("StaffId");
+
+                    b.Navigation("Staff");
                 });
 
             modelBuilder.Entity("Docuflow_projectIT_KPB.Models.Surat", b =>

@@ -2,9 +2,17 @@
 @model Docuflow_projectIT_KPB.Models.Surat
 
 @{
-    ViewData["Title"] = "Buat berita acara";
+    // Satu formulir untuk Buat dan Ubah. Aturan per jenis surat tersebar di
+    // 300 baris JS di bawah; menyalinnya jadi Edit.cshtml berarti tiap aturan
+    // baru harus ditulis dua kali, dan yang terlupa hanya ketahuan dari
+    // dokumen yang salah cetak.
+    var ubah = Model != null && Model.Id > 0;
+
+    ViewData["Title"] = ubah ? "Ubah berita acara" : "Buat berita acara";
     ViewData["Eyebrow"] = "Arsip";
-    ViewData["Sub"] = "Nomor surat dibuat otomatis saat disimpan.";
+    ViewData["Sub"] = ubah
+        ? $"Nomor {Model!.NomorSurat} dan jenisnya tidak bisa diubah."
+        : "Nomor surat dibuat otomatis saat disimpan.";
 }
 
 @* Tombol simpan hanya ada di kaki form. Sebelumnya ada dua — satu di bar
@@ -13,8 +21,12 @@
 <div class="panel">
     @* enctype wajib: SuratController.Create menerima IFormFile. Tanpa ini
        lampiran tidak pernah sampai ke server dan FilePath selalu kosong. *@
-    <form asp-action="Create" method="post" id="formSurat" enctype="multipart/form-data">
+    <form asp-action="@(ubah ? "Edit" : "Create")" method="post" id="formSurat" enctype="multipart/form-data">
         @Html.AntiForgeryToken()
+        @if (ubah)
+        {
+            <input type="hidden" asp-for="Id" />
+        }
 
         <div class="panel__body">
 
@@ -35,7 +47,12 @@
                            BAPB pihak lawan bisa jadi pengirim ATAU penerima
                            tergantung jenisnya, dan labelnya dihitung Bapb
                            supaya tidak berbeda dengan hasil cetaknya. *@
-                        <select asp-for="JenisSuratId" class="form-select" required>
+                        @* Dikunci saat mengubah: kode jenis sudah tercetak di dalam
+                           nomor surat, jadi menggantinya membuat nomor menyebut jenis
+                           yang bukan isinya. Select yang disabled tidak ikut terkirim,
+                           dan SuratController.Edit memang tidak membacanya — penjagaan
+                           sebenarnya ada di server, ini hanya supaya tidak menggoda. *@
+                        <select asp-for="JenisSuratId" class="form-select" required disabled="@ubah">
                             <option value="">Pilih jenis</option>
                             @foreach (var j in ViewBag.JenisSurat)
                             {
@@ -345,6 +362,16 @@
                     <div class="col-md-6">
                         <label class="form-label" for="file">Berkas</label>
                         <input type="file" id="file" name="file" class="form-control" />
+                        @if (ubah && !string.IsNullOrEmpty(Model!.FilePath))
+                        {
+                            <div class="fieldset__hint" style="margin-top:6px">
+                                Terpasang:
+                                <a href="@Url.Content("~" + Model.FilePath)" target="_blank" rel="noopener">
+                                    @System.IO.Path.GetFileName(Model.FilePath)
+                                </a>.
+                                Mengunggah berkas baru akan menggantikannya.
+                            </div>
+                        }
                     </div>
                 </div>
             </div>
@@ -352,14 +379,57 @@
         </div>
 
         <div class="panel__head" style="border-top:1px solid var(--rule); border-bottom:0;">
-            <a class="btn btn-outline-secondary" asp-action="Index">Batal</a>
-            <button type="submit" class="btn btn-primary">Simpan berita acara</button>
+            <a class="btn btn-outline-secondary"
+               asp-action="@(ubah ? "Details" : "Index")"
+               asp-route-id="@(ubah ? (int?)Model!.Id : null)">Batal</a>
+            <button type="submit" class="btn btn-primary">
+                @(ubah ? "Simpan perubahan" : "Simpan berita acara")
+            </button>
         </div>
 
     </form>
 </div>
 
 @section Scripts {
+@if (ubah)
+{
+    @* Ditulis sebagai JSON, bukan dirakit jadi HTML di server: isinya teks
+       bebas dari operator, dan @@Html.Raw atas string yang dirangkai tangan
+       adalah cara paling mudah menyuntikkan skrip ke halaman sendiri.
+       @@Json.Serialize sudah meloloskan < / & dengan benar. *@
+    <script>
+        window.__seedBarang = @Json.Serialize((Model!.BarangList ?? new List<Docuflow_projectIT_KPB.Models.BarangSurat>())
+            .Select(b => new {
+                NamaBarang = b.NamaBarang,
+                Jumlah = b.Jumlah,
+                Satuan = b.Satuan,
+                TanggalBarang = b.Tanggal,
+                JamBarang = b.Jam,
+                SerialNumber = b.SerialNumber,
+                MerkType = b.MerkType,
+                Rekaman = b.Rekaman,
+                Area = b.Area,
+                Pengguna = b.Pengguna,
+                Keterangan = b.Keterangan
+            }));
+
+        window.__seedPoin = @Json.Serialize((Model.PoinList ?? new List<Docuflow_projectIT_KPB.Models.PoinSurat>())
+            .OrderBy(x => x.Urutan)
+            .Select(x => new {
+                level = x.Level,
+                judul = x.Judul,
+                keterangan = x.Keterangan,
+                // Dua nilai, dan keduanya perlu. src untuk ditampilkan —
+                // di bawah /docflow path berawalan "/" menunjuk ke luar
+                // aplikasi dan gambarnya rusak. path untuk dikirim balik apa
+                // adanya; menyimpan bentuk ber-Url.Content akan menulis
+                // "/docflow/uploads/..." ke database dan merusaknya pada
+                // simpanan berikutnya.
+                gambar = x.Gambar.OrderBy(g => g.Urutan)
+                                 .Select(g => new { src = Url.Content("~" + g.FilePath), path = g.FilePath })
+            }));
+    </script>
+}
 <script>
     // JS biasa, tanpa jQuery. Halaman ini sebelumnya menarik jQuery dari
     // code.jquery.com — satu-satunya dependensi internet saat runtime, dan
@@ -396,7 +466,7 @@
         // disembunyikan. Controller memasangkan ketujuh array berdasarkan
         // indeks, jadi array yang panjangnya berbeda akan menggeser data satu
         // baris ke baris lain.
-        function tambahBaris() {
+        function tambahBaris(nilai) {
             var tr = document.createElement("tr");
 
             var no = document.createElement("td");
@@ -443,13 +513,34 @@
             tdAksi.appendChild(hapus);
             tr.appendChild(tdAksi);
 
+            // Diisi lewat name-nya, bukan lewat urutan sel: urutan kolom di
+            // DOM sengaja tidak sama dengan urutan tampilnya pada tiap varian,
+            // jadi mencocokkan lewat posisi akan menggeser data.
+            if (nilai) {
+                // Dicocokkan tanpa peduli besar-kecil huruf: Json.Serialize
+                // memakai camelCase, sementara name input-nya PascalCase.
+                // Menyamakan salah satunya membuat pengisian ini diam-diam
+                // gagal begitu kebijakan penamaan JSON diubah.
+                var cari = {};
+                Object.keys(nilai).forEach(function (k) { cari[k.toLowerCase()] = nilai[k]; });
+
+                Array.prototype.forEach.call(tr.querySelectorAll("input[name]"), function (inp) {
+                    var v = cari[inp.name.replace("[]", "").toLowerCase()];
+                    if (v !== undefined && v !== null) inp.value = v;
+                });
+            }
+
             tbody.appendChild(tr);
             nomoriUlang();
         }
 
-        tambah.addEventListener("click", tambahBaris);
+        // addEventListener meneruskan objek Event sebagai argumen pertama, dan
+        // itu akan terbaca sebagai "nilai awal". Dibungkus supaya tidak.
+        tambah.addEventListener("click", function () { tambahBaris(); });
 
-        tambahBaris();
+        var awalBarang = window.__seedBarang || [];
+        if (awalBarang.length) awalBarang.forEach(tambahBaris);
+        else tambahBaris();
     })();
 
     // ==================================================================
@@ -497,7 +588,7 @@
             nomoriUlang();
         }
 
-        function tambahPoin() {
+        function tambahPoin(data) {
             var kunci = "p" + (++urutKunci);
 
             var row = document.createElement("div");
@@ -572,6 +663,40 @@
             gambar.accept = "image/*";
             bungkus.appendChild(gambar);
             row.appendChild(bungkus);
+
+            if (data) {
+                judul.value = data.judul || "";
+                ket.value = data.keterangan || "";
+                row.dataset.level = String(data.level || 0);
+
+                // Gambar yang sudah tersimpan dikirim balik apa adanya lewat
+                // input tersembunyi. Yang tombol silangnya ditekan tidak ikut
+                // terkirim, dan itulah tanda bagi server untuk membuangnya.
+                (data.gambar || []).forEach(function (g) {
+                    var item = document.createElement("span");
+                    item.className = "poin__lama";
+
+                    var img = document.createElement("img");
+                    img.src = g.src;
+                    img.alt = "";
+                    item.appendChild(img);
+
+                    var hid = document.createElement("input");
+                    hid.type = "hidden";
+                    hid.name = "GambarLama_" + kunci + "[]";
+                    hid.value = g.path;
+                    item.appendChild(hid);
+
+                    var buang = document.createElement("button");
+                    buang.type = "button";
+                    buang.textContent = "×";
+                    buang.setAttribute("aria-label", "Hapus gambar ini");
+                    buang.addEventListener("click", function () { item.remove(); });
+                    item.appendChild(buang);
+
+                    bungkus.appendChild(item);
+                });
+            }
 
             daftar.appendChild(row);
             nomoriUlang();
@@ -721,8 +846,11 @@
             nomoriBagian();
         }
 
-        tambah.addEventListener("click", tambahPoin);
+        tambah.addEventListener("click", function () { tambahPoin(); });
         jenis.addEventListener("change", pilihBagian);
+
+        (window.__seedPoin || []).forEach(tambahPoin);
+
         pilihBagian();
     })();
 </script>

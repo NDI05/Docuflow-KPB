@@ -653,6 +653,14 @@ table, .tabular { font-variant-numeric: tabular-nums; }
 .note--ok     { border-left-color: var(--kpb-green); background: var(--ok-bg); }
 .note--danger { border-left-color: var(--kpb-red);   background: var(--danger-bg); }
 
+/* asp-validation-summary SELALU merender <div>-nya, bahkan saat tidak ada
+   galat — yang membedakan hanya kelas validation-summary-valid dan sebuah
+   <ul> kosong. Tanpa aturan ini, halaman yang bersih tetap menggambar kotak
+   merah kosong. Disembunyikan lewat display:none, bukan visibility, supaya
+   ia juga hilang dari pembaca layar; role="alert" pada kotak kosong tidak
+   ada yang perlu diumumkan. */
+.validation-summary-valid { display: none; }
+
 .pager { display: flex; align-items: center; justify-content: space-between; gap: var(--s4); padding-top: var(--s4); }
 .pager__info { font-size: 12px; color: var(--ink-3); }
 .pager__links { display: flex; gap: var(--s1); }
@@ -787,4 +795,46 @@ table, .tabular { font-variant-numeric: tabular-nums; }
     .rail, .foot, .no-print { display: none !important; }
     .canvas { margin-left: 0; }
     body { background: #fff; }
+}
+
+/* Gambar poin yang sudah tersimpan, saat berita acara diubah. Tombol silangnya
+   membuang input tersembunyi di sebelahnya — itulah yang memberi tahu server
+   bahwa gambarnya tidak lagi dipakai. */
+.poin__lama {
+    position: relative;
+    display: inline-block;
+    margin: 8px 8px 0 0;
+    border: 1px solid var(--rule);
+    border-radius: 6px;
+    overflow: hidden;
+    line-height: 0;
+}
+
+.poin__lama img {
+    display: block;
+    width: 96px;
+    height: 96px;
+    object-fit: cover;
+}
+
+.poin__lama button {
+    position: absolute;
+    top: 4px;
+    right: 4px;
+    width: 22px;
+    height: 22px;
+    padding: 0;
+    line-height: 20px;
+    font-size: 15px;
+    border: 1px solid var(--rule);
+    border-radius: 50%;
+    background: var(--surface);
+    color: var(--danger, #b42318);
+    cursor: pointer;
+}
+
+.poin__lama button:hover {
+    background: var(--danger, #b42318);
+    border-color: var(--danger, #b42318);
+    color: #fff;
 }

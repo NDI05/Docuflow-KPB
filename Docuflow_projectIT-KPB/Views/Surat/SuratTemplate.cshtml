@@ -3,6 +3,9 @@
 @{
     Layout = null;
 
+    // Ditandai GeneratePdf. Lihat blok hiasan layar di bawah.
+    var cetak = ViewData["Cetak"] as bool? == true;
+
     // Dua jenis berbagi kode BAST. Serah terima rekaman CCTV memakai kolom
     // dan kotak tanda tangan sendiri; aturannya dijawab Bast, sumber yang
     // sama dengan yang dipakai formulir Create supaya kolom di layar tidak
@@ -18,9 +21,12 @@
     <title>Preview Surat</title>
 
     <style>
+            /* Margin nol: jarak tepi yang sebenarnya adalah padding
+               .page-content. Kalau @@page juga diberi margin, keduanya
+               bertumpuk dan isi halaman menyusut jadi kotak kecil di tengah. */
             @@page {
                 size: A4;
-                margin: 20mm 18mm 20mm 18mm;
+                margin: 0;
             }
 
             /* Arial, gaya formal, spacing normal.
@@ -34,16 +40,17 @@
                 font-size: 12px;
                 line-height: 1.5;
                 color: #000;
-                background: #f2f2f2;
+                background: #fff;
             }
 
+            /* Persis satu lembar A4, tanpa jarak dan tanpa bayangan.
+               Keduanya ditambahkan kembali hanya untuk layar. */
             .paper {
                 width: 210mm;
                 min-height: 297mm;
-                margin: 15px auto;
+                margin: 0 auto;
                 background: #fff;
                 padding: 0;
-                box-shadow: 0 0 10px rgba(0,0,0,0.15);
                 box-sizing: border-box;
             }
 
@@ -100,10 +107,10 @@
                 line-height: 1.4;
             }
 
-            /* 278px, bukan 245px: nomor format baru
-               ("BAST No.002/KPB3240/2026-S0") lebih panjang dari format lama
-               dan membungkus ke baris kedua, membuat kotak ini memanjang ke
-               bawah sampai menabrak judul. */
+            /* 278px, bukan 245px: nomor ("BAST 002/KPB3240/2026-S0") pernah
+               membungkus ke baris kedua pada lebar lama, membuat kotak ini
+               memanjang ke bawah sampai menabrak judul. Lebar ini disisakan
+               meski format kehilangan "No." — ruangnya untuk kode terpanjang. */
             .box-info {
                 position: absolute;
                 top: 0;
@@ -279,6 +286,25 @@
                         margin-bottom: 5px;
                     }
     </style>
+@if (!cetak)
+{
+    @* Hiasan layar — latar abu, bayangan, dan jarak di sekeliling kertas —
+       hanya untuk pratinjau di peramban. Ditulis di sini, bukan di blok CSS
+       utama, karena tiga hal itu ikut TERCETAK kalau tidak dipisahkan:
+       latar abu jadi bidang abu di seluruh halaman, bayangan jadi garis
+       kelabu di tepi, dan margin luar menggeser kertas sehingga isinya
+       mengecil — hasilnya mirip hasil pindai, bukan dokumen.
+
+       Dua penjaga, masing-masing menutup satu jalur cetak yang berbeda:
+       blok ini tidak dirender sama sekali saat wkhtmltopdf yang memanggil,
+       dan @@media screen menjaga Ctrl+P dari halaman pratinjau. *@
+    <style>
+        @@media screen {
+            body { background: #f2f2f2; }
+            .paper { margin: 15px auto; box-shadow: 0 0 10px rgba(0,0,0,0.15); }
+        }
+    </style>
+}
 </head>
 
 <body>
@@ -320,6 +346,10 @@
                         <td class="separator">:</td>
                         <td class="value">Ruang IT KPB</td>
                     </tr>
+                    @* Baris ini SELALU dicetak, termasuk saat isinya kosong: bentuk
+                       kop BAST memang memuat Tujuan, dan menghilangkan barisnya
+                       mengubah bentuk dokumennya. Arsip 2026 memang tidak menyimpan
+                       tujuan, jadi yang tercetak "Tujuan :" tanpa isi. *@
                     <tr>
                         <td class="label">Tujuan</td>
                         <td class="separator">:</td>
@@ -431,9 +461,22 @@
                                sebagai "Nomor Memo No 123", yang menyebut nomor dua kali. *@
                             @{
                                 var dasar = (Model.JenisTiket ?? string.Empty).Trim();
+                                var noTiket = (Model.NoTiket ?? string.Empty).Trim();
                                 var sebutNomor = dasar.StartsWith("Nomor", StringComparison.OrdinalIgnoreCase);
+                                var adaDasar = dasar.Length > 0 || noTiket.Length > 0;
                             }
-                            Catatan : Pemenuhan Permintaan Berdasarkan @dasar @(sebutNomor ? "" : "No") @Model.NoTiket
+                            @* Kalimat "Berdasarkan ... No ..." hanya dicetak kalau memang ada
+                               dasarnya. Dokumen arsip lama tidak menyimpan rujukan tiket, dan
+                               tanpa syarat ini seluruhnya tercetak "Berdasarkan  No " —
+                               kalimat menggantung yang tampak seperti data hilang. *@
+                            @if (adaDasar)
+                            {
+                                <text>Catatan : Pemenuhan Permintaan Berdasarkan @dasar @(sebutNomor ? "" : "No") @noTiket</text>
+                            }
+                            else
+                            {
+                                <text>Catatan :</text>
+                            }
                         </td>
                     </tr>
                 </tfoot>
@@ -486,7 +529,7 @@
                             <br />@Model.Staff.Jabatan
                         }
                     </td>
-                    <td>Mengetahui<br />@(string.IsNullOrWhiteSpace(Model.Manager?.Jabatan) ? "Ast Manager IT | PT. KPB" : Model.Manager.Jabatan)</td>
+                    <td>Mengetahui<br />@(string.IsNullOrWhiteSpace(Model.Manager?.Jabatan) ? "Ast. Manajer IT | KPB" : Model.Manager.Jabatan)</td>
                     @if (!cctv)
                     {
                         <td>

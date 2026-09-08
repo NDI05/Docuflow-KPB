@@ -330,7 +330,7 @@ namespace Docuflow_projectIT_KPB.Controllers
             }
             catch
             {
-                TempData["Error"] = "User tidak bisa dihapus karena masih dipakai di data Surat.";
+                TempData["Error"] = "User tidak bisa dihapus karena masih dipakai di data dokumen.";
             }
 
             return RedirectToAction(nameof(Index));

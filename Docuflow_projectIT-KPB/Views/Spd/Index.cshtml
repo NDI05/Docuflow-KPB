@@ -1,0 +1,250 @@
+@model List<Docuflow_projectIT_KPB.Models.Spd>
+
+@{
+    ViewData["Title"] = "Sub Pekerjaan Dinas";
+    ViewData["Eyebrow"] = "Rekap";
+
+    int halaman = ViewBag.CurrentPage ?? 1;
+    int totalHalaman = ViewBag.TotalPages ?? 1;
+    string cari = ViewBag.Search ?? "";
+    int? tahunAktif = ViewBag.Tahun;
+    string sortAktif = ViewBag.Sort ?? "tanggal";
+    string arah = ViewBag.Dir ?? "desc";
+
+    var daftarTahun = ViewBag.DaftarTahun as List<int> ?? new List<int>();
+
+    // Setiap tautan membawa keadaan yang sedang berlaku. Tanpa ini, mengurutkan
+    // menghapus saringan dan pindah halaman menghapus urutan.
+    Dictionary<string, string> Rute(int? halamanBaru = null, string sortBaru = null, string dirBaru = null, bool bawaCari = true, bool bawaTahun = true)
+    {
+        var d = new Dictionary<string, string>();
+        if (bawaCari && !string.IsNullOrEmpty(cari)) d["search"] = cari;
+        if (bawaTahun && tahunAktif.HasValue && tahunAktif.Value > 0) d["tahun"] = tahunAktif.Value.ToString();
+        d["sort"] = sortBaru ?? sortAktif;
+        d["dir"] = dirBaru ?? arah;
+        if (halamanBaru.HasValue && halamanBaru.Value > 1) d["page"] = halamanBaru.Value.ToString();
+        return d;
+    }
+
+    string ArahBerikut(string kolom) =>
+        sortAktif == kolom
+            ? (arah == "asc" ? "desc" : "asc")
+            : (kolom == "tanggal" ? "desc" : "asc");
+
+    string AriaUrut(string kolom) =>
+        sortAktif != kolom ? "none" : (arah == "asc" ? "ascending" : "descending");
+
+    var kolom = new[]
+    {
+        new { Kunci = "nomor",   Label = "Nomor"   },
+        new { Kunci = "staff",   Label = "Staff"   },
+        new { Kunci = "kota",    Label = "Kota"    },
+        new { Kunci = "tanggal", Label = "Tanggal" },
+    };
+
+    bool adaSaringan = !string.IsNullOrEmpty(cari) || tahunAktif.HasValue;
+
+    ViewData["Sub"] = adaSaringan
+        ? "Hasil yang cocok dengan saringan di bawah."
+        : "Seluruh sub pekerjaan dinas yang pernah didata.";
+
+    var jendela = new List<int>();
+    for (int i = 1; i <= totalHalaman; i++)
+    {
+        if (i == 1 || i == totalHalaman || (i >= halaman - 2 && i <= halaman + 2))
+        {
+            jendela.Add(i);
+        }
+    }
+}
+
+<div class="panel">
+
+    <div class="panel__head">
+        <form method="get" asp-action="Index" class="finder" role="search">
+            <input type="search" name="search" value="@cari" class="form-control"
+                   placeholder="Cari nomor, staff, kota, atau keperluan"
+                   aria-label="Cari SPD" />
+
+            <select name="tahun" class="form-select" aria-label="Saring menurut tahun">
+                <option value="">Semua tahun</option>
+                @foreach (var t in daftarTahun)
+                {
+                    <option value="@t" selected="@(tahunAktif == t)">@t</option>
+                }
+            </select>
+
+            <input type="hidden" name="sort" value="@sortAktif" />
+            <input type="hidden" name="dir" value="@arah" />
+
+            <button type="submit" class="btn btn-outline-secondary">Cari</button>
+        </form>
+
+        <a class="btn btn-primary" asp-action="Create">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                <path d="M12 5v14M5 12h14"/>
+            </svg>
+            Buat SPD
+        </a>
+    </div>
+
+    @if (adaSaringan)
+    {
+        <div class="sift">
+            <span>Menyaring:</span>
+
+            @if (!string.IsNullOrEmpty(cari))
+            {
+                <a class="sift__x" asp-action="Index" asp-all-route-data="@Rute(bawaCari: false)">
+                    “@cari”
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" aria-hidden="true">
+                        <path d="M18 6L6 18M6 6l12 12"/>
+                    </svg>
+                    <span class="visually-hidden">Hapus kata pencarian</span>
+                </a>
+            }
+
+            @if (tahunAktif.HasValue)
+            {
+                <a class="sift__x" asp-action="Index" asp-all-route-data="@Rute(bawaTahun: false)">
+                    Tahun @tahunAktif
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" aria-hidden="true">
+                        <path d="M18 6L6 18M6 6l12 12"/>
+                    </svg>
+                    <span class="visually-hidden">Hapus saringan tahun</span>
+                </a>
+            }
+
+            <a asp-action="Index">Tampilkan semua</a>
+        </div>
+    }
+
+    @if (Model != null && Model.Any())
+    {
+        <div class="ledger--wrap">
+            <table class="ledger">
+                <thead>
+                    <tr>
+                        @foreach (var k in kolom)
+                        {
+                            <th aria-sort="@AriaUrut(k.Kunci)">
+                                <a class="sorter @(sortAktif == k.Kunci ? "is-sorted" : "")"
+                                   data-dir="@arah"
+                                   asp-action="Index"
+                                   asp-all-route-data="@Rute(sortBaru: k.Kunci, dirBaru: ArahBerikut(k.Kunci))">
+                                    @k.Label
+                                    @if (sortAktif == k.Kunci)
+                                    {
+                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" aria-hidden="true">
+                                            <path d="M6 9l6 6 6-6"/>
+                                        </svg>
+                                    }
+                                </a>
+                            </th>
+                        }
+                        <th>Keperluan</th>
+                        <th><span class="visually-hidden">Aksi</span></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var s in Model)
+                    {
+                        <tr>
+                            <td>
+                                @* Markup .nomor ditulis langsung, tidak memakai partial
+                                   _Nomor: partial itu bertipe Surat dan mewarnai chip dari
+                                   JenisSuratId. SPD satu deret tunggal, jadi warna berputar
+                                   tidak membedakan apa pun — satu rona tetap. *@
+                                <span class="nomor" title="@s.NomorSpd">
+                                    <span class="nomor__kode" data-tone="8"><span>SPD</span></span>
+                                    <span class="nomor__body">
+                                        <span class="nomor__urut">@(s.NomorSpd.Contains(' ') ? s.NomorSpd.Substring(s.NomorSpd.IndexOf(' ') + 1, s.NomorSpd.IndexOf('/') - s.NomorSpd.IndexOf(' ') - 1) : s.NomorSpd)</span><span class="nomor__rest">@(s.NomorSpd.Contains('/') ? s.NomorSpd.Substring(s.NomorSpd.IndexOf('/')) : "")</span>
+                                    </span>
+                                </span>
+                            </td>
+
+                            <td>@(s.Staff?.Nama ?? "—")</td>
+
+                            <td>
+                                <span class="jenis" data-tone="8">@s.NamaKota</span>
+                                @if (!string.IsNullOrWhiteSpace(s.Provinsi))
+                                {
+                                    <div class="feed__time">@s.Provinsi</div>
+                                }
+                            </td>
+
+                            <td>@s.TanggalDinas.ToString("dd/MM/yyyy")</td>
+
+                            <td>@s.Keperluan</td>
+
+                            <td>
+                                <div class="d-flex gap-2 justify-content-end">
+                                    <form asp-action="Delete" method="post" class="d-inline"
+                                          onsubmit="return confirm('Hapus @s.NomorSpd? Nomornya tidak bisa dipakai ulang.');">
+                                        @Html.AntiForgeryToken()
+                                        <input type="hidden" name="id" value="@s.Id" />
+                                        <button type="submit" class="btn btn-outline-secondary btn-sm text-danger">Hapus</button>
+                                    </form>
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+
+        <div class="panel__body">
+            <div class="pager">
+                <span class="pager__info">Halaman @halaman dari @totalHalaman</span>
+
+                <nav class="pager__links" aria-label="Navigasi halaman">
+                    <a class="@(halaman == 1 ? "is-disabled" : "")"
+                       asp-action="Index" asp-all-route-data="@Rute(halamanBaru: halaman - 1)"
+                       aria-label="Halaman sebelumnya">‹</a>
+
+                    @{ int sebelumnya = 0; }
+                    @foreach (var n in jendela)
+                    {
+                        if (sebelumnya > 0 && n - sebelumnya > 1)
+                        {
+                            <span class="is-disabled">…</span>
+                        }
+
+                        if (n == halaman)
+                        {
+                            <span class="is-current" aria-current="page">@n</span>
+                        }
+                        else
+                        {
+                            <a asp-action="Index" asp-all-route-data="@Rute(halamanBaru: n)">@n</a>
+                        }
+
+                        sebelumnya = n;
+                    }
+
+                    <a class="@(halaman == totalHalaman ? "is-disabled" : "")"
+                       asp-action="Index" asp-all-route-data="@Rute(halamanBaru: halaman + 1)"
+                       aria-label="Halaman berikutnya">›</a>
+                </nav>
+            </div>
+        </div>
+    }
+    else
+    {
+        <div class="empty">
+            @if (adaSaringan)
+            {
+                <h3>Tidak ada yang cocok</h3>
+                <p>Tidak ada SPD yang cocok dengan saringan di atas.</p>
+                <a class="btn btn-outline-secondary" asp-action="Index">Tampilkan semua</a>
+            }
+            else
+            {
+                <h3>Belum ada SPD</h3>
+                <p>Nomor SPD yang diterbitkan akan terdata dan bisa direkap dari sini.</p>
+                <a class="btn btn-primary" asp-action="Create">Buat SPD</a>
+            }
+        </div>
+    }
+
+</div>

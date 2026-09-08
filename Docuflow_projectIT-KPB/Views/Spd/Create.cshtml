@@ -1,0 +1,109 @@
+@model Docuflow_projectIT_KPB.Models.Spd
+
+@{
+    ViewData["Title"] = "Buat SPD";
+    ViewData["Eyebrow"] = "Sub Pekerjaan Dinas";
+    ViewData["Sub"] = "Nomor SPD dibuat otomatis saat disimpan.";
+
+    var daftarStaff = ViewBag.Staff as List<Docuflow_projectIT_KPB.Models.User>
+                      ?? new List<Docuflow_projectIT_KPB.Models.User>();
+
+    var daftarKota = ViewBag.Kota as List<Docuflow_projectIT_KPB.Models.Kota>
+                     ?? new List<Docuflow_projectIT_KPB.Models.Kota>();
+}
+
+<div class="row">
+    <div class="col-lg-8 col-xl-7">
+        <div class="panel">
+            <form asp-action="Create" method="post">
+                @Html.AntiForgeryToken()
+
+                <div class="panel__body">
+
+                    @* Ringkasan seluruh galat, bukan hanya yang punya span
+                       sendiri. Aplikasi ini tidak memuat validasi sisi klien
+                       sama sekali, jadi galat yang tidak punya span akan
+                       menghilang tanpa jejak — persis yang terjadi saat
+                       NomorSpd wajib diisi padahal tidak ada di formulir. *@
+                    <div asp-validation-summary="All" class="note note--danger" role="alert"></div>
+
+                    <div class="fieldset">
+                        <div class="fieldset__head">
+                            <span class="fieldset__no">01</span>
+                            <div>
+                                <h3>Pelaksana dan tujuan</h3>
+                                <p class="fieldset__hint">Siapa yang berangkat dan ke kota mana.</p>
+                            </div>
+                        </div>
+
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label class="form-label" asp-for="StaffId">Nama staff</label>
+                                <select asp-for="StaffId" class="form-select" required>
+                                    <option value="">Pilih staff</option>
+                                    @foreach (var u in daftarStaff)
+                                    {
+                                        <option value="@u.Id">@u.Nama</option>
+                                    }
+                                </select>
+                                <span asp-validation-for="StaffId" class="text-danger"></span>
+                            </div>
+
+                            <div class="col-md-6">
+                                <label class="form-label" asp-for="NamaKota">Kota tujuan</label>
+
+                                @* <datalist> dipilih daripada pustaka combobox: halaman ini
+                                   tidak boleh menarik berkas dari internet (jaringan kilang
+                                   internal), dan aplikasi ini memang tidak memuat JavaScript
+                                   pihak ketiga sama sekali. Peramban menyaring 514 pilihan
+                                   ini sendiri, termasuk pencocokan di tengah kata.
+
+                                   Yang harus diingat: datalist MENGIRIM TEKS yang diketik,
+                                   bukan id. Nama yang tidak cocok ditolak di server oleh
+                                   SpdController.Create. *@
+                                <input asp-for="NamaKota" class="form-control" list="daftarKota"
+                                       autocomplete="off" placeholder="Ketik nama kota" required />
+                                <datalist id="daftarKota">
+                                    @foreach (var k in daftarKota)
+                                    {
+                                        <option value="@k.Nama">@k.Provinsi</option>
+                                    }
+                                </datalist>
+                                <span asp-validation-for="NamaKota" class="text-danger"></span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="fieldset">
+                        <div class="fieldset__head">
+                            <span class="fieldset__no">02</span>
+                            <div><h3>Rincian dinas</h3></div>
+                        </div>
+
+                        <div class="row g-3">
+                            <div class="col-md-5">
+                                <label class="form-label" asp-for="TanggalDinas">Tanggal dinas</label>
+                                <input asp-for="TanggalDinas" type="date" class="form-control" required />
+                                <span asp-validation-for="TanggalDinas" class="text-danger"></span>
+                            </div>
+
+                            <div class="col-12">
+                                <label class="form-label" asp-for="Keperluan">Keperluan dinas</label>
+                                <textarea asp-for="Keperluan" class="form-control" rows="3"
+                                          placeholder="Maksud perjalanan dinas" required></textarea>
+                                <span asp-validation-for="Keperluan" class="text-danger"></span>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+
+                <div class="panel__head" style="border-top:1px solid var(--rule); border-bottom:0;">
+                    <a class="btn btn-outline-secondary" asp-action="Index">Batal</a>
+                    <button type="submit" class="btn btn-primary">Simpan SPD</button>
+                </div>
+
+            </form>
+        </div>
+    </div>
+</div>

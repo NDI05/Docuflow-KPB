@@ -21,7 +21,7 @@ namespace Docuflow_projectIT_KPB.Services
     public static class JabatanUser
     {
         /// <summary>Satu-satunya jabatan yang berperan manajer.</summary>
-        public const string AstManager = "AST. Manager ICS | PT. KPB";
+        public const string AstManager = "Ast. Manajer IT | KPB";
 
         /// <summary>
         /// Isi dropdown. Daftar putih: nilainya datang dari form dan ikut
@@ -33,7 +33,7 @@ namespace Docuflow_projectIT_KPB.Services
             AstManager,
             "Officer ICS | PT. KPB",
             "Jr. Officer ICS | PT. KPB",
-            "Staff ICS | PT. KPB"
+            "Staff IT | PT. KPB"
         };
 
         public static bool Dikenal(string? jabatan) =>
