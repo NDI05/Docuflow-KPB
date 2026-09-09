@@ -4,35 +4,38 @@ Diperbarui **2026-09-09**.
 
 ## Branch
 
-| Branch | Isi | Dipakai untuk |
-|---|---|---|
-| **`integrasi-tracking-system`** | seluruh pekerjaan sejak Agustus 2026 | **inilah yang dirilis ke produksi** |
-| `master` | tertinggal 9 commit, tidak punya apa pun yang khas | tidak dipakai |
-| `worktree-pertamina-redesign` | redesain UI Juli 2026, dari titik cabang yang sudah jauh tertinggal | tidak dipakai, isinya sudah dilewati |
+**`master` adalah trunk, dan satu-satunya branch.** Itu yang di-build, dikemas,
+dan diserahkan ke produksi. Juga default branch di GitHub.
 
-**Yang di-build, dikemas, dan diserahkan berasal dari
-`integrasi-tracking-system`.** Namanya menyesatkan — branch itu lahir untuk satu
-pekerjaan integrasi, lalu menjadi trunk sebenarnya karena seluruh pekerjaan
-berikutnya menumpuk di sana. `master` tidak pernah menyusul.
+Sampai 9 September 2026 ada tiga branch, dan trunk sebenarnya bukan `master`:
 
-Dua branch lain tidak memuat apa pun yang belum ada di trunk:
+| Branch | Nasib |
+|---|---|
+| `integrasi-tracking-system` | trunk sesungguhnya sejak Agustus; `master` di-fast-forward ke sini lalu branch-nya dihapus |
+| `master` | tertinggal 9 commit tanpa satu pun commit khas; sekarang menyusul dan menjadi trunk |
+| `worktree-pertamina-redesign` | redesain UI 28 Juli 2026 dari titik cabang yang jauh tertinggal, tidak jadi dipakai; dihapus |
 
-- `master` — `git rev-list --count integrasi-tracking-system..master` = **0**;
-- `worktree-pertamina-redesign` — dua commit redesain UI dari 28 Juli 2026,
-  bercabang dari titik yang sudah jauh tertinggal. Desain yang berlaku sekarang
-  adalah `wwwroot/css/docuflow.css`, yang lahir belakangan lewat jalur lain.
+Penggabungannya **fast-forward**, bukan merge commit — `master` memang tidak
+punya apa pun yang khas (`git rev-list --count integrasi-tracking-system..master`
+= 0), jadi tidak ada yang perlu digabungkan.
 
-**Yang sebaiknya dilakukan** — belum dikerjakan, butuh keputusan pemilik repo:
+Dua commit redesain UI itu tidak hilang. Disimpan sebagai tag sebelum branch-nya
+dihapus:
 
 ```bash
-git checkout master
-git merge --ff-only integrasi-tracking-system   # master menyusul, tanpa merge commit
-git push origin master
-git branch -d worktree-pertamina-redesign       # sudah tidak dipakai
+git show arsip/pertamina-redesign        # 598f7cb
+git checkout -b coba arsip/pertamina-redesign
 ```
 
-Sesudah itu `master` menjadi trunk sesuai namanya, dan `integrasi-tracking-system`
-boleh ditutup.
+Desain yang berlaku sekarang adalah `wwwroot/css/docuflow.css`, yang lahir
+belakangan lewat jalur lain — jadi tag itu arsip, bukan pekerjaan tertunda.
+
+### Aturan ke depan
+
+Kerjakan di branch bertopik, lalu gabungkan ke `master`. Jangan biarkan sebuah
+branch topik berubah jadi trunk bayangan seperti yang terjadi pada
+`integrasi-tracking-system`: begitu `master` tertinggal berminggu-minggu, tidak
+ada lagi yang tahu mana yang dirilis tanpa membandingkan commit satu per satu.
 
 ## Remote
 
