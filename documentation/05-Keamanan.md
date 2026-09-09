@@ -1,6 +1,8 @@
 # Keamanan Docuflow — kondisi saat ini
 
-Diverifikasi 2026-07-27 dari kode dan dari uji langsung ke aplikasi yang berjalan.
+Diverifikasi **2026-09-09** dari kode, dari query index langsung ke
+`DocuflowDB`, dan dari uji langsung ke aplikasi yang berjalan.
+
 Dokumen ini **bukan** daftar rekomendasi ideal, melainkan catatan apa yang sudah
 ada dan apa yang belum, supaya keputusan diambil sadar.
 
@@ -8,77 +10,108 @@ ada dan apa yang belum, supaya keputusan diambil sadar.
 
 | Kontrol | Implementasi |
 |---|---|
-| Hash password | BCrypt (BCrypt.Net-Next), cost 11 pada data yang ada |
-| Session | `HttpContext.Session`, idle timeout 30 menit, cookie `HttpOnly` + `IsEssential` |
-| Proteksi route | `Filters/SessionAuthorizeAttribute.cs` pada `HomeController`, `SuratController`, `UsersController` |
-| Anti-CSRF | `[ValidateAntiForgeryToken]` pada Login, Users/Create, ResetPassword, Users/Delete, Surat/Create, Surat/Delete |
-| Audit trail | Tabel `AuditLogs` — Login, Logout, Generate Nomor Surat, Hapus Surat |
-| Akses DB | Windows Authentication (`Trusted_Connection=True`), tanpa password di file konfigurasi |
+| Hash password | BCrypt (BCrypt.Net-Next), work factor 11, satu salt per akun |
+| Session | `HttpContext.Session`, idle 30 menit, cookie `HttpOnly` + `IsEssential` |
+| Proteksi route | `Filters/SessionAuthorizeAttribute` pada `HomeController`, `SuratController`, `SpdController`, `UsersController` |
+| Pemisahan peran | `Users/*` hanya `SuperAdmin`; `Surat/*` dan `Spd/*` untuk `Admin` **dan** `SuperAdmin` |
+| Anti-CSRF | `[ValidateAntiForgeryToken]` pada seluruh POST: Account 1, Surat 4, Users 4, Spd 2 |
+| Jejak audit | `AuditLogs` — Login, Logout, Generate Nomor Surat, Ubah Surat, Hapus Surat, Generate Nomor SPD, Hapus SPD |
+| Akses basis data | Windows Authentication (`Trusted_Connection=True`) — tidak ada password di berkas konfigurasi |
+| Kunci Data Protection | Disimpan di `C:\ProgramData\Docuflow\keys`, di luar folder publish |
+| Penjaga path unggahan | `PathUnggahanSah` memagari nilai `GambarLama_*` dengan regex |
+| Penjaga kolom terkunci | `Edit` tidak pernah menyalin `NomorSurat`, `JenisSuratId`, `Tanggal` dari form |
+| Penjaga jenis dokumen | `TolakKalauBalp` menolak cetak BALP di route, bukan sekadar menyembunyikan tombol |
+
+Tiga penjaga terakhir dibuat karena penyembunyian di UI **bukan** kontrol akses:
+form bisa dipalsukan, dan sudah diuji dengan POST yang sengaja memalsukan nomor,
+jenis, tanggal, dan path `../../appsettings.json`. Ketiganya ditolak.
 
 ## Yang belum ada — dengan dampaknya
 
 ### 1. Tidak ada HTTPS
-Aplikasi hanya listen HTTP di `0.0.0.0:5090`. Cookie session dan kredensial
-login lewat jaringan dalam bentuk terbaca. Selama masih di LAN lab ini risikonya
-terbatas, tapi **tidak layak dipakai lintas jaringan kantor apa adanya**.
 
-`Program.cs` memanggil `app.UseHttpsRedirection()`, namun karena tidak ada port
-HTTPS yang dikonfigurasi, ASP.NET hanya mencatat peringatan dan melewatinya.
-Aplikasi dijalankan dengan `ASPNETCORE_ENVIRONMENT=Development` sehingga
-`UseHsts()` juga tidak aktif.
+Situs berjalan HTTP polos di IIS port 80. Cookie session dan kredensial login
+melintas jaringan dalam bentuk terbaca.
 
-### 2. Otorisasi hanya membedakan Admin vs bukan Admin
-`SuratController` tidak mengecek peran sama sekali. Artinya siapa pun yang bisa
-login — termasuk `Staff` — dapat **menghapus surat milik siapa pun**
-(`POST /Surat/Delete/{id}`) dan mengunduh seluruh lampiran. Cek peran hanya ada
-di `UsersController` lewat perbandingan string `Session["Role"] == "Admin"`.
+HSTS dan redirect HTTPS ada di `Program.cs` tapi digerbangi setelan `UseHttps`
+di `appsettings.json`, dan setelan itu `false`. **Jangan dinyalakan sebelum
+binding HTTPS benar-benar terpasang** — HSTS pada situs HTTP polos membuat
+browser pengguna memaksa HTTPS secara permanen, dan itu tidak bisa dibatalkan
+dari sisi server.
 
-### 3. Tidak ada unique constraint pada Username
-Duplikasi hanya dicegah di `UsersController.Create`. Insert langsung ke DB, atau
-dua request bersamaan, bisa membuat dua user dengan username sama — dan
-`AccountController` memakai `FirstOrDefault`, jadi yang login selalu baris
-pertama.
+### 2. `Users.Username` tidak punya unique index
 
-### 4. Tidak ada rate limiting pada login
-Tidak ada pembatasan percobaan, lockout, atau jeda. Serangan tebak password
-tidak menemui hambatan selain waktu hash BCrypt.
+Diperiksa langsung: satu-satunya index pada `Users` adalah primary key `Id`.
+Duplikasi hanya dicegah di `UsersController.Create`. Insert langsung ke basis
+data, atau dua permintaan bersamaan, bisa membuat dua akun dengan username sama
+— dan `AccountController` memakai `FirstOrDefault`, jadi yang bisa login selalu
+baris pertama.
 
-### 5. Upload file tidak divalidasi
-`SuratController.Create` menerima `IFormFile` apa pun: tanpa batas ukuran, tanpa
-whitelist ekstensi, tanpa pemeriksaan tipe. Nama file memakai
-`Path.GetFileName` (aman dari path traversal) dan diberi awalan timestamp, tapi
-isi file tidak diperiksa. Folder `wwwroot/uploads` disajikan sebagai static
-files, sehingga file yang diunggah bisa diakses langsung lewat URL **tanpa
-login**.
+Bandingkan dengan `CounterNomorSurat (Kode, Tahun)` dan `Kota.Nama` yang sudah
+unik. Perbaikannya satu migration.
 
-### 6. Password plaintext masih diterima
-`AccountController` sengaja menerima password plaintext yang tersimpan di kolom
-`Password` (bila tidak diawali `$2`), lalu meng-upgrade-nya ke BCrypt setelah
-login pertama berhasil. Praktis untuk seeding, tapi berarti kolom password bisa
-berisi plaintext untuk waktu yang tidak terbatas kalau user tersebut tidak
-pernah login.
+### 3. Lampiran bisa diambil tanpa login
 
-### 7. Reset password tanpa verifikasi identitas
-Admin dapat mereset password user mana pun tanpa konfirmasi kedua dan tanpa
-pemberitahuan ke user bersangkutan. Aksi ini juga **tidak tercatat di AuditLogs**
-— hanya Login, Logout, Generate Nomor Surat, dan Hapus Surat yang dicatat.
+`wwwroot/uploads` disajikan sebagai static files. Diuji: mengambil berkas di
+sana **tanpa sesi sama sekali** membalas **200**.
 
-## Paparan jaringan saat ini
+Nama berkasnya memang panjang dan acak (`timestamp_guid_nama`), jadi tidak bisa
+ditebak — tapi satu tautan yang bocor berarti berkasnya terbuka selamanya.
+Perbaikan yang benar: pindahkan folder unggahan ke luar `wwwroot` dan sajikan
+lewat action yang memeriksa sesi.
 
-Port 5090 dibuka ke seluruh LAN lewat rule firewall `KPB Docuflow 5090` dengan
-Profile `Any`. Kalau perlu dipersempit ke Mac saja:
+### 4. Unggahan tidak divalidasi
 
-```powershell
-Set-NetFirewallRule -DisplayName "KPB Docuflow 5090" -RemoteAddress <IP-KLIEN>
-```
+`SimpanBerkas` menerima `IFormFile` apa pun: tanpa batas ukuran, tanpa daftar
+putih ekstensi, tanpa pemeriksaan tipe isi. Nama berkasnya aman dari path
+traversal (`Path.GetFileName` + awalan timestamp dan GUID), tapi isinya tidak
+diperiksa sama sekali.
 
-Alternatif paling ketat: hapus rule tersebut dan kembali memakai SSH tunnel saja.
+### 5. Tidak ada pembatasan percobaan login
+
+Tidak ada rate limit, lockout, maupun jeda. Penebakan password hanya terhambat
+waktu hash BCrypt.
+
+### 6. Password teks biasa masih diterima
+
+`AccountController` sengaja menerima password teks biasa bila nilai tersimpan
+tidak diawali `$2`, lalu menaikkannya jadi BCrypt setelah login pertama
+berhasil. Praktis untuk penyisipan akun awal, tapi berarti kolom password bisa
+memuat teks biasa selama akun itu belum pernah dipakai login.
+
+### 7. Reset password tidak tercatat
+
+Super Admin bisa mereset password akun mana pun tanpa konfirmasi kedua dan tanpa
+pemberitahuan ke pemiliknya. Aksi ini **tidak masuk `AuditLogs`** — yang tercatat
+hanya tujuh aktivitas di tabel atas.
+
+### 8. Recovery model `SIMPLE`
+
+Mesin uji tidak punya pemulihan ke titik waktu. Pada 8 September 2026 satu
+dokumen terhapus dan **tidak bisa dikembalikan** karena hal ini. Untuk produksi
+sebaiknya `FULL` dengan cadangan log berkala.
+
+## Data pribadi
+
+Arsip 2026 memuat data pegawai nyata: nama, jabatan, fungsi/direktorat, nomor
+pekerja, serial number perangkat, hostname.
+
+- `db/impor-arsip-2026.sql` dan `db/rekonsiliasi-arsip.html` **dikeluarkan dari
+  git** (2026-09-09) dan dibangun ulang lewat `db/arsip/` saat dibutuhkan.
+- **Riwayat commit lama masih memuat keduanya.** Repo karena itu wajib tetap
+  **private**. Menghapusnya dari riwayat butuh penulisan ulang yang mengubah
+  seluruh SHA, dan belum dikerjakan.
+- Ekspor `.bacpac` untuk penyerahan **tidak** memuat tabel `Users_password_lama`
+  maupun pengguna basis data `[IIS APPPOOL\Docflow]`; keduanya dibuang di salinan
+  sebelum ekspor.
 
 ## Urutan perbaikan yang masuk akal
 
-1. Cek peran di `SuratController.Delete` — celah terbesar, perbaikannya paling kecil.
-2. Unique index pada `Users.Username`.
-3. Validasi ekstensi + ukuran upload, dan pindahkan `uploads` keluar dari `wwwroot`
-   supaya lampiran tidak bisa diambil tanpa login.
-4. HTTPS sebelum dipakai di luar LAN lab.
-5. Rate limiting login (`AddRateLimiter` sudah tersedia di ASP.NET Core).
+1. **Unique index pada `Users.Username`** — satu migration, menutup celah nyata.
+2. **Pindahkan `uploads` keluar dari `wwwroot`** dan sajikan lewat action
+   ber-sesi.
+3. **Validasi ekstensi dan ukuran unggahan.**
+4. **Catat reset password di `AuditLogs`.**
+5. **HTTPS** sebelum dipakai lintas jaringan kantor.
+6. **Rate limiting login** — `AddRateLimiter` sudah tersedia di ASP.NET Core.
+7. **Recovery model `FULL`** di produksi.

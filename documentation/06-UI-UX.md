@@ -1,61 +1,128 @@
 # UI/UX Docuflow — kondisi saat ini
 
-Catatan ini menggambarkan antarmuka yang **sudah ada**, bukan pedoman desain yang
-harus dicapai. Diverifikasi 2026-07-27.
+Menggambarkan antarmuka yang **sudah ada**, bukan pedoman desain yang harus
+dicapai. Diverifikasi **2026-09-09**.
 
 ## Fondasi
 
-- Razor Views + Bootstrap + jQuery + jQuery Validation Unobtrusive.
-- Dua layout: `_Layout.cshtml` (aplikasi) dan `_LoginLayout.cshtml` (login).
-- Aset lokal di `wwwroot/lib`, kecuali `Surat/Create.cshtml` yang menarik jQuery
-  dari `code.jquery.com` — **satu-satunya dependensi eksternal saat runtime**.
-  Kalau VM tidak punya akses internet, tabel barang dinamis di halaman itu mati.
+- Razor Views + Bootstrap 5.3.3.
+- **Sistem desainnya `wwwroot/css/docuflow.css`** — token warna, jarak, dan
+  komponen. Dimuat sesudah Bootstrap dan menimpanya lewat CSS variable milik
+  Bootstrap sendiri, jadi markup `form-control` / `btn` / `row` yang sudah ada
+  tetap bekerja.
+- **Tidak ada aset dari internet.** Bootstrap, webfont Supreme, dan seluruh ikon
+  disajikan dari `wwwroot`; ikonnya inline SVG, tidak ada icon font. Jaringan
+  kilang tertutup — satu tautan CDN membuat halaman itu rusak di sana tanpa
+  terlihat dari mesin pengembangan.
+- **Tidak ada JavaScript pihak ketiga sama sekali.** Tabel barang dan poin
+  laporan ditulis dengan JS biasa, tanpa jQuery.
+  `_ValidationScriptsPartial.cshtml` tidak dirender di mana pun, jadi
+  **tidak ada validasi sisi klien** — seluruh validasi di server.
+- Satu layout aplikasi (`_Layout.cshtml`). Halaman login berdiri sendiri dengan
+  `Layout = null`.
 
 ## Halaman
 
 | Halaman | Catatan |
 |---|---|
-| `Account/Login` | Dua kolom: panel kiri bergambar, form kanan |
-| `Home/Index` | Kartu ringkasan + sebaran surat per jenis + 10 aktivitas terbaru |
-| `Surat/Index` | Tabel + kotak cari + pagination 15 baris |
-| `Surat/Create` | Terbagi jadi `section-box`: Jenis & Tujuan, Data PJ, Jenis Perangkat, Daftar Barang, Catatan, Tanda Tangan |
-| `Surat/Details` | Ringkasan surat + daftar barang + tombol Preview/PDF/Download |
-| `Surat/SuratTemplate` | Template cetak berkop, dipakai untuk Preview maupun PDF |
-| `Users/Index` | Tabel + cari + pagination 15 baris |
-| `Users/Create`, `Users/ResetPassword` | Form sederhana |
+| `Account/Login` | Berdiri sendiri. Badge versi tampil di bawah, sebelum login |
+| `Home/Index` | Bercabang menurut peran: Super Admin melihat jejak audit, Admin melihat grafik surat |
+| `Surat/Index` | Tabel + cari + saring jenis/tahun + urutkan + paginasi 15 baris. Label jenis berwarna (`RonaJenis`) |
+| `Surat/Create` | **Satu formulir untuk Buat dan Ubah**, dibedakan `Model.Id > 0` |
+| `Surat/Details` | Ringkasan + barang/poin + tombol Ubah, Pratinjau, Cetak PDF, Unduh |
+| `Surat/UnggahBalp` | Unggah berkas vendor + tanggal pada surat itu |
+| `Surat/SuratTemplate*` | Tiga template cetak, dipakai Pratinjau maupun PDF |
+| `Spd/Index`, `Spd/Create` | Rekap dan formulir SPD |
+| `Users/*` | Index, Create, Edit, ResetPassword — hanya Super Admin |
 
 ## Interaksi yang perlu diketahui
 
-**Pemilih jenis perangkat** di `Surat/Create` mengisi tabel barang otomatis:
+### Formulir surat menyesuaikan diri
 
-- PC → PC, Monitor, VGA, Keyboard, Mouse, Hostname
-- Laptop → Notebook, Adaptor, Backpack, Mouse, Ethernet, Chainlock, Hostname
-- HT → HT, Charger, Battery, Antenna
+`pilihBagian()` menampilkan atau menyembunyikan bagian menurut jenis yang
+dipilih. Tiga hal yang mudah salah:
 
-Baris juga bisa ditambah manual. Nama input berbentuk array (`NamaBarang[]`,
-`SerialNumber[]`, `MerkType[]`, `Pengguna[]`) dan dipasangkan berdasarkan indeks
-di controller — jumlah baris yang dipakai adalah **yang terpendek** di antara
-keempat array.
+1. **Bagian yang disembunyikan juga dikosongkan.** Kalau tidak, operator yang
+   sempat mengisi lalu berpindah jenis akan menyimpan nilai yang tidak pernah
+   tercetak.
+2. **`required` ikut dilepas saat sebuah input disembunyikan.** Peramban menolak
+   mengirim formulir yang memuat kontrol wajib tersembunyi dan hanya mencatat
+   "not focusable" di konsol — tombol Simpan tampak mati tanpa penjelasan.
+3. **`nomoriBagian()` harus jadi panggilan terakhir.** Ia menomori ulang bagian
+   yang tampak; dipanggil lebih awal, ia membaca flag `hidden` yang belum
+   disetel baris di bawahnya dan penomorannya berlubang (01, 02, 03, **05**).
 
-## Masalah yang terlihat
+### Satu tabel barang, tiga bentuk
 
-1. **Form Create tidak punya `enctype="multipart/form-data"`.** Komentar di view
-   menyebut "upload dihapus", tapi `SuratController.Create` masih menerima
-   `IFormFile file`. Akibatnya lampiran tidak bisa diunggah lewat UI — jalur
-   upload hanya hidup lewat request manual. Ini kemungkinan besar bug, bukan
-   keputusan desain.
-2. **Nomor urut baris barang tidak dihitung ulang setelah baris dihapus.**
-   Variabel `rowNumber` hanya bertambah, jadi kolom "No" bisa melompat.
-3. **Tidak ada konfirmasi hapus yang terlihat di server.** Penghapusan surat
-   bergantung pada konfirmasi sisi klien saja.
-4. **Tanda tangan hanya berupa nama tercetak.** Kolom `TtdImagePath` tersedia di
-   tabel `Users` tapi tidak dirender.
+Kolom disembunyikan lewat kelas varian pada tabel (`barang--bast`,
+`barang--cctv`, `barang--bapb`). **Kelas pada `<th>` dan `<td>` harus sama** —
+kalau tidak, judul kolom tetap terlihat di atas sel yang disembunyikan. Itu
+pernah terjadi di sini.
+
+Kelas kolomnya menamai **isi**, bukan varian (`k-nama`, `k-alat`, `k-waktu`, …),
+karena beberapa kolom dipakai lebih dari satu varian. Urutan kolom di DOM
+dipilih supaya satu urutan menghasilkan susunan yang benar untuk ketiga varian
+setelah penyembunyian — menambah kolom berarti memeriksa ketiganya, bukan hanya
+milik sendiri.
+
+Setiap baris tetap mengirim **seluruh** array kolom, termasuk yang sedang
+disembunyikan; controller memasangkannya menurut indeks, jadi array yang
+panjangnya berbeda akan menggeser data satu baris ke baris lain.
+
+### Poin laporan
+
+Daftar bertingkat dengan tombol panah untuk menaik-turunkan level. Penomoran
+1 / 1.1 / 1.1.1 dihitung ulang dari seluruh daftar setiap ada perubahan dan
+tidak pernah disimpan.
+
+Gambar diunggah per baris dengan nama `Gambar_<kunci>`, memakai kunci acak dari
+sisi klien — **bukan indeks**, supaya menghapus satu baris tidak memindahkan
+gambar milik baris lain. Saat mengubah, gambar yang sudah ada tampil sebagai
+thumbnail dengan tombol silang; yang dibiarkan dikirim balik lewat input
+tersembunyi.
+
+### Pencarian kota pada SPD
+
+`<input list>` + `<datalist>` berisi 514 pilihan — fitur bawaan peramban, tanpa
+JS dan tanpa pustaka. Yang harus diingat: **datalist mengirim teks yang diketik,
+bukan id**, jadi `SpdController.Create` mencocokkan teksnya ke tabel `Kota` dan
+menolak yang tidak cocok. Itu pemeriksaan batas kepercayaan, bukan kenyamanan.
+
+## Cetak
+
+Ketiga template memakai Arial 12px, `line-height` 1.5, dan logo
+`/images/kpb-logo.png`.
+
+**CSS bawaannya adalah bentuk cetak.** Hiasan layar — latar abu, bayangan, jarak
+di sekeliling kertas — dirender terpisah dan hanya saat bukan mencetak. Sebelum
+dipisahkan, ketiganya ikut masuk PDF dan hasilnya tampak seperti hasil pindai:
+bidang abu satu halaman penuh dengan lembar putih bergaris bayangan di tengah.
+
+Hasil cetak diukur, bukan dilihat sekilas: A4, margin 18mm kiri-kanan dan 20mm
+atas, kertas putih penuh sampai tepi.
+
+## Masalah yang tersisa
+
+1. **Tanda tangan hanya nama tercetak.** Kolom `Users.TtdImagePath` ada tapi
+   tidak dirender view mana pun.
+2. **Konfirmasi hapus hanya di sisi klien.** `onsubmit="return confirm(...)"`;
+   server tidak meminta konfirmasi kedua.
+3. **Tabel barang lebar belum diuji di layar kecil.** Bootstrap responsif secara
+   bawaan, tapi tabel dengan sebelas kolom belum diperiksa di ponsel.
 
 ## Yang belum diputuskan
 
-- **[PERLU KONFIRMASI]** Rentang usia dan kebiasaan pengguna sasaran. Di project
-  tracking-system hal ini dipakai untuk menentukan ukuran huruf dan kepadatan
-  tabel; untuk Docuflow belum ada acuan serupa.
-- **[PERLU KONFIRMASI]** Apakah aplikasi perlu dipakai dari ponsel. Tata letak
-  Bootstrap responsif secara default, tapi tabel barang yang lebar belum diuji di
-  layar kecil.
+- **[PERLU KONFIRMASI]** Apakah aplikasi perlu dipakai dari ponsel. Kalau ya,
+  tabel barang butuh perlakuan tersendiri.
+- **[PERLU KONFIRMASI]** Apakah tanda tangan gambar jadi dipakai. Kolomnya sudah
+  ada sejak awal tapi tidak pernah diminta.
+
+## Sudah selesai
+
+Tiga masalah yang tercatat pada versi Juli 2026 sudah tidak berlaku:
+
+| | |
+|---|---|
+| jQuery ditarik dari `code.jquery.com` | Dihapus — tidak ada JS pihak ketiga lagi |
+| Formulir tanpa `enctype="multipart/form-data"` | Sudah ada; lampiran bisa diunggah lewat UI |
+| Nomor baris barang melompat setelah hapus | Dihitung ulang dari posisi baris, bukan dari penghitung yang hanya naik |

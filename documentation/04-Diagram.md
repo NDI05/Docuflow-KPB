@@ -1,5 +1,7 @@
 # Diagram Docuflow
 
+Diperbarui **2026-09-09**.
+
 Semua diagram di bawah menggambarkan **kondisi kode saat ini**, bukan rancangan
 ideal. Diverifikasi 2026-07-27.
 
@@ -12,10 +14,11 @@ flowchart LR
         B[deploy.sh]
     end
     subgraph VM["VM Windows 11 ARM"]
-        C["C:\dev\docuflow<br/>ASP.NET Core net8.0"]
+        C["C:\inetpub\docflow<br/>ASP.NET Core net8.0"]
+        I["IIS — app pool Docflow<br/>/docflow"]
         D[("SQL Server Express<br/>DocuflowDB")]
         E[wkhtmltopdf.exe<br/>Rotativa]
-        F["C:\dev\tracking-system<br/>port 5080 — sistem lain"]
+        F["C:\dev\tracking-system<br/>port 8080 — sistem lain, JANGAN disentuh"]
     end
     G[Browser pegawai]
 
@@ -23,11 +26,17 @@ flowchart LR
     B -->|tar + scp + dotnet build| C
     C -->|Trusted_Connection| D
     C --> E
-    G -->|http :5090| C
+    G -->|http :80 /docflow| I
+    I --> C
 ```
 
 Windows wajib karena dua hal: `wkhtmltopdf.exe` (binary Windows-only) dan
 `Trusted_Connection=True` (Windows Authentication ke SQL Server).
+
+**Kestrel di port 5090 sudah pensiun** (2026-08-06). IIS satu-satunya jalur.
+Dulu keduanya berbagi satu basis data tapi punya `wwwroot/uploads` masing-masing,
+sehingga lampiran yang diunggah lewat satu jalur jadi gambar rusak di jalur
+lainnya.
 
 ## 2. Alur login
 
@@ -51,9 +60,9 @@ sequenceDiagram
     A-->>U: 302 /Home/Index
 ```
 
-Proteksi route lewat `Filters/SessionAuthorizeAttribute.cs`. Cek admin dilakukan
-dengan membandingkan string `Session["Role"] == "Admin"` di dalam action, bukan
-lewat atribut.
+Proteksi route lewat `Filters/SessionAuthorizeAttribute.cs`, yang menerima
+`params string[]` — memperluas sebuah controller cukup menambah satu argumen.
+Pemeriksaan peran ada di atribut controller, **bukan** di `if` per action.
 
 ## 3. Alur pembuatan surat
 
@@ -71,15 +80,20 @@ sequenceDiagram
     end
     C->>N: GenerateNomorSurat(jenisSuratId)
     N->>DB: ambil/naikkan CounterNomorSurat
-    N-->>C: "BAPB 007/KPB2340/2026/S0"
+    N-->>C: "BAPB 097/KPB3240/2026-S0"
     C->>DB: cari user pertama Role = PenanggungJawab
     C->>DB: INSERT Surat + BarangSurat
     C->>DB: AuditLog "Generate Nomor Surat"
     C-->>S: 302 /Surat/Details/{id}
 ```
 
-**Format nomor:** `{KODE} {NNN}/KPB2340/{tahun}/S0`, dengan `KODE` = teks sebelum
-`-` pada `JenisSurat.NamaJenis`, dan `NNN` = `NomorTerakhir` 3 digit.
+**Format nomor:** `{KODE} {NNN}/KPB3240/{tahun}-S0` — mis.
+`BAST 146/KPB3240/2026-S0`. `KODE` diambil dari **kolom** `JenisSurat.Kode`
+(sejak 2026-08-06 tidak lagi diurai dari `NamaJenis`), dan `NNN` adalah
+`NomorTerakhir + 1` dalam 3 digit.
+
+Tanpa `No.` di antara kode dan angkanya: sistem lama menulis
+`BAPB 027/KPB3240/2024-S0`, dan Docuflow melanjutkan deret yang sama.
 
 Titik rapuh yang sudah terlihat:
 - Nomor diambil **sebelum** `SaveChanges` surat. Kalau insert gagal, counter
@@ -111,13 +125,19 @@ project**.
 
 ```mermaid
 flowchart TD
-    Admin -->|Users/Index, Create, ResetPassword, Delete| U[Manajemen User]
+    SA[SuperAdmin] --> U["Users: Index, Create, Edit, ResetPassword, Delete"]
+    SA --> Surat
+    SA --> Spd
+    SA --> Audit[Jejak audit]
     Admin --> Surat
-    Manager --> Surat
-    Staff --> Surat
-    PJ[PenanggungJawab] --> Surat
-    Surat[Surat: Index, Create, Details, Preview, PDF, Download, Delete]
+    Admin --> Spd
+    Surat["Surat: Index, Create, Edit, Details, Preview, PDF, Download, UnggahBalp, Delete"]
+    Spd["SPD: Index, Create, Delete"]
 ```
 
-Semua peran yang sudah login punya akses **sama persis** ke seluruh menu Surat —
-termasuk `Delete`. Tidak ada pembatasan per peran di `SuratController`.
+Dua peran, **bertingkat bukan terpisah** (diubah 2026-09-03). Super Admin adalah
+superset; satu-satunya pintu yang tetap searah adalah `Users/*`.
+
+`Jabatan` berbeda dari `Role`: `Role` menjawab "boleh membuka apa", `Jabatan`
+menjawab "siapa orang ini" dan ikut tercetak. Peran tanda tangan **dihitung**
+dari jabatan lewat `Services/JabatanUser`, tidak disimpan.

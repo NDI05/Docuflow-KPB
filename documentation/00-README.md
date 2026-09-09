@@ -21,10 +21,9 @@ Versi 1.0 · Dokumen dipecah per topik.
    di sini diambil dari kode atau dari query langsung ke `DocuflowDB`, bukan dari
    asumsi. Tanggal verifikasi terakhir: **2026-09-09**.
 
-   Berkas yang tanggal verifikasinya lebih tua ditulis di kepala masing-masing.
-   `07-Status-Implementasi.md` dan `09-Lingkungan-Produksi.md` yang paling
-   mutakhir; `01`–`06` masih menggambarkan keadaan Juli 2026 dan belum memuat
-   SPD, BALP, BAPB, fitur Ubah, maupun arsip 2026 hasil migrasi.
+   Seluruh berkas `01`–`09` diperbarui pada tanggal itu. `02-PRFAQ.md` tetap
+   kosong karena isinya janji produk yang harus datang dari pemilik produk, bukan
+   dari kode.
 2. **Yang belum diketahui ditulis sebagai lubang, bukan ditebak.** Bagian yang
    butuh keputusan bisnis diberi tanda **[PERLU KONFIRMASI]**. Dokumen yang
    menebak kebutuhan produk lebih berbahaya daripada dokumen yang mengaku kosong.

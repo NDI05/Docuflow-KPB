@@ -1,61 +1,163 @@
-# PRD Docuflow
+# PRD — Docuflow
 
-> **Peringatan.** Dokumen ini disusun **mundur dari kode yang sudah jadi**, bukan
-> dari wawancara kebutuhan. Bagian yang tidak bisa disimpulkan dari kode ditandai
-> **[PERLU KONFIRMASI]** dan sengaja dibiarkan kosong daripada ditebak.
+Diperbarui **2026-09-09**, sesudah rilis 1.0.0.
 
 ## Masalah yang diselesaikan
 
 Fungsi IT Kilang Pertamina Balikpapan menerbitkan berita acara setiap kali
-perangkat berpindah tangan — penyerahan, serah terima, pengembalian, peminjaman,
-penghapusan. Sebelum ada sistem ini, penomoran dan pengetikan surat dilakukan
-manual, sehingga rawan nomor ganda dan format tidak seragam.
+perangkat diserahkan, dikembalikan, diperbaiki, atau disurvei. Sebelum Docuflow,
+nomor suratnya dikelola di sistem lama berbasis MariaDB, dan dokumennya disusun
+manual.
 
-Docuflow memusatkan tiga hal: penomoran otomatis per jenis surat per tahun,
-pengisian data barang secara terstruktur, dan pencetakan PDF dengan template
-resmi.
+Tiga hal yang paling sering salah pada cara itu:
 
-## Pengguna
+1. **Nomor kembar.** Dua orang menerbitkan pada waktu berdekatan dan mendapat
+   nomor yang sama. Dua dokumen resmi dengan nomor identik tidak bisa dibedakan
+   di arsip.
+2. **Dokumen tidak seragam.** Tiap orang menyalin berkas lama, dan bentuknya
+   perlahan menyimpang antar penyusun.
+3. **Arsip sulit ditelusuri.** Mencari satu serah terima berarti membuka folder
+   satu per satu.
 
-| Peran | Yang bisa dilakukan (kondisi kode saat ini) |
+## Lingkup
+
+### Yang dikerjakan
+
+- Menerbitkan nomor surat berurut per kode dan per tahun, **dijamin tidak
+  kembar** meski dua orang menyimpan bersamaan.
+- Menyimpan isi dokumen: daftar barang atau poin laporan bertingkat, penanda
+  tangan, dasar pemenuhan.
+- Mencetak PDF dengan tata letak resmi yang berbeda per jenis.
+- Mengarsipkan: cari, saring per jenis dan per tahun, urutkan.
+- Mencatat jejak audit atas penerbitan nomor, perubahan, dan penghapusan.
+- Mendata **SPD** (Sub Pekerjaan Dinas) dengan deret nomornya sendiri.
+
+### Yang sengaja tidak dikerjakan
+
+| | Alasan |
 |---|---|
-| **Admin** | Semua fitur surat + kelola user (tambah, reset password, hapus) |
-| **Manager** | Semua fitur surat. Namanya muncul sebagai penanda tangan "Mengetahui" |
-| **Staff** | Semua fitur surat. Namanya muncul sebagai penanda tangan pembuat |
-| **PenanggungJawab** | Semua fitur surat. Dipilih otomatis oleh sistem saat surat dibuat |
+| Halaman registrasi | Akun hanya dibuat Super Admin. Konsekuensinya basis data baru tidak bisa dimasuki sampai satu akun disisipkan lewat skrip |
+| Tanda tangan digital | Belum diminta. Kolomnya ada, tidak dipakai |
+| CRUD jenis surat | Menambah jenis hampir selalu berarti menambah aturan cetak di kode; CRUD saja akan menghasilkan jenis yang bisa dipilih tapi tercetak salah |
+| Alur persetujuan | Persetujuan terjadi di luar sistem, di atas kertas |
+| **Mencetak BALP** | Suratnya dibuat vendor. Docuflow hanya menerbitkan nomor dan mengarsipkan berkasnya kembali |
 
-Perlu dicatat: pembedaan hak akses di atas **hanya berlaku untuk menu user**.
-Untuk surat, keempat peran punya akses identik — termasuk menghapus. Lihat
-`05-Keamanan.md` §2.
+## Pengguna dan peran
 
-## Lingkup yang sudah jadi
+Dua peran, **bertingkat bukan terpisah** (diubah 2026-09-03):
 
-1. Login berbasis akun internal aplikasi (bukan Active Directory).
-2. Penomoran otomatis: `{KODE} {NNN}/KPB2340/{tahun}/S0`.
-3. Pembuatan surat dengan daftar barang dinamis, dengan template isian cepat
-   untuk PC, Laptop, dan HT.
-4. Lampiran berkas opsional per surat.
-5. Cetak PDF dan pratinjau HTML dengan template resmi berkop.
-6. Dashboard: jumlah user, jumlah surat, sebaran per jenis, 10 aktivitas terbaru.
-7. Audit log untuk login, logout, pembuatan nomor, dan penghapusan surat.
+| Peran | Jangkauan |
+|---|---|
+| `Admin` | Berita Acara + SPD |
+| `SuperAdmin` | semuanya, ditambah manajemen pengguna dan jejak audit |
 
-## Di luar lingkup saat ini
+Super Admin adalah superset. Satu-satunya pintu yang tetap searah adalah
+`Users/*`.
 
-Bukan karena diputuskan tidak perlu, melainkan **belum dibuat** — lihat
-`07-Status-Implementasi.md`: edit surat, edit user, CRUD jenis surat, tanda
-tangan digital, alur persetujuan berjenjang, notifikasi.
+Penjagaannya di filter route (`SessionAuthorizeAttribute`), bukan di menu.
+Menyembunyikan menu bukan kontrol akses; menu hanya disesuaikan supaya tidak
+menyesatkan.
 
-## Yang belum bisa dipastikan dari kode
+**Jabatan terpisah dari peran.** `Role` menjawab "boleh membuka apa";
+`Jabatan` menjawab "siapa orang ini" dan ikut tercetak di dokumen. Peran tanda
+tangan dihitung dari jabatan, tidak disimpan — menyimpan keduanya membuka
+peluang keduanya bertentangan.
 
-- **[PERLU KONFIRMASI]** Siapa pemilik proses resmi penomoran surat — apakah
-  nomor dari sistem ini sudah diakui sebagai nomor agenda resmi, atau masih perlu
-  dicatat ulang di sistem persuratan korporat.
-- **[PERLU KONFIRMASI]** Apakah `KPB2340` dan `S0` pada format nomor bersifat
-  tetap selamanya, atau bisa berubah per unit/tahun. Saat ini keduanya
-  di-hardcode di `NomorSuratService.cs:59-60`.
-- **[PERLU KONFIRMASI]** Apakah surat perlu status (draft / disetujui / batal).
-  Saat ini surat langsung final begitu dibuat.
-- **[PERLU KONFIRMASI]** Berapa lama surat dan lampiran harus disimpan, dan
-  apakah ada kewajiban retensi/arsip.
-- **[PERLU KONFIRMASI]** Target jumlah pengguna dan surat per tahun — menentukan
-  apakah utang teknis soal index dan `nvarchar(max)` perlu dibayar sekarang.
+## Jenis dokumen
+
+| Kode | Jenis | Isi | Kotak tanda tangan |
+|---|---|---|---|
+| `BAST` | Serah Terima Barang | tabel barang: nama, serial, merk, pengguna | 4 |
+| `BAST` | Serah Terima Data CCTV | tabel rekaman: nama, tanggal, jam, rekaman, area | 3 |
+| `BA` | Kerusakan | poin laporan bertingkat + gambar | 3 |
+| `BA` | Survey | sama, kop berbeda: logo kanan atas, "TENTANG" | 2 |
+| `BAPB` | Pengembalian Barang Rusak (IT → vendor) | tabel 7 kolom | 2 |
+| `BAPB` | Pengembalian Barang Sewa (IT → vendor) | jumlah, satuan, serial, merk, keterangan | 3 |
+| `BAPB` | Pengembalian Barang (User → IT) | sama, **arah terbalik** | 3 |
+| `BALP` | Layak Pakai | — | — |
+
+**Beberapa jenis sengaja berbagi satu kode.** Dua BAST, dua BA, dan tiga BAPB
+masing-masing satu deret nomor. Memberi kode sendiri-sendiri akan memulai
+masing-masing dari 001 dan menghasilkan nomor dokumen kembar.
+
+Aturan per jenis tinggal di `Services/` — `Bapb`, `Bast`, `Ba`, `Balp` — dan
+formulir maupun template memanggil sumber yang sama, supaya label di layar tidak
+pernah berbeda dengan yang tercetak.
+
+## Alur kerja
+
+### Menerbitkan berita acara
+
+1. Pilih jenis. Formulir menyesuaikan sendiri: bagian yang tidak berlaku
+   disembunyikan **dan dikosongkan**, penomoran bagiannya dihitung ulang supaya
+   tidak berlubang.
+2. Isi tujuan, penanggung jawab, isi dokumen, penanda tangan.
+3. Simpan. **Nomor terbit di dalam transaksi yang sama dengan penyimpanan** —
+   kalau simpannya gagal, nomornya ikut batal dan tidak hangus.
+4. Pratinjau atau cetak PDF.
+
+### Mengubah
+
+Semua isian bisa diubah, **kecuali tiga**: nomor, jenis, dan tanggal. Nomor
+sudah tercetak di kertas; kode jenis ada di dalam nomor itu; tanggal menentukan
+tahun nomor sekaligus tahun arsip. Formulir mengunci ketiganya dan controller
+menolaknya lagi — form bisa dipalsukan.
+
+### BALP
+
+Berbeda dari yang lain karena dokumennya bukan produk Docuflow:
+
+1. Buat entri BALP → nomor terbit.
+2. Nomor diberikan ke vendor; vendor menulis suratnya.
+3. Berkas jadi diunggah kembali, beserta tanggal yang tertera padanya.
+
+`TanggalBalp` disimpan terpisah dari `Tanggal`: yang satu tanggal pada surat
+vendor, yang satu tanggal terbitnya nomor. Menimpanya akan membuat arsip
+mengarsipkan dokumen di tahun yang berbeda dengan yang tertulis pada nomornya.
+
+Preview, cetak, dan unduh-tanpa-berkas **ditolak di route**, bukan sekadar
+disembunyikan tombolnya — tanpa itu BALP tercetak memakai tata letak BAST:
+dokumen yang tampak resmi tapi bukan yang berlaku.
+
+### SPD
+
+Terpisah dari berita acara: menu sendiri, tabel sendiri, deret nomor sendiri,
+dan **sengaja tanpa baris `JenisSurat`**. Menambahkannya akan membuat SPD bisa
+dipilih di formulir berita acara dan tercetak dengan tata letak yang salah.
+
+Isian: staff pelaksana, kota tujuan (dari daftar 514 kabupaten/kota), keperluan,
+tanggal dinas. Tidak ada unggah dokumen.
+
+## Penomoran
+
+```
+BAST 146/KPB3240/2026-S0
+ │    │      │      │  └── kode akhir, tetap
+ │    │      │      └───── tahun, berganti sendiri
+ │    │      └──────────── kode kilang, tetap
+ │    └─────────────────── urut per kode per tahun
+ └──────────────────────── kode jenis
+```
+
+Tanpa `No.` di antara kode dan angkanya. Sistem lama menulis
+`BAPB 027/KPB3240/2024-S0`, dan Docuflow melanjutkan deret yang sama —
+menyisipkan `No.` akan membuat satu deret berkesinambungan tercetak dalam dua
+bentuk, terbelah tepat di titik peralihan.
+
+Arsip 2026 dari sistem lama sudah dimasukkan: **251 dokumen**, dengan counter
+dilanjutkan dari deret lama (BAST 145, BAPB 96, BALP 15), bukan dimulai ulang.
+
+## Yang belum dikerjakan
+
+- **BAKP** — diminta, format dokumennya belum ditentukan.
+- **BAPP** dari arsip lama — 5 dokumen tanpa padanan, deretnya terpisah dari
+  BAST dan tidak boleh digabung.
+- **HTTPS** — situs masih HTTP polos.
+
+## Keputusan yang butuh pemilik produk
+
+| | |
+|---|---|
+| Kapan BAKP dibuat, dan bentuk dokumennya seperti apa | belum dijawab |
+| Apakah BAPP perlu rumah sendiri di Docuflow | belum dijawab |
+| Apakah jabatan `Officer ICS` dan `Jr. Officer ICS` juga salah ketik seperti dua jabatan lain yang sudah diperbaiki jadi "IT" | belum dijawab |
