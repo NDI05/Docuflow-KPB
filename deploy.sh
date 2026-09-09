@@ -86,6 +86,20 @@ ssh -i "$KEY" "$VM" '
   Start-Sleep -Seconds 3;
   cd C:\dev\docuflow\Docuflow_projectIT-KPB;
   dotnet publish -c Release -o C:\inetpub\docflow --nologo 2>&1 | Select-String "error|->" | Select-Object -Last 2;
+
+  # Folder unggahan harus ada dan bisa DITULISI app pool. Publish tidak
+  # membuatnya, dan izinnya hilang setiap kali folder situs dihapus lalu
+  # dibangun ulang - folder baru hanya mewarisi read+execute dari induknya.
+  # Itu terjadi 9 September 2026 saat pindah ke net8, dan gejalanya jauh dari
+  # sebabnya: unggah BALP membalas HTTP 500 UnauthorizedAccessException,
+  # sementara seluruh halaman lain tetap 200. Disetel ulang tiap deploy supaya
+  # tidak bergantung pada ingatan siapa pun.
+  #
+  # Modify HANYA di uploads. Sisa folder situs tetap read+execute: proses web
+  # yang bisa menimpa DLL-nya sendiri adalah risiko yang tidak perlu.
+  New-Item -ItemType Directory -Path C:\inetpub\docflow\wwwroot\uploads -Force | Out-Null;
+  icacls C:\inetpub\docflow\wwwroot\uploads /grant "IIS AppPool\Docflow:(OI)(CI)M" /Q | Out-Null;
+
   Start-WebAppPool -Name Docflow;
   Start-Sleep -Seconds 2;
   (Get-WebAppPoolState -Name Docflow).Value
