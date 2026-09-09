@@ -17,7 +17,7 @@ build net8.0 versi 1.0.0, dan lewat query langsung ke `DocuflowDB`.
 | Pratinjau HTML | `/Surat/Preview/{id}` | 200 |
 | **Cetak PDF** | `/Surat/GeneratePdf/{id}` | 200 `application/pdf`; diukur: A4, margin 18/18/20mm, kertas putih penuh |
 | Unduh lampiran | `/Surat/Download/{id}` | 200 |
-| Unggah berkas BALP | `/Surat/UnggahBalp/{id}` | 200; berkas lama dihapus saat diganti |
+| Unggah berkas BALP | `/Surat/UnggahBalp/{id}` | 302 ke Details, `FilePath` + `TanggalBalp` tersimpan, `Download` 200 `application/pdf`; berkas lama dihapus saat diganti |
 | Hapus | `POST /Surat/Delete` | 302; gambar poin ikut dihapus dari disk |
 | **SPD** | `/Spd/Index`, `/Spd/Create` | 200; deret nomor sendiri, 514 kota bisa dicari |
 | Manajemen user | `/Users/*` | 200 untuk SuperAdmin, 302 untuk Admin |
