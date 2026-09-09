@@ -140,8 +140,19 @@ Aplikasi ini **tidak punya halaman pendaftaran**. Akun hanya bisa dibuat oleh
 Super Admin dari dalam aplikasi, jadi sepuluh baris di `02-data-inti.sql`
 adalah satu-satunya pintu masuk pertama.
 
-Password tersimpan sebagai hash BCrypt. **Minta setiap pengguna mengganti
-password setelah pemasangan** — hash yang sama sudah dipakai di server uji.
+Password awal untuk **kesepuluh akun** adalah:
+
+```
+Pertamina#2026
+```
+
+Tersimpan sebagai hash BCrypt (work factor 11), satu salt per akun — jadi
+sepuluh hash itu tidak kembar meski passwordnya sama, dan tabel `Users` tidak
+mengumumkan bahwa semuanya memakai password yang sama.
+
+**Minta setiap pengguna menggantinya pada hari pertama.** Satu password awal
+untuk sepuluh orang aman selama hari pemasangan, tidak lebih. Penggantian lewat
+Super Admin: menu Users, tombol Reset Password.
 
 Dua peran, bertingkat bukan terpisah:
 
