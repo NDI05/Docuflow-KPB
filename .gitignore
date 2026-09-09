@@ -393,3 +393,10 @@ skills-lock.json
 
 # Paket rilis untuk tim IT — besar dan bisa dibangun ulang dari sumbernya.
 dist/
+
+# Arsip 2026 hasil migrasi: memuat data pegawai nyata (nama, jabatan, nomor
+# pekerja, serial number, hostname). Dibangun ulang lewat db/arsip/, bukan
+# disimpan di sini — satu kesalahan setelan visibilitas repo tidak boleh
+# berarti data pegawai ikut terbuka.
+db/impor-arsip-2026.sql
+db/rekonsiliasi-arsip.html
