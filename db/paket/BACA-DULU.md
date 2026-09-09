@@ -18,7 +18,7 @@ ulang. Konvensi ini sama dengan TrackingSystem.
 ```
 app/          hasil publish Release — salin apa adanya ke folder situs
 sql/          skrip basis data, dijalankan berurutan (jalur A)
-basis-data/   DocuflowDB.bak — cadangan penuh (jalur B)
+basis-data/   DocuflowDB.bacpac — ekspor skema + data (jalur B)
 CHANGELOG.md  riwayat versi
 ```
 
@@ -64,21 +64,33 @@ sqlcmd -S <SERVER> -d DocuflowDB -E -b -i sql\04-arsip-2026.sql
 luar daftar arsipnya. Itu disengaja: skrip ini menulis ulang arsipnya, dan
 tanpa penjagaan itu ia pernah menghapus dokumen yang dibuat lewat aplikasi.
 
-### Jalur B — pulihkan cadangan
+### Jalur B — impor bacpac
 
-`basis-data\DocuflowDB.bak` adalah cadangan penuh yang sudah berisi semuanya.
-
-**Batasannya keras:** cadangan ini dibuat di **SQL Server 17.0 (2025) Express**,
-`compatibility_level 170`. SQL Server **tidak bisa** memulihkan cadangan dari
-versi yang lebih baru daripada dirinya. Kalau produksi memakai versi lebih lama,
-jalur ini gagal dan harus memakai jalur A.
+`basis-data\DocuflowDB.bacpac` berisi skema **dan** data, satu berkas.
 
 ```
-RESTORE DATABASE DocuflowDB
-FROM DISK = N'...\DocuflowDB.bak'
-WITH MOVE 'DocuflowDB'     TO N'<folder-data>\DocuflowDB.mdf',
-     MOVE 'DocuflowDB_log' TO N'<folder-data>\DocuflowDB_log.ldf';
+sqlpackage /Action:Import ^
+           /TargetServerName:"<SERVER>" ^
+           /TargetDatabaseName:DocuflowDB ^
+           /TargetTrustServerCertificate:True ^
+           /SourceFile:"...\DocuflowDB.bacpac"
 ```
+
+Basis data tujuan harus **belum ada** — sqlpackage yang membuatnya.
+
+**Batas versi:** berkas ini ditulis sqlpackage **162.5.57.1** sehingga modelnya
+`Sql160DatabaseSchemaProvider`. Artinya masuk ke **SQL Server 2022 (16.x) ke
+atas**. Kalau produksi SQL Server 2019 atau lebih lama, pakai jalur A — skrip
+`.sql` tidak terikat versi engine sama sekali.
+
+Sumbernya SQL Server 2025 (17.0), jadi ekspornya sengaja memakai sqlpackage 162,
+bukan yang 170: yang 170 menulis model `Sql170` dan hanya bisa diimpor kembali
+ke SQL Server 2025.
+
+Dua hal sengaja **tidak** ikut di dalamnya: pengguna basis data
+`[IIS APPPOOL\Docflow]` (identitas application pool di produksi bernama lain —
+lihat bagian hak akses di bawah), dan tabel `Users_password_lama` (jaring
+pengaman saat password disetel ulang di mesin uji).
 
 ### Hak akses basis data
 

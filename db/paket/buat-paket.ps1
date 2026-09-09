@@ -37,9 +37,35 @@ Write-Host "==> 4/5 Salin skrip data lain"
 Copy-Item "C:\dev\docuflow\db\seed-kota.sql"          "$dist\sql\03-kota.sql"
 Copy-Item "C:\dev\docuflow\db\impor-arsip-2026.sql"   "$dist\sql\04-arsip-2026.sql"
 
-Write-Host "==> 5/5 Cadangan basis data"
-$bak = "$dist\basis-data\DocuflowDB.bak"
-sqlcmd -S "localhost\SQLEXPRESS" -E -Q "BACKUP DATABASE DocuflowDB TO DISK = N'$bak' WITH INIT, COPY_ONLY, NAME = N'Docuflow untuk produksi'"
+Write-Host "==> 5/5 Ekspor basis data (.bacpac)"
+# Cadangan .bak sementara, HANYA sebagai sumber salinan bersih untuk ekspor.
+# Yang diserahkan adalah .bacpac; .bak dari SQL Server 17 tidak bisa dipulihkan
+# di versi yang lebih lama, sedangkan bacpac dari sqlpackage 162 bermodel Sql160
+# dan masuk ke SQL Server 2022 ke atas.
+$bakSementara = "C:\dev\docuflow-ekspor-sementara.bak"
+sqlcmd -S "localhost\SQLEXPRESS" -E -b -Q "BACKUP DATABASE DocuflowDB TO DISK = N'$bakSementara' WITH INIT, COPY_ONLY, NAME = N'sumber ekspor bacpac'" | Out-Null
+
+# Diekspor dari SALINAN, bukan dari basis data hidup. Dua alasan:
+#   1. bacpac divalidasi terhadap aturan Azure SQL Database v12, dan login
+#      Windows [IIS APPPOOL\Docflow] yang dipakai Trusted_Connection tidak sah
+#      di sana - ekspor langsung gagal dengan SQL71627.
+#   2. Users_password_lama berisi hash password LAMA dan tidak boleh ikut ke
+#      produksi. Dibuang di salinan saja; mesin uji tetap memegangnya.
+$S    = "localhost\SQLEXPRESS"
+$sp   = 'C:\dev\sp162\sqlpackage.exe'
+if (-not (Test-Path $sp)) { throw "sqlpackage 162 tidak ada di $sp. Yang versi 170 akan menulis model Sql170 yang hanya bisa diimpor ke SQL Server 2025." }
+$data = ((sqlcmd -S $S -E -h -1 -W -Q "SET NOCOUNT ON; SELECT CAST(SERVERPROPERTY('InstanceDefaultDataPath') AS nvarchar(400));") -join '').Trim()
+
+sqlcmd -S $S -E -b -Q "IF DB_ID('DocuflowExport') IS NOT NULL BEGIN ALTER DATABASE DocuflowExport SET SINGLE_USER WITH ROLLBACK IMMEDIATE; DROP DATABASE DocuflowExport; END;" | Out-Null
+sqlcmd -S $S -E -b -Q "RESTORE DATABASE DocuflowExport FROM DISK = N'$bakSementara' WITH MOVE 'DocuflowDB' TO N'$data`DocuflowExport.mdf', MOVE 'DocuflowDB_log' TO N'$data`DocuflowExport_log.ldf', RECOVERY" | Out-Null
+sqlcmd -S $S -d DocuflowExport -E -b -Q "IF DATABASE_PRINCIPAL_ID('IIS APPPOOL\Docflow') IS NOT NULL DROP USER [IIS APPPOOL\Docflow]; IF OBJECT_ID('Users_password_lama') IS NOT NULL DROP TABLE Users_password_lama;" | Out-Null
+
+& $sp /Action:Export /SourceServerName:$S /SourceDatabaseName:DocuflowExport /SourceTrustServerCertificate:True /TargetFile:"$dist\basis-data\DocuflowDB.bacpac" 2>&1 |
+    Select-String -Pattern "Error|Successfully" | Select-Object -Last 3
+
+sqlcmd -S $S -E -b -Q "ALTER DATABASE DocuflowExport SET SINGLE_USER WITH ROLLBACK IMMEDIATE; DROP DATABASE DocuflowExport;" | Out-Null
+Remove-Item $bakSementara -Force -ErrorAction SilentlyContinue
+if (-not (Test-Path "$dist\basis-data\DocuflowDB.bacpac")) { throw "bacpac tidak terbentuk" }
 
 Write-Host ""
 Write-Host "Isi paket:"
