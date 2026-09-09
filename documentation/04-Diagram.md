@@ -12,7 +12,7 @@ flowchart LR
         B[deploy.sh]
     end
     subgraph VM["VM Windows 11 ARM"]
-        C["C:\dev\docuflow<br/>ASP.NET Core net10.0"]
+        C["C:\dev\docuflow<br/>ASP.NET Core net8.0"]
         D[("SQL Server Express<br/>DocuflowDB")]
         E[wkhtmltopdf.exe<br/>Rotativa]
         F["C:\dev\tracking-system<br/>port 5080 — sistem lain"]

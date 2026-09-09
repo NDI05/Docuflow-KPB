@@ -13,10 +13,20 @@ supaya tim IT membaca versi dengan cara yang sudah mereka kenal.
 Riwayat sebelum 1.0.0 tidak dipetakan mundur menjadi nomor versi — sistemnya
 belum pernah diserahkan ke produksi, dan riwayat itu sudah utuh di `git log`.
 
-## 1.0.0 — 2026-09-08
+## 1.0.0 — 2026-09-09
 
 Rilis produksi pertama. Yang diserahkan ke tim IT: hasil publish Release,
 skrip basis data, dan cadangan penuh.
+
+**Menargetkan .NET 8**
+
+- Semula `net10.0`. Diturunkan ke **`net8.0`** dengan EF Core **8.0.11** setelah
+  dipastikan server produksi Pertamina hanya punya ASP.NET Core 8 Hosting
+  Bundle — kombinasi yang sama persis dengan TrackingSystem, sistem sebelah yang
+  sudah berjalan di sana. Dipublish sebagai net10.0, IIS hanya membalas
+  HTTP 500.31 tanpa pesan lain.
+- Nomor versi tidak dinaikkan: 1.0.0 belum pernah diserahkan ke siapa pun, jadi
+  tidak ada dua build berbeda yang beredar dengan angka sama.
 
 **Berita acara**
 

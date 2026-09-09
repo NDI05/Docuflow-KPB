@@ -36,7 +36,7 @@ dengan akun seed.
 
 | Hal | Dampak | Lokasi |
 |---|---|---|
-| CI GitHub Actions gagal | Workflow memasang SDK `8.0.x`, project menargetkan `net10.0` | `.github/workflows/dotnet.yml` |
+| ~~CI GitHub Actions gagal~~ | Selesai 2026-09-09: project diturunkan ke `net8.0`, cocok dengan SDK `8.0.x` yang dipasang workflow | `.github/workflows/dotnet.yml` |
 | Counter naik sebelum surat tersimpan | Nomor bisa hilang kalau insert gagal | `SuratController.cs:151` |
 | Tidak ada kunci pada generate nomor | Dua submit bersamaan bisa dapat nomor sama | `NomorSuratService.cs:37-56` |
 | PenanggungJawab dipilih non-deterministik | `FirstOrDefaultAsync` tanpa `OrderBy` | `SuratController.cs:153` |

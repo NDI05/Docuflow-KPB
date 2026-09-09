@@ -1,7 +1,13 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk.Web">
 
   <PropertyGroup>
-    <TargetFramework>net10.0</TargetFramework>
+    <!-- net8.0, bukan net10.0. Server produksi Pertamina hanya punya ASP.NET
+         Core 8 Hosting Bundle — sama seperti TrackingSystem yang sudah berjalan
+         di sana. Dipublish sebagai net10.0, IIS membalas HTTP 500.31 tanpa
+         pesan lain yang menjelaskan sebabnya. Versi paket EF di bawah ikut
+         diturunkan ke 8.0.11, sama persis dengan TrackingSystem, supaya
+         kombinasinya sudah terbukti di lingkungan itu. -->
+    <TargetFramework>net8.0</TargetFramework>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
     <RootNamespace>Docuflow_projectIT_KPB</RootNamespace>
@@ -22,9 +28,9 @@
 
   <ItemGroup>
     <PackageReference Include="BCrypt.Net-Next" Version="4.1.0" />
-    <PackageReference Include="Microsoft.EntityFrameworkCore" Version="10.0.3" />
-    <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="10.0.3" />
-    <PackageReference Include="Microsoft.EntityFrameworkCore.Tools" Version="10.0.3">
+    <PackageReference Include="Microsoft.EntityFrameworkCore" Version="8.0.11" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="8.0.11" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Tools" Version="8.0.11">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>

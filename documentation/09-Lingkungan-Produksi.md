@@ -11,9 +11,9 @@ diterima di sana.
 
 | | **Docuflow 1.0.0** | TrackingSystem 1.7.1 (pembanding) |
 |---|---|---|
-| Target framework | **net10.0** | net8.0 |
-| Runtime di server | **ASP.NET Core 10 Hosting Bundle** | ASP.NET Core 8 Hosting Bundle |
-| EF Core | 10.0.3 | 8.0.11 |
+| Target framework | **net8.0** | net8.0 |
+| Runtime di server | **ASP.NET Core 8 Hosting Bundle** | ASP.NET Core 8 Hosting Bundle |
+| EF Core | 8.0.11 | 8.0.11 |
 | Modul IIS | AspNetCoreModuleV2 | AspNetCoreModuleV2 |
 | Hosting model | `inprocess` | `inprocess` |
 | App pool | No Managed Code, 64-bit, Load User Profile = True | sama |
@@ -35,12 +35,15 @@ Lingkungan tempat paket ini dibangun dan diuji:
 
 ## Tiga hal yang perlu dipastikan lebih dulu
 
-### 1. Runtime .NET 10 — ini yang paling mungkin menggagalkan publish
+### 1. Runtime .NET — sudah disamakan dengan TrackingSystem
 
-Docuflow dibangun untuk **net10.0**, sedangkan TrackingSystem yang sudah
-berjalan di sana memakai **net8.0**. Kalau server produksi hanya punya Hosting
-Bundle 8, Docuflow tidak akan hidup: IIS membalas **HTTP 500.31 — Failed to load
-ASP.NET Core runtime**, dan tidak ada pesan lain yang menjelaskan sebabnya.
+Docuflow semula dibangun untuk **net10.0**. Setelah dipastikan server produksi
+hanya punya **ASP.NET Core 8 Hosting Bundle**, targetnya diturunkan ke
+**net8.0** dengan EF Core **8.0.11** — kombinasi yang sama persis dengan
+TrackingSystem, jadi sudah terbukti diterima di lingkungan itu.
+
+Kalau ini tidak dilakukan, IIS akan membalas **HTTP 500.31 — Failed to load
+ASP.NET Core runtime**, tanpa pesan lain yang menjelaskan sebabnya.
 
 Cara memastikan di server produksi:
 
@@ -48,13 +51,7 @@ Cara memastikan di server produksi:
 dotnet --list-runtimes
 ```
 
-Harus ada baris `Microsoft.AspNetCore.App 10.x`.
-
-**Kalau tidak ada dan tidak boleh dipasang:** Docuflow bisa diturunkan ke
-net8.0. Sudah diuji — kode ini dibangun bersih pada net8.0 dengan EF Core
-8.0.11, tanpa satu pun galat; tidak ada API khusus .NET 9/10 yang dipakai.
-Yang belum diuji adalah menjalankannya, jadi kalau jalur ini diambil, perlu
-satu putaran uji ulang sebelum diserahkan.
+Harus ada baris `Microsoft.AspNetCore.App 8.x`.
 
 ### 2. Versi SQL Server — menentukan jalur pemasangan basis data
 
@@ -93,14 +90,12 @@ User Secrets atau variabel lingkungan, bukan berkas biasa.
 
 ## Pertanyaan untuk tim IT Pertamina
 
-1. Apakah **ASP.NET Core 10 Hosting Bundle** sudah/boleh dipasang di server
-   produksi? Kalau tidak, kami turunkan ke net8.0 seperti TrackingSystem.
-2. Versi dan edisi **SQL Server** produksi?
-3. Apakah **Windows Authentication** dari application pool ke SQL Server
+1. Versi dan edisi **SQL Server** produksi?
+2. Apakah **Windows Authentication** dari application pool ke SQL Server
    diizinkan, atau harus SQL login?
-4. Boleh membuat folder `C:\ProgramData\Docuflow\keys` yang bisa ditulisi
+3. Boleh membuat folder `C:\ProgramData\Docuflow\keys` yang bisa ditulisi
    application pool? Tanpa itu sesi dan token antiforgery hangus setiap daur
    ulang app pool, dan gejalanya halaman putih tanpa pesan galat.
-5. Situsnya HTTP atau HTTPS? Selama masih HTTP, `UseHttps` wajib tetap `false` —
+4. Situsnya HTTP atau HTTPS? Selama masih HTTP, `UseHttps` wajib tetap `false` —
    menyalakannya di HTTP polos memaksa browser pengguna ke HTTPS secara
    permanen dan tidak bisa dibatalkan dari sisi server.

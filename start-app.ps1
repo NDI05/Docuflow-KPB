@@ -9,7 +9,7 @@
 $ErrorActionPreference = "Stop"
 
 $proj = "C:\dev\docuflow\Docuflow_projectIT-KPB"
-$exe  = Join-Path $proj "bin\Debug\net10.0\Docuflow_projectIT-KPB.exe"
+$exe  = Join-Path $proj "bin\Debug\net8.0\Docuflow_projectIT-KPB.exe"
 $out  = "C:\dev\docuflow\app_out.log"
 $err  = "C:\dev\docuflow\app_err.log"
 
