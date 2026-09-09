@@ -1,0 +1,48 @@
+$ErrorActionPreference = "Stop"
+$dist = "C:\dev\dist"
+
+if (Test-Path $dist) { Remove-Item $dist -Recurse -Force }
+New-Item -ItemType Directory -Path "$dist\app", "$dist\sql", "$dist\basis-data" | Out-Null
+
+Write-Host "==> 1/5 Publish aplikasi (Release)"
+Set-Location "C:\dev\docuflow\Docuflow_projectIT-KPB"
+dotnet publish -c Release -o "$dist\app" --nologo | Select-Object -Last 3
+
+# Folder unggahan harus ADA tapi KOSONG: dua berkas yang tersisa di server uji
+# adalah sisa percobaan Agustus dan tidak dirujuk satu baris pun di basis data.
+New-Item -ItemType Directory -Path "$dist\app\wwwroot\uploads" -Force | Out-Null
+Get-ChildItem "$dist\app\wwwroot\uploads" -File -ErrorAction SilentlyContinue | Remove-Item -Force
+
+# appsettings.json hasil publish memuat sambungan basis data mesin uji.
+# Diganti contoh berisi placeholder supaya tidak ada yang menyalinnya apa adanya.
+# Dihapus, bukan disimpan sebagai contoh: berkasnya memuat sambungan mesin
+# uji lengkap, dan sebuah "contoh" berisi sambungan nyata adalah hal yang
+# paling mudah disalin apa adanya di server tujuan.
+Remove-Item "$dist\app\appsettings.json" -Force
+Remove-Item "$dist\app\appsettings.Development.json" -Force -ErrorAction SilentlyContinue
+
+Write-Host "==> 2/5 Skrip skema dari EF migrations"
+# --nologo bukan opsi `dotnet ef`; dulu galatnya tertelan Out-Null dan
+# 01-skema.sql tidak pernah terbentuk tanpa ada yang memberi tahu.
+dotnet ef migrations script --idempotent --output "$dist\sql\01-skema.sql"
+if (-not (Test-Path "$dist\sql\01-skema.sql")) { throw "Skrip skema tidak terbentuk" }
+
+Write-Host "==> 3/5 Skrip data inti (jenis surat, pengguna, counter)"
+# -y 8000, bukan -W: lebar bawaan sqlcmd memotong baris INSERT di tengah
+# string dan hasilnya gagal parse. Sisa spasi dipangkas setelahnya.
+sqlcmd -S "localhost\SQLEXPRESS" -d DocuflowDB -E -h -1 -y 8000 -i C:\dev\data-inti.sql -o "$dist\sql\02-data-inti.sql"
+(Get-Content "$dist\sql\02-data-inti.sql") | ForEach-Object { $_.TrimEnd() } | Set-Content "$dist\sql\02-data-inti.sql" -Encoding UTF8
+
+Write-Host "==> 4/5 Salin skrip data lain"
+Copy-Item "C:\dev\docuflow\db\seed-kota.sql"          "$dist\sql\03-kota.sql"
+Copy-Item "C:\dev\docuflow\db\impor-arsip-2026.sql"   "$dist\sql\04-arsip-2026.sql"
+
+Write-Host "==> 5/5 Cadangan basis data"
+$bak = "$dist\basis-data\DocuflowDB.bak"
+sqlcmd -S "localhost\SQLEXPRESS" -E -Q "BACKUP DATABASE DocuflowDB TO DISK = N'$bak' WITH INIT, COPY_ONLY, NAME = N'Docuflow untuk produksi'"
+
+Write-Host ""
+Write-Host "Isi paket:"
+Get-ChildItem $dist -Recurse -File |
+    Group-Object { $_.Directory.Name } |
+    ForEach-Object { "{0,-14} {1,4} berkas  {2,8:N1} MB" -f $_.Name, $_.Count, (($_.Group | Measure-Object Length -Sum).Sum / 1MB) }
