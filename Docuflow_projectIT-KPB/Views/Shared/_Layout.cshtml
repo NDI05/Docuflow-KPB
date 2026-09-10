@@ -20,16 +20,18 @@
        dan tidak boleh bergantung pada akses internet keluar. *@
     <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
     <link rel="stylesheet" href="~/css/docuflow.css" asp-append-version="true" />
-    @* Favicon Docuflow. DUA gambar, bukan satu diperkecil:
+    @* Favicon Docuflow. Marknya tiga bagian: kertas gaya garis dengan sudut
+       terlipat, bintang empat sudut di kanan bawah, dan mark Pertamina di
+       dalam kertasnya.
 
+       DUA gambar, bukan satu diperkecil:
          16-48px  mark Pertamina di atas plat putih bergaris biru
-         180px+   kertas gaya garis dengan sudut terlipat, mark Pertamina
-                  duduk di celah kanan bawah tempat garisnya berhenti
+         180px+   mark lengkap dengan kertas dan bintangnya
 
-       Gaya garis punya detail paling halus setebal 24/512 = 4,7% lebar. Pada
-       16 piksel itu 0,75 piksel: garisnya hilang sebagian dan kertasnya
-       berhenti terbaca. Diukur pada raster 16px sungguhan, bukan diperkirakan
-       dari render vektor yang diperbesar.
+       Detail paling halus pada mark lengkap setebal 24/512 = 4,7% lebar. Pada
+       16 piksel itu 0,75 piksel: garis kertasnya hilang sebagian dan bintangnya
+       jadi titik. Diukur pada raster 16px sungguhan, bukan diperkirakan dari
+       render vektor yang diperbesar.
 
        Url.Content, bukan "/favicon.ico": di bawah /docflow path berawalan
        garis miring menunjuk ke luar aplikasi dan ikonnya tidak pernah termuat. *@
