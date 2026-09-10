@@ -14,16 +14,16 @@
 
     <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
     <link rel="stylesheet" href="~/css/docuflow.css" asp-append-version="true" />
-    @* Favicon Docuflow. DUA gambar, bukan satu diperkecil - dan pembagiannya
-       bukan selera:
+    @* Favicon Docuflow. DUA gambar, bukan satu diperkecil:
 
-         ukuran kecil (favicon)  mark Pertamina langsung di atas plat putih
-         ukuran besar (pintasan) mark Pertamina di dalam kertas putih membulat
+         16-48px  mark Pertamina di atas plat putih bergaris biru
+         180px+   kertas gaya garis dengan sudut terlipat, mark Pertamina
+                  duduk di celah kanan bawah tempat garisnya berhenti
 
-       Pada 16 piksel, kertas bersarang menyisakan mark selebar enam piksel,
-       dan dua celah putih di antara jajar genjangnya lenyap lebih dulu -
-       hasilnya bercak warna, bukan logo. Diukur pada raster 16px sungguhan,
-       bukan diperkirakan dari render vektor.
+       Gaya garis punya detail paling halus setebal 24/512 = 4,7% lebar. Pada
+       16 piksel itu 0,75 piksel: garisnya hilang sebagian dan kertasnya
+       berhenti terbaca. Diukur pada raster 16px sungguhan, bukan diperkirakan
+       dari render vektor yang diperbesar.
 
        Url.Content, bukan "/favicon.ico": di bawah /docflow path berawalan
        garis miring menunjuk ke luar aplikasi dan ikonnya tidak pernah termuat. *@
