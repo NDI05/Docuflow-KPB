@@ -231,10 +231,19 @@
                         <br />@Model.Staff.Jabatan
                     }
                 </td>
-                <td>Mengetahui<br />@(string.IsNullOrWhiteSpace(Model.Manager?.Jabatan) ? "Ast. Manajer IT | KPB" : Model.Manager.Jabatan)</td>
+                @* Pada Survey kotak ini yang paling kanan, jadi tempat dan tanggalnya
+                   di sini; pada Kerusakan ada satu kotak lagi sesudahnya. *@
+                <td>
+                    @if (survey)
+                    {
+                        <text>Balikpapan, @Model.Tanggal.ToString("dd MMMM yyyy")<br /></text>
+                    }
+                    Mengetahui<br />@(string.IsNullOrWhiteSpace(Model.Manager?.Jabatan) ? "Ast. Manajer IT | KPB" : Model.Manager.Jabatan)
+                </td>
                 @if (!survey)
                 {
                     <td>
+                        Balikpapan, @Model.Tanggal.ToString("dd MMMM yyyy")<br />
                         Penanggung Jawab
                         @if (!string.IsNullOrWhiteSpace(Model.Jabatan))
                         {

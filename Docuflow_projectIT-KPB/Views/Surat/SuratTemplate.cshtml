@@ -540,8 +540,11 @@
                             }
                         </td>
                     }
+                    @* Bulan ditulis penuh, bukan "07.09.2026": bentuk baku surat resmi
+                       Indonesia. Culture aplikasi id-ID (Program.cs) yang menerjemahkan
+                       MMMM, jadi nama bulannya tidak perlu ditulis tangan. *@
                     <td>
-                        Balikpapan, @Model.Tanggal.ToString("dd.MM.yyyy")<br />
+                        Balikpapan, @Model.Tanggal.ToString("dd MMMM yyyy")<br />
                         Yang Menerima
                         @if (!string.IsNullOrWhiteSpace(Model.JabatanYangMenerima))
                         {
