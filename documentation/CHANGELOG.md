@@ -39,10 +39,12 @@ Minor, bukan patch: yang berubah adalah bunyi setiap dokumen yang dicetak.
   memakainya.
 - Sebelumnya aplikasi memakai `favicon.ico` bawaan templat ASP.NET, tanpa satu
   pun tag `<link>` yang menunjuknya.
-- **Dua gambar, bukan satu diperkecil.** Favicon 16–48px memakai varian tanpa
-  kertas; 180px+ memakai logo lengkap. Delapan garis teks pada logo lengkap
-  setebal 8/512 = 1,6% lebar, yang pada 16 piksel jadi 0,25 piksel — hilang
-  total, dan yang tersisa kertas kosong. Diukur pada raster sungguhan.
+- **Satu logo untuk semua ukuran.** `favicon.ico` memuat enam ukuran (16–256)
+  dari gambar yang sama. Versi pertama memakai varian lain untuk 16–48px
+  "supaya lebih terbaca" — keputusan yang tidak diminta, dan akibatnya bilah
+  tab menampilkan logo yang berbeda dari yang dirancang. Konsekuensi yang
+  diterima sadar: delapan garis teksnya setebal 1,6% lebar, jadi pada 16 piksel
+  garis-garis itu memang lebur.
 - Tag `<link>` dipasang di `_Layout` **dan** di `Login`; halaman masuk memakai
   `Layout = null` jadi tidak mewarisi apa pun.
 
