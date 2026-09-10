@@ -17,7 +17,7 @@
          WAJIB dinaikkan setiap publish. Riwayatnya di documentation/CHANGELOG.md.
          Konvensi ini mengikuti TrackingSystem, sistem sebelah di kilang yang
          sama, supaya tim IT membaca versi dengan cara yang sudah mereka kenal. -->
-    <Version>1.1.0</Version>
+    <Version>1.1.1</Version>
     <!-- SDK secara bawaan menempelkan SHA commit ke ProductVersion. Dimatikan:
          build produksi dijalankan di VM, dan deploy.sh sengaja TIDAK menyalin
          .git ke sana, jadi SHA yang tercap adalah commit lama sisa kloning

@@ -13,6 +13,43 @@ supaya tim IT membaca versi dengan cara yang sudah mereka kenal.
 Riwayat sebelum 1.0.0 tidak dipetakan mundur menjadi nomor versi — sistemnya
 belum pernah diserahkan ke produksi, dan riwayat itu sudah utuh di `git log`.
 
+## 1.1.1 — 2026-09-10
+
+Patch: hanya bentuk cetakan, tidak ada perubahan data maupun perilaku.
+
+**Jarak antar huruf**
+
+- Ketiga template kini menyetel `letter-spacing: 0.09em` pada body, plus
+  `text-rendering: geometricPrecision`. Sebelumnya tidak menyetelnya sama
+  sekali, dan wkhtmltopdf membulatkan lebar tiap huruf ke bawah saat menggambar
+  teks ke PDF — hasil cetak jauh lebih rapat daripada pratinjau peramban,
+  hurufnya tampak menempel.
+- Lima blok dikecualikan ke 0.02–0.04em karena ruangnya pas-pasan dan pada
+  0.09em isinya pecah dua baris: alamat kop BAST/BA, seluruh blok tanda tangan
+  (lebar selnya tetap 25% / 33% / 50%), kop `Kepada`/`Dari` BAPB, tanggal di
+  baris Catatan BAPB, dan lembar ketentuan `.rules`.
+- Tanggal tanda tangan dibungkus `white-space: nowrap`. Sel 25% itu selebar
+  154,4px sementara "Balikpapan, 07 September 2026" butuh 157,3px pada metrik
+  Arial asli — muat hanya karena wkhtmltopdf mencetak lebih rapat, jadi sel itu
+  yang pertama pecah kalau spasinya dinaikkan.
+
+**Maksimal dua halaman**
+
+- Surat dicetak bolak-balik, jadi dua halaman adalah batas keras. BAST dan BAST
+  CCTV sebelumnya keluar tiga halaman.
+- `.paper` tidak lagi punya `min-height` saat mencetak: 297mm menghitung jadi
+  1122,52px pada 96 dpi sementara bidang cetak wkhtmltopdf 1122px, jadi lembar
+  kedua meleset setengah piksel dan melahirkan halaman ketiga kosong. Nilainya
+  dikembalikan di blok `@media screen` supaya lembar di layar tetap setinggi A4.
+- Lembar ketentuan halaman 2 dirapatkan (`.rules` 0.02em, `line-height` 1.5,
+  jarak butir 6px) karena 0.09em membuat 353 karakter terakhir luber.
+- Diuji dengan merender **seluruh 236 dokumen** yang bisa dicetak: 96 satu
+  halaman, 140 dua halaman, nol lebih dari dua.
+- Batas yang tersisa dan sudah diukur: sisa ruang halaman 1 pada BAST 4,3cm,
+  satu baris barang ~30pt, jadi BAST di atas sekitar 6 baris barang akan
+  mendorong lembar ketentuan ke halaman ketiga. Dari 140 BAST di arsip,
+  terbanyak 3 baris.
+
 ## 1.1.0 — 2026-09-10
 
 Minor, bukan patch: yang berubah adalah bunyi setiap dokumen yang dicetak.
