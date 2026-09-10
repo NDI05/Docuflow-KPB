@@ -14,6 +14,23 @@
 
     <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
     <link rel="stylesheet" href="~/css/docuflow.css" asp-append-version="true" />
+    @* Favicon Docuflow. DUA gambar, bukan satu diperkecil - dan pembagiannya
+       bukan selera:
+
+         ukuran kecil (favicon)  mark Pertamina langsung di atas plat putih
+         ukuran besar (pintasan) mark Pertamina di dalam kertas putih membulat
+
+       Pada 16 piksel, kertas bersarang menyisakan mark selebar enam piksel,
+       dan dua celah putih di antara jajar genjangnya lenyap lebih dulu -
+       hasilnya bercak warna, bukan logo. Diukur pada raster 16px sungguhan,
+       bukan diperkirakan dari render vektor.
+
+       Url.Content, bukan "/favicon.ico": di bawah /docflow path berawalan
+       garis miring menunjuk ke luar aplikasi dan ikonnya tidak pernah termuat. *@
+    <link rel="icon" href="@Url.Content("~/favicon.ico")" sizes="any" />
+    <link rel="icon" type="image/png" sizes="32x32" href="@Url.Content("~/favicon-32.png")" />
+    <link rel="icon" type="image/png" sizes="16x16" href="@Url.Content("~/favicon-16.png")" />
+    <link rel="apple-touch-icon" sizes="180x180" href="@Url.Content("~/apple-touch-icon.png")" />
 </head>
 <body>
 
