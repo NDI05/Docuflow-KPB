@@ -13,6 +13,45 @@ supaya tim IT membaca versi dengan cara yang sudah mereka kenal.
 Riwayat sebelum 1.0.0 tidak dipetakan mundur menjadi nomor versi — sistemnya
 belum pernah diserahkan ke produksi, dan riwayat itu sudah utuh di `git log`.
 
+## 1.1.0 — 2026-09-10
+
+Minor, bukan patch: yang berubah adalah bunyi setiap dokumen yang dicetak.
+
+**Format tempat-tanggal pada tanda tangan**
+
+- Ketiga template kini memakai satu bentuk: `Balikpapan, 12 Agustus 2026` —
+  bulan ditulis penuh. BAST sebelumnya memakai angka (`Balikpapan, 07.09.2026`);
+  BA dan BAPB tidak punya baris tempat-tanggal sama sekali.
+- Penempatannya mengikuti kotak paling kanan pada tiap ragam, dan itu berbeda
+  antar template: BA Survey hanya punya dua kotak sehingga barisnya masuk ke
+  Mengetahui, BA Kerusakan tiga sehingga masuk ke Penanggung Jawab, dan BAPB
+  selalu di Diterima oleh.
+- Diverifikasi pada dokumen sungguhan di keempat jenis yang bisa dicetak.
+- Nama bulan datang dari culture `id-ID` di `Program.cs`, bukan tabel yang
+  ditulis tangan.
+
+**Logo dan favicon**
+
+- Kertas gaya garis bersudut terlipat, mark Pertamina di dalamnya, bintang
+  empat sudut di kanan bawah. Mark Pertamina-nya dipotong dari
+  `wwwroot/images/kpb-logo-mark.png` yang sudah ada di repo — bukan digambar
+  ulang, karena tiruan logo korporat yang meleset lebih buruk daripada tidak
+  memakainya.
+- Sebelumnya aplikasi memakai `favicon.ico` bawaan templat ASP.NET, tanpa satu
+  pun tag `<link>` yang menunjuknya.
+- **Dua gambar, bukan satu diperkecil.** Favicon 16–48px memakai varian tanpa
+  kertas; 180px+ memakai logo lengkap. Delapan garis teks pada logo lengkap
+  setebal 8/512 = 1,6% lebar, yang pada 16 piksel jadi 0,25 piksel — hilang
+  total, dan yang tersisa kertas kosong. Diukur pada raster sungguhan.
+- Tag `<link>` dipasang di `_Layout` **dan** di `Login`; halaman masuk memakai
+  `Layout = null` jadi tidak mewarisi apa pun.
+
+**Perbaikan**
+
+- Unggah berkas BALP membalas HTTP 500 `UnauthorizedAccessException` karena app
+  pool kehilangan izin tulis atas `wwwroot/uploads`. Izin itu dulu disetel
+  sekali secara manual; sekarang `deploy.sh` menyetelnya ulang setiap deploy.
+
 ## 1.0.0 — 2026-09-09
 
 Rilis produksi pertama. Yang diserahkan ke tim IT: hasil publish Release,
