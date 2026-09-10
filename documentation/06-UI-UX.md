@@ -90,8 +90,32 @@ menolak yang tidak cocok. Itu pemeriksaan batas kepercayaan, bukan kenyamanan.
 
 ## Cetak
 
-Ketiga template memakai Arial 12px, `line-height` 1.5, dan logo
-`/images/kpb-logo.png`.
+Ketiga template memakai Arial 12px, `line-height` 1.5, `letter-spacing`
+0.09em, dan logo `/images/kpb-logo.png`.
+
+**`letter-spacing` bukan hiasan.** wkhtmltopdf membulatkan lebar tiap huruf ke
+bawah saat menggambar teks ke PDF, jadi hasil cetaknya jauh lebih rapat daripada
+pratinjau peramban — huruf tampak menempel. Diukur: sel tanggal tanda tangan
+selebar 25% (154,4px) memuat "Balikpapan, 07 September 2026" yang pada metrik
+Arial asli butuh 157,3px, dan tetap muat satu baris. Selisih itulah kerapatan
+yang dikeluhkan.
+
+Empat blok **dikecualikan ke 0.03–0.04em** karena ruangnya pas-pasan dan pada
+0.09em isinya pecah dua baris: alamat pada kop BAST/BA, seluruh blok tanda
+tangan (lebar selnya tetap 25% / 33% / 50%), kop `Kepada`/`Dari` pada BAPB, dan
+tanggal di baris Catatan BAPB. Tanggal tanda tangan juga `white-space: nowrap`
+— bentuknya baku dan tidak boleh terbelah. Batas terukur per blok:
+
+| Blok | Ruang | Sisa pada 0 | Maks `letter-spacing` |
+|---|---|---|---|
+| Alamat kop baris 1 | 249,6px | 28,8px | 0,064em |
+| Sel tanggal ttd (25%) | 154,4px | −2,9px | ~0 |
+| "Yang Bertanggung Jawab" | 154,4px | 27,7px | 0,115em |
+| Nomor di kotak kop | 190,0px | 43,2px | 0,164em |
+| Judul surat | 657,6px | 375,2px | 0,838em |
+
+Menaikkan angka global di atas 0.09em berarti melebarkan sel-sel itu dulu, bukan
+sekadar mengganti satu nilai.
 
 **CSS bawaannya adalah bentuk cetak.** Hiasan layar — latar abu, bayangan, jarak
 di sekeliling kertas — dirender terpisah dan hanya saat bukan mencetak. Sebelum

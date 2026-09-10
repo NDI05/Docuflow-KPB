@@ -29,7 +29,11 @@
                 margin: 0;
             }
 
-            /* Arial, gaya formal, spacing normal.
+            /* Arial, gaya formal.
+               letter-spacing 0.09em: tanpa itu wkhtmltopdf mencetak huruf
+               berhimpitan — jarak antar huruf dibulatkan ke bawah saat teks
+               digambar ke PDF, jadi hasil cetaknya jauh lebih rapat daripada
+               pratinjau di peramban. Nilai ini diwarisi seluruh blok.
                line-height diseragamkan 1.5 di sini; sebelumnya tiap blok
                memakai angka sendiri (1.2 / 1.4 / 1.5 / 1.55) sehingga jarak
                baris antar bagian tidak konsisten di satu halaman. */
@@ -39,6 +43,8 @@
                 font-family: Arial, Helvetica, sans-serif;
                 font-size: 12px;
                 line-height: 1.5;
+                letter-spacing: 0.09em;
+                text-rendering: geometricPrecision;
                 color: #000;
                 background: #fff;
             }
@@ -104,6 +110,10 @@
             .alamat {
                 margin-top: 6px;
                 font-size: 11px;
+                /* Baris "Kantor NSO PT Kilang Pertamina Balikpapan" hanya
+                   punya sisa 29px pada lebar kop; 0.09em membuatnya pecah
+                   dua baris dan bentuk kop berubah. */
+                letter-spacing: 0.03em;
                 line-height: 1.4;
             }
 
@@ -220,6 +230,11 @@
             }
 
             .signature {
+                /* Kotak tanda tangan lebarnya tetap (25% / 33% / 50%), dan sel
+                   tanggal sudah nol sisa pada 0 spasi. 0.09em membuat label
+                   "Yang Bertanggung Jawab" pecah dua baris, jadi blok ini
+                   dikembalikan ke 0.04em — jarak yang terbukti muat. */
+                letter-spacing: 0.04em;
                 width: 100%;
                 border-collapse: collapse;
                 margin-top: 22px;
@@ -285,7 +300,13 @@
                     .rules .sublist li {
                         margin-bottom: 5px;
                     }
-    </style>
+    
+            /* Tanggal tanda tangan tidak boleh pecah dua baris: bentuknya
+               baku "Balikpapan, 07 September 2026". Dengan nowrap, kolom ini
+               yang melebar dan tiga kolom lain menyusut — bukan teksnya yang
+               membungkus. */
+            .tanggal-ttd { white-space: nowrap; }
+</style>
 @if (!cetak)
 {
     @* Hiasan layar — latar abu, bayangan, dan jarak di sekeliling kertas —
@@ -544,7 +565,7 @@
                        Indonesia. Culture aplikasi id-ID (Program.cs) yang menerjemahkan
                        MMMM, jadi nama bulannya tidak perlu ditulis tangan. *@
                     <td>
-                        Balikpapan, @Model.Tanggal.ToString("dd MMMM yyyy")<br />
+                        <span class="tanggal-ttd">Balikpapan, @Model.Tanggal.ToString("dd MMMM yyyy")</span><br />
                         Yang Menerima
                         @if (!string.IsNullOrWhiteSpace(Model.JabatanYangMenerima))
                         {

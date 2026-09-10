@@ -54,7 +54,7 @@
         body {
             margin: 0; padding: 0;
             font-family: Arial, Helvetica, sans-serif;
-            font-size: 12px; line-height: 1.5; color: #000; background: #fff;
+            font-size: 12px; line-height: 1.5; letter-spacing: 0.09em; text-rendering: geometricPrecision; color: #000; background: #fff;
         }
 
         /* Persis satu lembar A4, tanpa jarak dan tanpa bayangan; keduanya
@@ -72,7 +72,10 @@
 
         /* Tanggal / Kepada / Dari. Tabel, bukan spasi berjajar: teks nama
            vendor yang panjang harus menggantung rapi di bawah titik dua. */
-        .alamat-surat { border-collapse: collapse; margin-bottom: 16px; }
+        /* Kop dan tanggal catatan dikecualikan dari 0.09em: keduanya ruangnya
+           pas-pasan, dan pada 0.09em "IT Kilang Pertamina Balikpapan" serta
+           "Tanggal: 01 September 2026" pecah dua baris. */
+        .alamat-surat { border-collapse: collapse; margin-bottom: 16px; letter-spacing: 0.03em; }
         .alamat-surat td { padding: 2px 0; vertical-align: top; }
         .alamat-surat .label { width: 90px; }
         .alamat-surat .sep { width: 12px; }
@@ -91,12 +94,12 @@
         .serial { white-space: pre-line; }
 
         .catatan { font-weight: bold; }
-        .catatan-tanggal { float: right; font-weight: normal; }
+        .catatan-tanggal { float: right; font-weight: normal; letter-spacing: 0.03em; white-space: nowrap; }
 
         /* Kotak tanda tangan bergaris, sesuai dokumen contoh. Tingginya
            dipatok supaya ruang tanda tangan basah tetap ada meski namanya
            kosong. */
-        .ttd { width: 100%; border-collapse: collapse; margin-top: 26px; }
+        .ttd { width: 100%; border-collapse: collapse; margin-top: 26px; letter-spacing: 0.04em; }
         .ttd td { border: 1px solid #000; padding: 8px 10px; text-align: center; vertical-align: top; height: 120px; }
         .ttd .peran { margin-bottom: 6px; }
         /* Jarak atas dipasang pada pembungkus, bukan pada baris organisasi:
@@ -104,7 +107,13 @@
            menempel ke label begitu organisasinya dilewati. */
         .ttd .isi { margin-top: 62px; }
         .ttd .nama { font-weight: bold; text-decoration: underline; margin-top: 4px; }
-    </style>
+    
+            /* Tanggal tanda tangan tidak boleh pecah dua baris: bentuknya
+               baku "Balikpapan, 07 September 2026". Dengan nowrap, kolom ini
+               yang melebar dan tiga kolom lain menyusut — bukan teksnya yang
+               membungkus. */
+            .tanggal-ttd { white-space: nowrap; }
+</style>
 @if (!cetak)
 {
     @* Hiasan layar — latar abu, bayangan, dan jarak di sekeliling kertas —
@@ -272,7 +281,7 @@
                     </td>
                     <td>
                         <div class="peran">
-                            Balikpapan, @Model.Tanggal.ToString("dd MMMM yyyy")<br />
+                            <span class="tanggal-ttd">Balikpapan, @Model.Tanggal.ToString("dd MMMM yyyy")</span><br />
                             Diterima oleh,
                             @if (!string.IsNullOrWhiteSpace(jabatanPenerima))
                             {
@@ -304,7 +313,7 @@
                     </td>
                     <td>
                         <div class="peran">
-                            Balikpapan, @Model.Tanggal.ToString("dd MMMM yyyy")<br />
+                            <span class="tanggal-ttd">Balikpapan, @Model.Tanggal.ToString("dd MMMM yyyy")</span><br />
                             Diterima oleh:
                             @if (!string.IsNullOrWhiteSpace(jabatanPenerima))
                             {
