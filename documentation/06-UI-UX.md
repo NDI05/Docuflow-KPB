@@ -125,6 +125,30 @@ bidang abu satu halaman penuh dengan lembar putih bergaris bayangan di tengah.
 Hasil cetak diukur, bukan dilihat sekilas: A4, margin 18mm kiri-kanan dan 20mm
 atas, kertas putih penuh sampai tepi.
 
+### Maksimal dua halaman
+
+Surat dicetak bolak-balik, jadi **dua halaman adalah batas keras**. Dua hal
+menjaganya, dan keduanya mudah dirusak tanpa sengaja:
+
+- **`.paper` tidak boleh punya `min-height` saat mencetak.** 297mm menghitung
+  jadi 1122,52px pada 96 dpi sementara bidang cetak wkhtmltopdf 1122px — lembar
+  kedua meleset setengah piksel dan melahirkan halaman ketiga yang kosong.
+  Nilainya dikembalikan di blok `@@media screen` supaya di layar lembarnya tetap
+  tampak setinggi A4.
+- **Lembar ketentuan (halaman 2 BAST) harus tetap satu halaman.** Tiga belas
+  butir teks padat yang muat pas-pasan; `letter-spacing: 0.09em` melebarkan tiap
+  baris ~10% dan membuat 353 karakter terakhir luber. Blok `.rules` karena itu
+  0.02em, `line-height` 1.5, jarak antar butir 6px.
+
+Diuji dengan merender **seluruh 236 dokumen** yang bisa dicetak: 96 satu
+halaman (BAPB), 140 dua halaman (BAST dan BAST CCTV), nol lebih dari dua.
+
+Ruang sisa halaman 1 diukur dari posisi teks terbawah: BAST dengan 2 barang
+menyisakan 4,3cm, BAPB dengan 8 barang menyisakan 5,6cm. Satu baris barang
+setinggi ~30pt, jadi **BAST masih aman sampai sekitar 6 baris**; lebih dari itu
+tabelnya mendorong lembar ketentuan ke halaman ketiga. Data nyata belum pernah
+mendekatinya — dari 140 BAST, terbanyak 3 baris dan rata-rata 1.
+
 ## Masalah yang tersisa
 
 1. **Tanda tangan hanya nama tercetak.** Kolom `Users.TtdImagePath` ada tapi

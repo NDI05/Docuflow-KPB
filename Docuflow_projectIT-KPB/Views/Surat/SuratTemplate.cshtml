@@ -50,10 +50,16 @@
             }
 
             /* Persis satu lembar A4, tanpa jarak dan tanpa bayangan.
-               Keduanya ditambahkan kembali hanya untuk layar. */
+               Keduanya ditambahkan kembali hanya untuk layar.
+
+               TANPA min-height saat mencetak. 297mm menghitung jadi 1122,52px
+               pada 96 dpi sementara bidang cetak wkhtmltopdf 1122px, jadi
+               lembar kedua meleset setengah piksel dan melahirkan halaman
+               ketiga yang kosong. Surat ini dicetak bolak-balik, jadi dua
+               halaman adalah batasnya. Di layar min-height dikembalikan lewat
+               blok @@media screen supaya lembarnya tetap tampak setinggi A4. */
             .paper {
                 width: 210mm;
-                min-height: 297mm;
                 margin: 0 auto;
                 background: #fff;
                 padding: 0;
@@ -277,9 +283,16 @@
                 margin-bottom: 15px;
             }
 
+            /* Lembar ketentuan HARUS satu halaman: suratnya dicetak
+               bolak-balik, jadi dua halaman adalah batasnya. Teksnya 13 butir
+               padat yang pada 0 spasi muat pas-pasan; 0.09em melebarkan tiap
+               baris ~10% dan membuat 353 karakter terakhir luber ke halaman
+               ketiga. Karena itu blok ini 0.02em, line-height 1.5, dan jarak
+               antar butir 6px — diukur ulang setiap kali salah satu diubah. */
             .rules {
                 font-size: 11px;
-                line-height: 1.55;
+                line-height: 1.5;
+                letter-spacing: 0.02em;
                 text-align: justify;
             }
 
@@ -289,7 +302,7 @@
                 }
 
                 .rules li {
-                    margin-bottom: 8px;
+                    margin-bottom: 6px;
                 }
 
                 .rules .sublist {
@@ -322,7 +335,8 @@
     <style>
         @@media screen {
             body { background: #f2f2f2; }
-            .paper { margin: 15px auto; box-shadow: 0 0 10px rgba(0,0,0,0.15); }
+            .paper { margin: 15px auto; box-shadow: 0 0 10px rgba(0,0,0,0.15);
+                     min-height: 297mm; }
         }
     </style>
 }

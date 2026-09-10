@@ -24,6 +24,7 @@ build net8.0 versi 1.0.0, dan lewat query langsung ke `DocuflowDB`.
 | **Ubah user** | `/Users/Edit/{id}` | 200; `Password` sengaja tidak disentuh — itu milik `ResetPassword` |
 | Penomoran bersamaan | `db/test-nomor-concurrent.sh 20` | 20 pengiriman serentak, nol nomor kembar |
 | Angka jadi huruf | `db/test-terbilang.sh` | kaidah "sepuluh", "sebelas", "seratus", "seribu" |
+| **Cetak maksimal 2 halaman** | render seluruh 236 dokumen yang bisa dicetak | 96 satu halaman, 140 dua halaman, nol lebih dari dua |
 | Pasang dari nol | `db/paket/uji-jalur-a.ps1` | basis data kosong → 251 surat, 569 barang, 10 pengguna, 514 kota, counter benar |
 
 ### Penjagaan yang diuji, bukan diasumsikan

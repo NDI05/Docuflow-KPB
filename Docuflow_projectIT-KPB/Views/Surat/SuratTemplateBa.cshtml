@@ -45,7 +45,10 @@
 
         /* Persis satu lembar A4, tanpa jarak dan tanpa bayangan; keduanya
            ditambahkan kembali hanya untuk layar. */
-        .paper { width: 210mm; min-height: 297mm; margin: 0 auto; background: #fff; box-sizing: border-box; }
+        /* min-height hanya untuk layar: 297mm = 1122,52px pada 96 dpi, setengah
+           piksel lebih tinggi daripada bidang cetak wkhtmltopdf, dan itu
+           cukup untuk melahirkan satu halaman kosong di belakang. */
+        .paper { width: 210mm; margin: 0 auto; background: #fff; box-sizing: border-box; }
         .page-content { padding: 20mm 18mm 20mm 18mm; box-sizing: border-box; }
 
         .header { position: relative; min-height: 112px; margin-bottom: 15px; }
@@ -124,7 +127,8 @@
     <style>
         @@media screen {
             body { background: #f2f2f2; }
-            .paper { margin: 15px auto; box-shadow: 0 0 10px rgba(0,0,0,0.15); }
+            .paper { margin: 15px auto; box-shadow: 0 0 10px rgba(0,0,0,0.15);
+                     min-height: 297mm; }
         }
     </style>
 }
